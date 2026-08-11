@@ -45,6 +45,7 @@ interface SalesContextValue extends DraftState {
   productGroups: string[];
   erpLastUpdate: string | null;
   orders: Order[];
+  brandMetadata: Record<string, any>;
   customer: Customer | null;
   table: PriceTable | undefined;
   lines: CartLine[];
