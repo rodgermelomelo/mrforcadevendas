@@ -2,14 +2,32 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Save, Search } from "lucide-react";
+import { Loader2, Save, Search, UserPlus, Copy, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPage } from "@/components/admin/admin-page";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   listUsers,
   setUserRole,
   setUserVisibility,
   listSellers,
+  createUserWithRoleAndSeller,
   type AppRole,
   type AdminUser,
 } from "@/lib/admin-data.functions";
