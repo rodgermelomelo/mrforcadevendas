@@ -917,7 +917,7 @@ export const listBaseCounts = createServerFn({ method: "GET" })
 
     const counts = await Promise.all(
       targets.map(async (t) => {
-        const { count } = await context.supabase.from(t.key).select("id", { count: "exact", head: true });
+        const { count } = await context.supabase.from(t.key as never).select("id", { count: "exact", head: true });
         return { key: t.key, label: t.label, count: count ?? 0 };
       }),
     );
