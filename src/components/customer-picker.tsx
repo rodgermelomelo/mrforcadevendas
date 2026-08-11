@@ -161,11 +161,11 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
     [recent, customers],
   );
 
-  const renderRow = (c: (typeof customers)[number]) => {
+  const renderRow = (prefix: string) => (c: (typeof customers)[number]) => {
     const table = priceTables.find((t) => t.code === c.priceTableCode);
     return (
       <CommandItem
-        key={c.id}
+        key={`${prefix}-${c.id}`}
         value={`${c.tradeName} ${c.legalName} ${c.erpCode} ${c.taxId} ${c.city}`}
         onSelect={() => startWithCustomer(c.id)}
         className="items-start gap-3 rounded-xl py-3"
@@ -231,11 +231,11 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
                 </span>
               }
             >
-              {recentCustomers.map(renderRow)}
+              {recentCustomers.map(renderRow("recent"))}
             </CommandGroup>
           )}
           <CommandGroup heading={term ? "Resultados" : "Minha carteira"}>
-            {results.map(renderRow)}
+            {results.map(renderRow("all"))}
           </CommandGroup>
         </CommandList>
           </Command>
