@@ -12,6 +12,7 @@ export interface WorkspaceData {
   sellerCodes: string[];
   lastUpdate: string | null;
   approvalRules: ApprovalRule[];
+  role: string | null;
 }
 
 /** Carrega carteira + catálogo do usuário autenticado (RLS limita a carteira visível). */
@@ -31,6 +32,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       linksRes,
       profileRes,
       rulesRes,
+      roleRes,
     ] = await Promise.all([
       supabase.from("customers").select("*").eq("active", true).order("trade_name"),
       supabase.from("products").select("*").eq("active", true).order("erp_code"),
@@ -42,6 +44,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId),
       supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
       supabase.from("approval_rules").select("*").eq("active", true),
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
@@ -130,5 +133,6 @@ export const getWorkspace = createServerFn({ method: "GET" })
       sellerCodes: (linksRes.data ?? []).map((l) => l.seller_erp_code),
       lastUpdate,
       approvalRules,
+      role: roleRes.data?.role || null,
     };
   });
