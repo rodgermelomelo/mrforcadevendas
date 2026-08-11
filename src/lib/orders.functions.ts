@@ -242,19 +242,21 @@ export const createOrder = createServerFn({ method: "POST" })
       order_id: orderId,
       revision: 1,
       content_hash: contentHash,
-      snapshot: {
+      snapshot: JSON.parse(
+        JSON.stringify({
+          customer: customer.erp_code,
+          priceTable: data.priceTableCode,
+          priceLevel: data.priceLevelLabel,
+          paymentTerm: data.paymentTerm,
+          items: data.items,
+          exceptions: data.exceptions,
+          subtotal: data.subtotal,
+          discountTotal: data.discountTotal,
+          total: data.total,
+          capturedAt: new Date().toISOString(),
+        }),
+      ),
 
-        customer: customer.erp_code,
-        priceTable: data.priceTableCode,
-        priceLevel: data.priceLevelLabel,
-        paymentTerm: data.paymentTerm,
-        items: data.items,
-        exceptions: data.exceptions,
-        subtotal: data.subtotal,
-        discountTotal: data.discountTotal,
-        total: data.total,
-        capturedAt: new Date().toISOString(),
-      },
     });
 
     await supabase.from("approval_events").insert({
