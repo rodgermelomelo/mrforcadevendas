@@ -84,13 +84,11 @@ function RevisarPedido() {
   const hasExceptions = validation.exceptions.length > 0;
   const hasErrors = validation.errors.length > 0;
 
-  const submit = () => {
+  const submit = async () => {
     if (hasErrors) {
       toast.error("Corrija os erros obrigatórios — o pedido permanece em rascunho.");
       return;
     }
-    const now = new Date().toISOString();
-    const number = `PV-${String(orders.length + 1).padStart(5, "0")}`;
     const items = lines.map((l) => ({
       productId: l.product.id,
       erpCode: l.product.erpCode,
@@ -100,47 +98,29 @@ function RevisarPedido() {
       discountPercent: l.discountPercent,
       total: l.lineTotal,
     }));
-    const order: Order = {
-      id: `${Date.now()}`,
-      number,
-      createdAt: now,
-      customerId: customer.id,
-      customerName: customer.tradeName,
-      priceTableCode: table?.code ?? "—",
-      priceLevelLabel: table?.levelLabel ?? "—",
-      paymentTerm: paymentTerm ?? customer.paymentTerm,
-      sellerName,
-      items,
-      subtotal,
-      discountTotal: discountValue,
-      total,
-      orderDiscountPercent,
-      isBonus,
-      notes,
-      exceptions: validation.exceptions,
-      status: hasExceptions ? "pending_approval" : "confirmed",
-      integrationStatus: hasExceptions ? "not_ready" : "awaiting_erp_integration",
-      requiredAuthority: validation.requiredAuthority,
-      contentHash: contentHash(JSON.stringify({ items, total, customer: customer.id, now })),
-      history: [
-        { at: now, label: "Pedido gerado pelo vendedor", detail: sellerName },
-        hasExceptions
-          ? {
-              at: now,
-              label: "Encaminhado para aprovação",
-              detail: `Autoridade: ${authorityLabel[validation.requiredAuthority ?? "gerente_comercial"]}`,
-            }
-          : {
-              at: now,
-              label: "Auto-aprovado e confirmado",
-              detail: "Snapshot imutável gerado (tabela, nível, preços, estoque, hash).",
-            },
-      ],
-    };
-    saveOrder(order);
-    toast.success(hasExceptions ? "Aprovação solicitada" : "Pedido confirmado");
-    void navigate({ to: "/pedidos/$orderId", params: { orderId: order.id } });
+    try {
+      const order = await sales.submitOrder({
+        customerErpCode: customer.erpCode,
+        priceTableCode: table?.code ?? "—",
+        priceLevelLabel: table?.levelLabel ?? "—",
+        paymentTerm: paymentTerm ?? customer.paymentTerm,
+        items,
+        subtotal,
+        discountTotal: discountValue,
+        total,
+        orderDiscountPercent,
+        isBonus,
+        notes,
+        exceptions: validation.exceptions,
+        requiredAuthority: validation.requiredAuthority,
+      });
+      toast.success(hasExceptions ? "Aprovação solicitada" : "Pedido confirmado");
+      void navigate({ to: "/pedidos/$orderId", params: { orderId: order.id } });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar o pedido.");
+    }
   };
+
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
