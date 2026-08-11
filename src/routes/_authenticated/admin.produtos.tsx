@@ -310,24 +310,106 @@ function ProductsPage() {
                 </span>
               </span>
             </button>
-          ))}
-          <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
+          </div>
+        ))}
+        <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
+      </div>
+    )}
+
+    {query.isFetching && !query.isLoading && (
+      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Atualizando…
+      </p>
+    )}
+
+    {/* Barra de Ações em Lote */}
+    {selectedCodes.length > 0 && (
+      <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full border border-primary/20 bg-white/90 p-2 shadow-2xl backdrop-blur-md dark:bg-zinc-900/90 md:gap-6 md:p-3">
+        <div className="flex items-center gap-2 pl-3 pr-2 md:pl-4">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+            {selectedCodes.length}
+          </span>
+          <span className="hidden text-sm font-medium text-foreground md:inline">selecionados</span>
         </div>
-      )}
+        <div className="h-8 w-px bg-border" />
+        <Button
+          onClick={() => setBulkDialogOpen(true)}
+          className="h-10 rounded-full bg-brand-gradient px-4 font-semibold text-white shadow-lg transition hover:scale-105 active:scale-95 md:px-6"
+        >
+          <Tag className="mr-2 h-4 w-4" />
+          Editar Marca
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSelectedCodes([])}
+          className="h-10 w-10 rounded-full hover:bg-destructive/10 hover:text-destructive"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+    )}
 
-      {query.isFetching && !query.isLoading && (
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Atualizando…
-        </p>
-      )}
+    <ProductDetailDialog
+      erpCode={openCode}
+      groups={groups}
+      onOpenChange={(open) => {
+        if (!open) setOpenCode(null);
+      }}
+    />
 
-      <ProductDetailDialog
-        erpCode={openCode}
-        groups={groups}
-        onOpenChange={(open) => {
-          if (!open) setOpenCode(null);
-        }}
-      />
-    </AdminPage>
-  );
+    {/* Diálogo de Edição em Lote */}
+    <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar marca em lote</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="flex items-center gap-2 rounded-xl bg-primary/5 p-3 text-sm text-primary">
+            <AlertCircle className="h-4 w-4" />
+            Esta ação atualizará {selectedCodes.length} produtos simultaneamente.
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="brand">Nova Marca</Label>
+            <div className="relative">
+              <Input
+                id="brand"
+                value={newBrand}
+                onChange={(e) => setNewBrand(e.target.value)}
+                placeholder="Ex: Dailus, Acemar..."
+                className="rounded-xl pr-20"
+              />
+              <div className="absolute right-2 top-1/2 flex -translate-y-1/2 gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-[10px] text-muted-foreground hover:text-primary"
+                  onClick={() => setNewBrand("")}
+                >
+                  Limpar
+                </Button>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Sugestões: Dailus, Acemar, Água de Cheiro, Divina Flora, Cuccio, Vernissage
+            </p>
+          </div>
+        </div>
+        <DialogFooter className="gap-2 sm:justify-end">
+          <Button variant="outline" onClick={() => setBulkDialogOpen(false)} className="rounded-xl">
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => bulkMutation.mutate(newBrand)}
+            disabled={bulkMutation.isPending}
+            className="rounded-xl bg-brand-gradient text-white"
+          >
+            {bulkMutation.isPending ? "Salvando..." : "Confirmar Alteração"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </AdminPage>
+);
 }
+
