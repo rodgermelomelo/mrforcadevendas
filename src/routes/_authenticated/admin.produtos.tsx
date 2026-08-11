@@ -6,7 +6,21 @@ import { ImageOff, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
 import { ProductDetailDialog, HealthBadge } from "@/components/admin/product-detail-dialog";
-import { listProducts, listRegistries } from "@/lib/admin-data.functions";
+import { listProducts, listRegistries, bulkUpdateProductBrand } from "@/lib/admin-data.functions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, Tag, X } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin/produtos")({
   component: ProductsPage,
