@@ -190,18 +190,21 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string | null
+          metadata: Json | null
           name: string
           updated_at: string | null
         }
         Insert: {
           active?: boolean
           created_at?: string | null
+          metadata?: Json | null
           name: string
           updated_at?: string | null
         }
         Update: {
           active?: boolean
           created_at?: string | null
+          metadata?: Json | null
           name?: string
           updated_at?: string | null
         }

@@ -899,6 +899,9 @@ export interface CodeLabelRow {
   label: string;
   extra?: boolean;
   active?: boolean;
+  metadata?: {
+    isCategory?: boolean;
+  };
 }
 
 export interface RegistriesData {
@@ -929,7 +932,7 @@ export const listRegistries = createServerFn({ method: "GET" })
       }
     }
 
-    const brandsStatus = new Map((brands.data ?? []).map((b: any) => [b.name, b.active]));
+    const brandsData = new Map((brands.data ?? []).map((b: any) => [b.name, { active: b.active, metadata: b.metadata }]));
 
     return {
       groups: (groups.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
@@ -945,7 +948,8 @@ export const listRegistries = createServerFn({ method: "GET" })
         .map(([brand, count]) => ({
           code: brand,
           label: `${brand} (${count} produtos)`,
-          active: brandsStatus.get(brand) ?? true,
+          active: brandsData.get(brand)?.active ?? true,
+          metadata: brandsData.get(brand)?.metadata || {},
         })),
     };
   });
@@ -959,6 +963,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
       label: string;
       isStandard?: boolean;
       active?: boolean;
+      metadata?: any;
     }) => {
       if (!input?.code || !input?.kind) throw new Error("Dados incompletos.");
       return input;
@@ -977,6 +982,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = { [target.field]: data.label };
     if (data.kind === "paymentTerms" && data.isStandard !== undefined) patch["is_standard"] = data.isStandard;
     if (data.kind === "brands" && data.active !== undefined) patch["active"] = data.active;
+    if (data.kind === "brands" && data.metadata !== undefined) patch["metadata"] = data.metadata;
     
     const { error } = await context.supabase.from(target.table).update(patch as never).eq(target.key as any, data.code);
     if (error) throw new Error(error.message);
