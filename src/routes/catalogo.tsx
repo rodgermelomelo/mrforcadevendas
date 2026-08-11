@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Search, Plus, Minus, ShoppingCart, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { formatBRL, resolvePrice } from "@/lib/pricing";
+import { productImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -161,9 +162,9 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: (qty: number
       )}
     >
       <div className="relative aspect-square bg-muted">
-        {product.imageUrl ? (
+        {productImage(product.imageUrl) ? (
           <img
-            src={product.imageUrl}
+            src={productImage(product.imageUrl) ?? ""}
             alt={product.name}
             loading="lazy"
             width={800}

@@ -14,7 +14,7 @@ const nav = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { itemCount, customer } = useSales();
+  const { itemCount, customer, erpLastUpdate } = useSales();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const isActive = (to: string, exact: boolean) =>
