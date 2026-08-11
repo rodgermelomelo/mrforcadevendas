@@ -109,9 +109,15 @@ function Catalogo() {
   }, [products]);
 
   const groups = useMemo(() => {
-    const set = new Set(productGroups);
-    return Array.from(set).sort();
-  }, [productGroups]);
+    // Se houver marcas selecionadas, mostrar apenas as categorias (grupos) que possuem produtos nessas marcas
+    const availableGroups = new Set<string>();
+    products.forEach(p => {
+      if (selectedBrands.length === 0 || (p.brand && selectedBrands.includes(p.brand))) {
+        availableGroups.add(p.group);
+      }
+    });
+    return Array.from(availableGroups).sort();
+  }, [products, selectedBrands]);
 
   const toggleBrand = (b: string) => {
     setSelectedBrands((prev) =>
