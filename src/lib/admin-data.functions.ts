@@ -906,6 +906,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
       code: string;
       label: string;
       isStandard?: boolean;
+      active?: boolean;
     }) => {
       if (!input?.code || !input?.kind) throw new Error("Dados incompletos.");
       return input;
