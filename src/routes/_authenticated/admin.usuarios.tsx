@@ -62,6 +62,8 @@ function UsersPage() {
   const saveRole = useServerFn(setUserRole);
   const saveVisibility = useServerFn(setUserVisibility);
 
+  const [createOpen, setCreateOpen] = useState(false);
+
   const usersQuery = useQuery({ queryKey: ["admin", "users"], queryFn: () => load() });
   const sellersQuery = useQuery({ queryKey: ["admin", "sellers"], queryFn: () => loadSellers() });
 
@@ -88,7 +90,15 @@ function UsersPage() {
   return (
     <AdminPage
       title="Usuários e papéis"
-      description="Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas explicitamente aqui. Implementar um fluxo para eu criar automaticamente um usuário de autenticação para cada representante, com atribuição de perfil e validação antes de salvar."
+      description="Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas explicitamente aqui."
+      actions={
+        <Button 
+          onClick={() => setCreateOpen(true)}
+          className="rounded-xl bg-brand-gradient shadow-lift"
+        >
+          <UserPlus className="mr-2 h-4 w-4" /> Criar usuário
+        </Button>
+      }
     >
       {usersQuery.isLoading ? (
         <div className="grid place-items-center py-16 text-muted-foreground">
@@ -109,7 +119,171 @@ function UsersPage() {
           ))}
         </div>
       )}
+
+      <CreateUserDialog 
+        open={createOpen} 
+        onOpenChange={setCreateOpen} 
+        sellers={(sellersQuery.data ?? []).map(s => ({ code: s.erpCode, name: s.name }))}
+        onSuccess={invalidate}
+      />
     </AdminPage>
+  );
+}
+
+function CreateUserDialog({ 
+  open, 
+  onOpenChange, 
+  sellers,
+  onSuccess 
+}: { 
+  open: boolean; 
+  onOpenChange: (o: boolean) => void;
+  sellers: { code: string; name: string }[];
+  onSuccess: () => void;
+}) {
+  const createUser = useServerFn(createUserWithRoleAndSeller);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ tempPassword: string } | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "vendedor_externo" as AppRole,
+    sellerCode: "",
+  });
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await createUser({ data: formData });
+      setResult(res);
+      toast.success("Usuário criado com sucesso!");
+      onSuccess();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyPassword = () => {
+    if (result) {
+      navigator.clipboard.writeText(result.tempPassword);
+      toast.success("Senha copiada!");
+    }
+  };
+
+  if (result) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" /> Usuário criado
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              O usuário foi provisionado. Por favor, forneça a senha temporária abaixo para o representante realizar o primeiro acesso.
+            </p>
+            <div className="rounded-xl bg-muted p-4 text-center">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Senha temporária</p>
+              <p className="mt-1 text-2xl font-mono font-bold tracking-tight text-foreground">{result.tempPassword}</p>
+            </div>
+            <Button onClick={copyPassword} variant="outline" className="w-full rounded-xl">
+              <Copy className="mr-2 h-4 w-4" /> Copiar senha
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => {
+              setResult(null);
+              setFormData({ name: "", email: "", role: "vendedor_externo", sellerCode: "" });
+              onOpenChange(false);
+            }} className="w-full rounded-xl">
+              Concluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Novo usuário comercial</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleCreate} className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome completo</Label>
+            <Input 
+              id="name" 
+              required 
+              value={formData.name} 
+              onChange={e => setFormData(d => ({ ...d, name: e.target.value }))}
+              placeholder="Ex: João Silva" 
+              className="rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              required 
+              value={formData.email} 
+              onChange={e => setFormData(d => ({ ...d, email: e.target.value }))}
+              placeholder="joao.silva@exemplo.com" 
+              className="rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Papel (Permissão)</Label>
+            <Select 
+              value={formData.role} 
+              onValueChange={v => setFormData(d => ({ ...d, role: v as AppRole }))}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {ROLES.map(r => (
+                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="seller">Vincular representante (Opcional)</Label>
+            <Select 
+              value={formData.sellerCode} 
+              onValueChange={v => setFormData(d => ({ ...d, sellerCode: v }))}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Selecione um representante" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="_none">Nenhum vínculo</SelectItem>
+                {sellers.map(s => (
+                  <SelectItem key={s.code} value={s.code}>{s.code} · {s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="pt-4">
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="w-full rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
+            >
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+              Criar e gerar acesso
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
