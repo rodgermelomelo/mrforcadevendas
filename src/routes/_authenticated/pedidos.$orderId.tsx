@@ -5,7 +5,7 @@ import { integrationLabel, statusLabel, statusTone } from "@/lib/orders/status";
 import { authorityLabel } from "@/lib/orders/validation";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/pedidos/$orderId")({
+export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
   head: () => ({
     meta: [
       { title: "Detalhe do pedido — MR Força de Vendas" },

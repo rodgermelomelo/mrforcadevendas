@@ -45,7 +45,9 @@ export interface Customer {
   priceTableCode: string;
   paymentTerm: string;
   restricted: boolean;
-  restrictionReason?: string;
+  restrictionReason?: string | undefined;
+  sellerErpCode?: string;
+
   creditLimit: number;
   openBalance: number;
   minOrderValue: number;
@@ -126,5 +128,5 @@ export interface Order {
   integrationStatus: IntegrationStatus;
   requiredAuthority: Authority | null;
   contentHash: string;
-  history: { at: string; label: string; detail?: string }[];
+  history: { at: string; label: string; detail?: string | undefined }[];
 }

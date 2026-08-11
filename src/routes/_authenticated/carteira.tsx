@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, ShieldAlert, MapPin } from "lucide-react";
-import { customers, priceTables } from "@/lib/demo/data";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/carteira")({
+export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
     meta: [
       { title: "Minha carteira — MR Força de Vendas" },
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/carteira")({
 
 function Carteira() {
   const [term, setTerm] = useState("");
-  const { selectCustomer, customer } = useSales();
+  const { selectCustomer, customer, customers, priceTables, hydrated } = useSales();
   const navigate = useNavigate();
 
   const results = useMemo(() => {
@@ -38,7 +37,7 @@ function Carteira() {
         .replace(/[.\-/]/g, "")
         .includes(q),
     );
-  }, [term]);
+  }, [term, customers]);
 
   const start = (id: string) => {
     selectCustomer(id);

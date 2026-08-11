@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trash2, Minus, Plus } from "lucide-react";
+import { productImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/carrinho")({
+export const Route = createFileRoute("/_authenticated/carrinho")({
   head: () => ({
     meta: [
       { title: "Carrinho do pedido — MR Força de Vendas" },
@@ -70,9 +71,9 @@ function Carrinho() {
             {lines.map((line) => (
               <li key={line.product.id} className="surface-card grid gap-3 p-4 sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center">
                 <div className="hidden h-16 w-16 overflow-hidden rounded-xl bg-muted sm:block">
-                  {line.product.imageUrl && (
+                  {productImage(line.product.imageUrl) && (
                     <img
-                      src={line.product.imageUrl}
+                      src={productImage(line.product.imageUrl) ?? ""}
                       alt={line.product.name}
                       loading="lazy"
                       width={800}

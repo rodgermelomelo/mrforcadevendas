@@ -1,28 +1,29 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import type { CartItem, Customer, Order, PriceTable, Product } from "@/lib/domain/types";
-import { customers, demoSellerName, priceTables, products } from "@/lib/demo/data";
 import { resolvePrice } from "@/lib/pricing";
+import { getWorkspace } from "@/lib/catalog.functions";
+import { createOrder, listOrders, type CreateOrderInput } from "@/lib/orders.functions";
 
-const STORAGE_KEY = "mrfv.state.v1";
+const STORAGE_KEY = "mrfv.draft.v2";
 
-interface PersistedState {
+interface DraftState {
   customerId: string | null;
   cart: CartItem[];
   orderDiscountPercent: number;
   isBonus: boolean;
   notes: string;
   paymentTerm: string | null;
-  orders: Order[];
 }
 
-const emptyState: PersistedState = {
+const emptyDraft: DraftState = {
   customerId: null,
   cart: [],
   orderDiscountPercent: 0,
   isBonus: false,
   notes: "",
   paymentTerm: null,
-  orders: [],
 };
 
 export interface CartLine {
@@ -34,8 +35,15 @@ export interface CartLine {
   lineTotal: number;
 }
 
-interface SalesContextValue extends PersistedState {
+interface SalesContextValue extends DraftState {
   hydrated: boolean;
+  loading: boolean;
+  customers: Customer[];
+  products: Product[];
+  priceTables: PriceTable[];
+  productGroups: string[];
+  erpLastUpdate: string | null;
+  orders: Order[];
   customer: Customer | null;
   table: PriceTable | undefined;
   lines: CartLine[];
@@ -55,21 +63,41 @@ interface SalesContextValue extends PersistedState {
   setBonus: (value: boolean) => void;
   setNotes: (value: string) => void;
   setPaymentTerm: (value: string) => void;
-  saveOrder: (order: Order) => void;
+  submitOrder: (input: CreateOrderInput) => Promise<Order>;
+  submitting: boolean;
 }
 
 const SalesContext = createContext<SalesContextValue | null>(null);
 
 export function SalesProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PersistedState>(emptyState);
+  const [state, setState] = useState<DraftState>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
+  const queryClient = useQueryClient();
+
+  const fetchWorkspace = useServerFn(getWorkspace);
+  const fetchOrders = useServerFn(listOrders);
+  const submit = useServerFn(createOrder);
+
+  const workspaceQuery = useQuery({
+    queryKey: ["workspace"],
+    queryFn: () => fetchWorkspace(),
+    staleTime: 60_000,
+  });
+  const ordersQuery = useQuery({ queryKey: ["orders"], queryFn: () => fetchOrders() });
+
+  const createMutation = useMutation({
+    mutationFn: (input: CreateOrderInput) => submit({ data: input }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState({ ...emptyState, ...(JSON.parse(raw) as PersistedState) });
+      if (raw) setState({ ...emptyDraft, ...(JSON.parse(raw) as DraftState) });
     } catch {
-      /* estado corrompido: começa limpo */
+      /* rascunho corrompido: começa limpo */
     }
     setHydrated(true);
   }, []);
@@ -79,13 +107,17 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state, hydrated]);
 
+  const customers = useMemo(() => workspaceQuery.data?.customers ?? [], [workspaceQuery.data]);
+  const products = useMemo(() => workspaceQuery.data?.products ?? [], [workspaceQuery.data]);
+  const priceTables = useMemo(() => workspaceQuery.data?.priceTables ?? [], [workspaceQuery.data]);
+
   const customer = useMemo(
     () => customers.find((c) => c.id === state.customerId) ?? null,
-    [state.customerId],
+    [customers, state.customerId],
   );
   const table = useMemo(
     () => priceTables.find((t) => t.code === customer?.priceTableCode),
-    [customer],
+    [priceTables, customer],
   );
 
   const lines = useMemo<CartLine[]>(() => {
@@ -106,20 +138,27 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         },
       ];
     });
-  }, [state.cart, table]);
+  }, [state.cart, products, table]);
 
   const subtotal = lines.reduce((acc, l) => acc + l.lineTotal, 0);
   const discountValue = subtotal * (state.orderDiscountPercent / 100);
   const total = state.isBonus ? 0 : subtotal - discountValue;
   const itemCount = state.cart.reduce((acc, i) => acc + i.quantity, 0);
 
-  const update = useCallback((patch: Partial<PersistedState>) => {
+  const update = useCallback((patch: Partial<DraftState>) => {
     setState((prev) => ({ ...prev, ...patch }));
   }, []);
 
   const value: SalesContextValue = {
     ...state,
-    hydrated,
+    hydrated: hydrated && !workspaceQuery.isLoading,
+    loading: workspaceQuery.isLoading || ordersQuery.isLoading,
+    customers,
+    products,
+    priceTables,
+    productGroups: workspaceQuery.data?.groups ?? [],
+    erpLastUpdate: workspaceQuery.data?.lastUpdate ?? null,
+    orders: ordersQuery.data ?? [],
     customer,
     table,
     lines,
@@ -127,7 +166,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     discountValue,
     total,
     itemCount,
-    sellerName: demoSellerName,
+    sellerName: workspaceQuery.data?.sellerName ?? "Vendedor",
     selectCustomer: (id) =>
       setState((prev) => ({
         ...prev,
@@ -176,15 +215,18 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     setBonus: (v) => update({ isBonus: v }),
     setNotes: (v) => update({ notes: v }),
     setPaymentTerm: (v) => update({ paymentTerm: v }),
-    saveOrder: (order) =>
+    submitting: createMutation.isPending,
+    submitOrder: async (input) => {
+      const order = await createMutation.mutateAsync(input);
       setState((prev) => ({
         ...prev,
-        orders: [order, ...prev.orders],
         cart: [],
         orderDiscountPercent: 0,
         isBonus: false,
         notes: "",
-      })),
+      }));
+      return order;
+    },
   };
 
   return <SalesContext.Provider value={value}>{children}</SalesContext.Provider>;

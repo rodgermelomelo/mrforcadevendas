@@ -9,82 +9,111 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as CarrinhoRouteImport } from './routes/carrinho'
-import { Route as CarteiraRouteImport } from './routes/carteira'
-import { Route as CatalogoRouteImport } from './routes/catalogo'
-import { Route as PedidoRevisarRouteImport } from './routes/pedido.revisar'
-import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
-import { Route as PedidosOrderIdRouteImport } from './routes/pedidos.$orderId'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
+import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
+import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
+import { Route as AuthenticatedPedidoRevisarRouteImport } from './routes/_authenticated/pedido.revisar'
+import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
+import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const CarrinhoRoute = CarrinhoRouteImport.update({
+const AuthenticatedCarrinhoRoute = AuthenticatedCarrinhoRouteImport.update({
   id: '/carrinho',
   path: '/carrinho',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const CarteiraRoute = CarteiraRouteImport.update({
+const AuthenticatedCarteiraRoute = AuthenticatedCarteiraRouteImport.update({
   id: '/carteira',
   path: '/carteira',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const CatalogoRoute = CatalogoRouteImport.update({
+const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const PedidoRevisarRoute = PedidoRevisarRouteImport.update({
-  id: '/pedido/revisar',
-  path: '/pedido/revisar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosIndexRoute = PedidosIndexRouteImport.update({
-  id: '/pedidos/',
-  path: '/pedidos/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosOrderIdRoute = PedidosOrderIdRouteImport.update({
-  id: '/pedidos/$orderId',
-  path: '/pedidos/$orderId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedPedidoRevisarRoute =
+  AuthenticatedPedidoRevisarRouteImport.update({
+    id: '/pedido/revisar',
+    path: '/pedido/revisar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosIndexRoute =
+  AuthenticatedPedidosIndexRouteImport.update({
+    id: '/pedidos/',
+    path: '/pedidos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosOrderIdRoute =
+  AuthenticatedPedidosOrderIdRouteImport.update({
+    id: '/pedidos/$orderId',
+    path: '/pedidos/$orderId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/carrinho': typeof CarrinhoRoute
-  '/carteira': typeof CarteiraRoute
-  '/catalogo': typeof CatalogoRoute
-  '/pedido/revisar': typeof PedidoRevisarRoute
-  '/pedidos/$orderId': typeof PedidosOrderIdRoute
-  '/pedidos/': typeof PedidosIndexRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/carrinho': typeof AuthenticatedCarrinhoRoute
+  '/carteira': typeof AuthenticatedCarteiraRoute
+  '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
+  '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/carrinho': typeof CarrinhoRoute
-  '/carteira': typeof CarteiraRoute
-  '/catalogo': typeof CatalogoRoute
-  '/pedido/revisar': typeof PedidoRevisarRoute
-  '/pedidos/$orderId': typeof PedidosOrderIdRoute
-  '/pedidos': typeof PedidosIndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/carrinho': typeof AuthenticatedCarrinhoRoute
+  '/carteira': typeof AuthenticatedCarteiraRoute
+  '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
+  '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/pedidos': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/carrinho': typeof CarrinhoRoute
-  '/carteira': typeof CarteiraRoute
-  '/catalogo': typeof CatalogoRoute
-  '/pedido/revisar': typeof PedidoRevisarRoute
-  '/pedidos/$orderId': typeof PedidosOrderIdRoute
-  '/pedidos/': typeof PedidosIndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
+  '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
+  '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
+  '/_authenticated/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/reset-password'
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
@@ -93,107 +122,138 @@ export interface FileRouteTypes {
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/auth'
+    | '/reset-password'
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
     | '/pedidos'
   id:
     | '__root__'
-    | '/'
-    | '/carrinho'
-    | '/carteira'
-    | '/catalogo'
-    | '/pedido/revisar'
-    | '/pedidos/$orderId'
-    | '/pedidos/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/carrinho'
+    | '/_authenticated/carteira'
+    | '/_authenticated/catalogo'
+    | '/_authenticated/'
+    | '/_authenticated/pedido/revisar'
+    | '/_authenticated/pedidos/$orderId'
+    | '/_authenticated/pedidos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  CarrinhoRoute: typeof CarrinhoRoute
-  CarteiraRoute: typeof CarteiraRoute
-  CatalogoRoute: typeof CatalogoRoute
-  PedidoRevisarRoute: typeof PedidoRevisarRoute
-  PedidosOrderIdRoute: typeof PedidosOrderIdRoute
-  PedidosIndexRoute: typeof PedidosIndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/carrinho': {
-      id: '/carrinho'
+    '/_authenticated/carrinho': {
+      id: '/_authenticated/carrinho'
       path: '/carrinho'
       fullPath: '/carrinho'
-      preLoaderRoute: typeof CarrinhoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedCarrinhoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/carteira': {
-      id: '/carteira'
+    '/_authenticated/carteira': {
+      id: '/_authenticated/carteira'
       path: '/carteira'
       fullPath: '/carteira'
-      preLoaderRoute: typeof CarteiraRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedCarteiraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/catalogo': {
-      id: '/catalogo'
+    '/_authenticated/catalogo': {
+      id: '/_authenticated/catalogo'
       path: '/catalogo'
       fullPath: '/catalogo'
-      preLoaderRoute: typeof CatalogoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedCatalogoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/pedido/revisar': {
-      id: '/pedido/revisar'
+    '/_authenticated/pedido/revisar': {
+      id: '/_authenticated/pedido/revisar'
       path: '/pedido/revisar'
       fullPath: '/pedido/revisar'
-      preLoaderRoute: typeof PedidoRevisarRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPedidoRevisarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/pedidos/': {
-      id: '/pedidos/'
+    '/_authenticated/pedidos/': {
+      id: '/_authenticated/pedidos/'
       path: '/pedidos'
       fullPath: '/pedidos/'
-      preLoaderRoute: typeof PedidosIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/pedidos/$orderId': {
-      id: '/pedidos/$orderId'
+    '/_authenticated/pedidos/$orderId': {
+      id: '/_authenticated/pedidos/$orderId'
       path: '/pedidos/$orderId'
       fullPath: '/pedidos/$orderId'
-      preLoaderRoute: typeof PedidosOrderIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPedidosOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCarrinhoRoute: typeof AuthenticatedCarrinhoRoute
+  AuthenticatedCarteiraRoute: typeof AuthenticatedCarteiraRoute
+  AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedPedidoRevisarRoute: typeof AuthenticatedPedidoRevisarRoute
+  AuthenticatedPedidosOrderIdRoute: typeof AuthenticatedPedidosOrderIdRoute
+  AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCarrinhoRoute: AuthenticatedCarrinhoRoute,
+  AuthenticatedCarteiraRoute: AuthenticatedCarteiraRoute,
+  AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedPedidoRevisarRoute: AuthenticatedPedidoRevisarRoute,
+  AuthenticatedPedidosOrderIdRoute: AuthenticatedPedidosOrderIdRoute,
+  AuthenticatedPedidosIndexRoute: AuthenticatedPedidosIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  CarrinhoRoute: CarrinhoRoute,
-  CarteiraRoute: CarteiraRoute,
-  CatalogoRoute: CatalogoRoute,
-  PedidoRevisarRoute: PedidoRevisarRoute,
-  PedidosOrderIdRoute: PedidosOrderIdRoute,
-  PedidosIndexRoute: PedidosIndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
