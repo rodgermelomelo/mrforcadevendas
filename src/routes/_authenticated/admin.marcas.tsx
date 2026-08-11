@@ -52,7 +52,10 @@ function BrandsAdminPage() {
   const brands: CodeLabelRow[] = query.data?.brands ?? [];
   const groups = (query.data?.groups ?? []).map(g => ({ code: g.code, label: g.label }));
 
-  const filtered = brands
+  const mainBrands = brands.filter(b => !b.metadata?.isCategory);
+  const categories = brands.filter(b => b.metadata?.isCategory);
+
+  const filtered = mainBrands
     .filter((b) => b.code.toLowerCase().includes(term.trim().toLowerCase()))
     .slice(0, 100);
 
@@ -109,57 +112,81 @@ function BrandsAdminPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <label 
-                  className="flex items-center gap-2 cursor-pointer"
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Categorias Vinculadas
+                    </label>
+                    <span className="text-[10px] font-medium text-primary">
+                      {categories.filter(c => c.metadata?.parentBrand === brand.code).length}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {categories.filter(c => c.metadata?.parentBrand === brand.code).length > 0 ? (
+                      categories
+                        .filter(c => c.metadata?.parentBrand === brand.code)
+                        .map(cat => (
+                          <div 
+                            key={cat.code}
+                            className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground"
+                          >
+                            <Tag className="h-2.5 w-2.5 text-primary/70" />
+                            {cat.code}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                mutation.mutate({
+                                  kind: "brands",
+                                  code: cat.code,
+                                  label: cat.code,
+                                  active: cat.active ?? true,
+                                  metadata: { ...cat.metadata, parentBrand: null, isCategory: false }
+                                });
+                              }}
+                              className="ml-1 text-muted-foreground hover:text-destructive"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))
+                    ) : (
+                      <span className="text-[10px] italic text-muted-foreground">Nenhuma categoria vinculada</span>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  className="flex flex-col gap-1.5 pt-2 border-t border-border/50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <input
-                    type="checkbox"
-                    checked={brand.metadata?.isCategory}
-                    onChange={(e) => mutation.mutate({
-                      kind: "brands",
-                      code: brand.code,
-                      label: brand.code,
-                      active: brand.active ?? true,
-                      metadata: { ...brand.metadata, isCategory: e.target.checked }
-                    })}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-xs font-medium text-muted-foreground">Esta marca é uma Categoria</span>
-                </label>
-                
-                {brand.metadata?.isCategory && (
-                  <div 
-                    className="flex flex-col gap-1.5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Marca Pai (Opcional)
-                    </label>
-                    <select
-                      value={brand.metadata?.parentBrand || ""}
-                      onChange={(e) => mutation.mutate({
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Vincular Categoria
+                  </label>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const catCode = e.target.value;
+                      if (!catCode) return;
+                      const cat = categories.find(c => c.code === catCode);
+                      mutation.mutate({
                         kind: "brands",
-                        code: brand.code,
-                        label: brand.code,
-                        active: brand.active ?? true,
-                        metadata: { ...brand.metadata, parentBrand: e.target.value || null }
-                      })}
-                      className="w-full rounded-lg border border-border bg-muted/50 px-2 py-1 text-[11px] outline-none focus:border-primary"
-                    >
-                      <option value="">Nenhuma</option>
-                      {brands
-                        .filter(b => b.code !== brand.code && !b.metadata?.isCategory)
-                        .map(b => (
-                          <option key={b.code} value={b.code}>{b.code}</option>
-                        ))
-                      }
-                    </select>
-                    <p className="text-[10px] text-primary/70 leading-tight italic">
-                      Ex: "{brand.code}" é uma categoria da marca "{brand.metadata?.parentBrand || '...'}"
-                    </p>
-                  </div>
-                )}
+                        code: catCode,
+                        label: catCode,
+                        active: cat?.active ?? true,
+                        metadata: { ...cat?.metadata, parentBrand: brand.code, isCategory: true }
+                      });
+                    }}
+                    className="w-full rounded-lg border border-border bg-muted/50 px-2 py-1 text-[11px] outline-none focus:border-primary"
+                  >
+                    <option value="">Selecionar categoria...</option>
+                    {categories
+                      .filter(c => c.metadata?.parentBrand !== brand.code)
+                      .map(c => (
+                        <option key={c.code} value={c.code}>{c.code}</option>
+                      ))
+                    }
+                  </select>
+                </div>
               </div>
               
               <div className="flex items-center justify-between border-t border-border/50 pt-3">
@@ -172,7 +199,7 @@ function BrandsAdminPage() {
                   className="flex items-center gap-1.5 text-[11px] font-bold text-primary hover:underline"
                 >
                   <Tag className="h-3.5 w-3.5" />
-                  Categorias
+                  Gerenciar
                 </button>
                 <div className="flex items-center gap-3">
                   <span className={`text-[11px] font-bold uppercase tracking-wider ${brand.active ? "text-emerald-600" : "text-muted-foreground"}`}>
@@ -189,8 +216,63 @@ function BrandsAdminPage() {
           {filtered.length === 0 && (
             <div className="col-span-full rounded-2xl border border-dashed border-border p-12 text-center">
               <p className="text-sm text-muted-foreground">Nenhuma marca encontrada.</p>
+        </div>
+      )}
+
+      {/* View per categories (non-assigned ones) */}
+      {!term && categories.filter(c => !c.metadata?.parentBrand).length > 0 && (
+        <div className="mt-8 pt-8 border-t border-border">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Categorias Não Vinculadas</h2>
+              <p className="text-sm text-muted-foreground">Estes itens estão marcados como categoria mas não possuem uma marca pai.</p>
             </div>
-          )}
+            <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+              {categories.filter(c => !c.metadata?.parentBrand).length} itens
+            </div>
+          </div>
+          
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.filter(c => !c.metadata?.parentBrand).map((cat) => (
+              <div 
+                key={cat.code}
+                className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="truncate text-sm font-semibold text-foreground">{cat.code}</h3>
+                  <button
+                    onClick={() => mutation.mutate({
+                      kind: "brands",
+                      code: cat.code,
+                      label: cat.code,
+                      active: cat.active ?? true,
+                      metadata: { ...cat.metadata, isCategory: false }
+                    })}
+                    className="text-[10px] text-primary hover:underline font-bold"
+                  >
+                    Tornar Marca
+                  </button>
+                </div>
+                <div className="flex items-center justify-between border-t border-border/50 pt-2">
+                  <span className="text-[10px] text-muted-foreground">{cat.productCount} produtos</span>
+                  <div className="flex h-5 w-8 shrink-0 cursor-pointer items-center rounded-full bg-border p-0.5 transition-colors data-[active=true]:bg-primary"
+                       data-active={cat.active}
+                       onClick={() => mutation.mutate({
+                         kind: "brands",
+                         code: cat.code,
+                         label: cat.code,
+                         active: !cat.active,
+                         metadata: cat.metadata
+                       })}
+                  >
+                    <div className={`h-3.5 w-3.5 rounded-full bg-white transition-transform ${cat.active ? "translate-x-3.5" : "translate-x-0"}`} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
         </div>
       )}
       
