@@ -186,6 +186,27 @@ export type Database = {
         }
         Relationships: []
       }
+      brands: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       catalog_review: {
         Row: {
           classification: string
