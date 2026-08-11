@@ -113,7 +113,6 @@ export function ProductDetailDialog({
                 {detail.eans.length > 0 && <Info label="EAN" value={detail.eans.join(", ")} />}
                 <Link
                   to="/catalogo"
-                  search={{ q: detail.product.erpCode }}
                   className="inline-block text-sm font-medium text-primary hover:underline"
                 >
                   Ver no catálogo comercial
