@@ -9,180 +9,183 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as CarrinhoRouteImport } from './routes/carrinho'
-import { Route as CarteiraRouteImport } from './routes/carteira'
-import { Route as CatalogoRouteImport } from './routes/catalogo'
-import { Route as PedidoRevisarRouteImport } from './routes/pedido.revisar'
-import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
-import { Route as PedidosOrderIdRouteImport } from './routes/pedidos.$orderId'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
+import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
+import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
+import { Route as AuthenticatedPedidoRevisarRouteImport } from './routes/_authenticated/pedido.revisar'
+import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
+import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CarrinhoRoute = CarrinhoRouteImport.update({
-  id: '/carrinho',
+const AuthenticatedCarrinhoRoute = AuthenticatedCarrinhoRouteImport.update({
+  id: '/_authenticated/carrinho',
   path: '/carrinho',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CarteiraRoute = CarteiraRouteImport.update({
-  id: '/carteira',
+const AuthenticatedCarteiraRoute = AuthenticatedCarteiraRouteImport.update({
+  id: '/_authenticated/carteira',
   path: '/carteira',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CatalogoRoute = CatalogoRouteImport.update({
-  id: '/catalogo',
+const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
+  id: '/_authenticated/catalogo',
   path: '/catalogo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PedidoRevisarRoute = PedidoRevisarRouteImport.update({
-  id: '/pedido/revisar',
-  path: '/pedido/revisar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosIndexRoute = PedidosIndexRouteImport.update({
-  id: '/pedidos/',
-  path: '/pedidos/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosOrderIdRoute = PedidosOrderIdRouteImport.update({
-  id: '/pedidos/$orderId',
-  path: '/pedidos/$orderId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedPedidoRevisarRoute =
+  AuthenticatedPedidoRevisarRouteImport.update({
+    id: '/_authenticated/pedido/revisar',
+    path: '/pedido/revisar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedPedidosIndexRoute =
+  AuthenticatedPedidosIndexRouteImport.update({
+    id: '/_authenticated/pedidos/',
+    path: '/pedidos/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedPedidosOrderIdRoute =
+  AuthenticatedPedidosOrderIdRouteImport.update({
+    id: '/_authenticated/pedidos/$orderId',
+    path: '/pedidos/$orderId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/carrinho': typeof CarrinhoRoute
-  '/carteira': typeof CarteiraRoute
-  '/catalogo': typeof CatalogoRoute
-  '/pedido/revisar': typeof PedidoRevisarRoute
-  '/pedidos/$orderId': typeof PedidosOrderIdRoute
-  '/pedidos/': typeof PedidosIndexRoute
+  '/carrinho': typeof AuthenticatedCarrinhoRoute
+  '/carteira': typeof AuthenticatedCarteiraRoute
+  '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
+  '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/carrinho': typeof CarrinhoRoute
-  '/carteira': typeof CarteiraRoute
-  '/catalogo': typeof CatalogoRoute
-  '/pedido/revisar': typeof PedidoRevisarRoute
-  '/pedidos/$orderId': typeof PedidosOrderIdRoute
-  '/pedidos': typeof PedidosIndexRoute
+  '/carrinho': typeof AuthenticatedCarrinhoRoute
+  '/carteira': typeof AuthenticatedCarteiraRoute
+  '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
+  '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/pedidos': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/carrinho': typeof CarrinhoRoute
-  '/carteira': typeof CarteiraRoute
-  '/catalogo': typeof CatalogoRoute
-  '/pedido/revisar': typeof PedidoRevisarRoute
-  '/pedidos/$orderId': typeof PedidosOrderIdRoute
-  '/pedidos/': typeof PedidosIndexRoute
+  '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
+  '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
+  '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
+  '/_authenticated/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
     | '/pedidos'
   id:
     | '__root__'
-    | '/'
-    | '/carrinho'
-    | '/carteira'
-    | '/catalogo'
-    | '/pedido/revisar'
-    | '/pedidos/$orderId'
-    | '/pedidos/'
+    | '/_authenticated/carrinho'
+    | '/_authenticated/carteira'
+    | '/_authenticated/catalogo'
+    | '/_authenticated/'
+    | '/_authenticated/pedido/revisar'
+    | '/_authenticated/pedidos/$orderId'
+    | '/_authenticated/pedidos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  CarrinhoRoute: typeof CarrinhoRoute
-  CarteiraRoute: typeof CarteiraRoute
-  CatalogoRoute: typeof CatalogoRoute
-  PedidoRevisarRoute: typeof PedidoRevisarRoute
-  PedidosOrderIdRoute: typeof PedidosOrderIdRoute
-  PedidosIndexRoute: typeof PedidosIndexRoute
+  AuthenticatedCarrinhoRoute: typeof AuthenticatedCarrinhoRoute
+  AuthenticatedCarteiraRoute: typeof AuthenticatedCarteiraRoute
+  AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedPedidoRevisarRoute: typeof AuthenticatedPedidoRevisarRoute
+  AuthenticatedPedidosOrderIdRoute: typeof AuthenticatedPedidosOrderIdRoute
+  AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/carrinho': {
-      id: '/carrinho'
+    '/_authenticated/carrinho': {
+      id: '/_authenticated/carrinho'
       path: '/carrinho'
       fullPath: '/carrinho'
-      preLoaderRoute: typeof CarrinhoRouteImport
+      preLoaderRoute: typeof AuthenticatedCarrinhoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/carteira': {
-      id: '/carteira'
+    '/_authenticated/carteira': {
+      id: '/_authenticated/carteira'
       path: '/carteira'
       fullPath: '/carteira'
-      preLoaderRoute: typeof CarteiraRouteImport
+      preLoaderRoute: typeof AuthenticatedCarteiraRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/catalogo': {
-      id: '/catalogo'
+    '/_authenticated/catalogo': {
+      id: '/_authenticated/catalogo'
       path: '/catalogo'
       fullPath: '/catalogo'
-      preLoaderRoute: typeof CatalogoRouteImport
+      preLoaderRoute: typeof AuthenticatedCatalogoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pedido/revisar': {
-      id: '/pedido/revisar'
+    '/_authenticated/pedido/revisar': {
+      id: '/_authenticated/pedido/revisar'
       path: '/pedido/revisar'
       fullPath: '/pedido/revisar'
-      preLoaderRoute: typeof PedidoRevisarRouteImport
+      preLoaderRoute: typeof AuthenticatedPedidoRevisarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pedidos/': {
-      id: '/pedidos/'
+    '/_authenticated/pedidos/': {
+      id: '/_authenticated/pedidos/'
       path: '/pedidos'
       fullPath: '/pedidos/'
-      preLoaderRoute: typeof PedidosIndexRouteImport
+      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pedidos/$orderId': {
-      id: '/pedidos/$orderId'
+    '/_authenticated/pedidos/$orderId': {
+      id: '/_authenticated/pedidos/$orderId'
       path: '/pedidos/$orderId'
       fullPath: '/pedidos/$orderId'
-      preLoaderRoute: typeof PedidosOrderIdRouteImport
+      preLoaderRoute: typeof AuthenticatedPedidosOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  CarrinhoRoute: CarrinhoRoute,
-  CarteiraRoute: CarteiraRoute,
-  CatalogoRoute: CatalogoRoute,
-  PedidoRevisarRoute: PedidoRevisarRoute,
-  PedidosOrderIdRoute: PedidosOrderIdRoute,
-  PedidosIndexRoute: PedidosIndexRoute,
+  AuthenticatedCarrinhoRoute: AuthenticatedCarrinhoRoute,
+  AuthenticatedCarteiraRoute: AuthenticatedCarteiraRoute,
+  AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedPedidoRevisarRoute: AuthenticatedPedidoRevisarRoute,
+  AuthenticatedPedidosOrderIdRoute: AuthenticatedPedidosOrderIdRoute,
+  AuthenticatedPedidosIndexRoute: AuthenticatedPedidosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

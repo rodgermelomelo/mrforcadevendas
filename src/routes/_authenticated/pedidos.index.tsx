@@ -4,7 +4,7 @@ import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { integrationLabel, statusLabel, statusTone } from "@/lib/orders/status";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/pedidos/")({
+export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({
     meta: [
       { title: "Meus pedidos — MR Força de Vendas" },
