@@ -1,0 +1,1 @@
+UPDATE public.brands SET metadata = '{"isCategory": true, "parentBrand": "ACEMAR"}'::jsonb WHERE name IN ('LENÇO', 'MANTEIGA');
