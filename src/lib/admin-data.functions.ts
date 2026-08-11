@@ -862,7 +862,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     (input: {
-      kind: "groups" | "segments" | "billingMethods" | "paymentTerms";
+      kind: "groups" | "segments" | "billingMethods" | "paymentTerms" | "brands";
       code: string;
       label: string;
       isStandard?: boolean;
