@@ -846,6 +846,7 @@ export interface CodeLabelRow {
   code: string;
   label: string;
   extra?: boolean;
+  active?: boolean;
 }
 
 export interface RegistriesData {
@@ -860,12 +861,13 @@ export const listRegistries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<RegistriesData> => {
     await assertAdmin(context);
-    const [groups, segments, billing, terms, products] = await Promise.all([
+    const [groups, segments, billing, terms, products, brands] = await Promise.all([
       context.supabase.from("product_groups").select("*").order("code"),
       context.supabase.from("segments").select("*").order("code"),
       context.supabase.from("billing_methods").select("*").order("code"),
       context.supabase.from("payment_terms").select("*").order("code"),
       context.supabase.from("products").select("brand, erp_code"),
+      context.supabase.from("brands").select("*"),
     ]);
 
     const brandsMap = new Map<string, number>();
@@ -874,6 +876,8 @@ export const listRegistries = createServerFn({ method: "GET" })
         brandsMap.set(p.brand, (brandsMap.get(p.brand) ?? 0) + 1);
       }
     }
+
+    const brandsStatus = new Map((brands.data ?? []).map((b: any) => [b.name, b.active]));
 
     return {
       groups: (groups.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
@@ -889,6 +893,7 @@ export const listRegistries = createServerFn({ method: "GET" })
         .map(([brand, count]) => ({
           code: brand,
           label: `${brand} (${count} produtos)`,
+          active: brandsStatus.get(brand) ?? true,
         })),
     };
   });
@@ -901,6 +906,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
       code: string;
       label: string;
       isStandard?: boolean;
+      active?: boolean;
     }) => {
       if (!input?.code || !input?.kind) throw new Error("Dados incompletos.");
       return input;
@@ -913,14 +919,16 @@ export const updateRegistry = createServerFn({ method: "POST" })
       segments: { table: "segments", field: "name", key: "code" },
       billingMethods: { table: "billing_methods", field: "description", key: "code" },
       paymentTerms: { table: "payment_terms", field: "description", key: "code" },
-      brands: { table: "products", field: "brand", key: "brand" },
+      brands: { table: "brands", field: "name", key: "name" },
     } as const;
     const target = map[data.kind];
     const patch: Record<string, unknown> = { [target.field]: data.label };
     if (data.kind === "paymentTerms" && data.isStandard !== undefined) patch["is_standard"] = data.isStandard;
+    if (data.kind === "brands" && data.active !== undefined) patch["active"] = data.active;
+    
     const { error } = await context.supabase.from(target.table).update(patch as never).eq(target.key as any, data.code);
     if (error) throw new Error(error.message);
-    await audit(context, target.table, data.code, "update", { label: data.label });
+    await audit(context, target.table, data.code, "update", patch);
     return { ok: true };
   });
 
