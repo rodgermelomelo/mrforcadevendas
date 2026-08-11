@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Customer } from "@/lib/domain/types";
 import { MapPin, ShieldAlert, CreditCard, ShoppingBag, History, FileText } from "lucide-react";
-import { maskTaxId } from "@/lib/pricing";
+import { maskTaxId, formatBRL } from "@/lib/pricing";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
 
 interface CustomerDetailDialogProps {
   customer: Customer | null;
@@ -63,7 +62,7 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase font-bold">Limite de Crédito</p>
                   <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                    {formatCurrency(customer.creditLimit)}
+                    {formatBRL(customer.creditLimit)}
                   </p>
                 </div>
                 {customer.restricted && (
@@ -75,13 +74,13 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase font-bold">Saldo em Aberto</p>
                 <p className="text-sm font-medium text-destructive">
-                  {formatCurrency(customer.openBalance || 0)}
+                  {formatBRL(customer.openBalance || 0)}
                 </p>
               </div>
                <div>
                 <p className="text-[10px] text-muted-foreground uppercase font-bold">Crédito Disponível</p>
                 <p className="text-sm font-bold">
-                  {formatCurrency(Math.max(0, customer.creditLimit - (customer.openBalance || 0)))}
+                  {formatBRL(Math.max(0, customer.creditLimit - (customer.openBalance || 0)))}
                 </p>
               </div>
             </div>
@@ -103,7 +102,7 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase font-bold">Pedido Mínimo</p>
-                <p className="text-sm font-medium">{formatCurrency(customer.minOrderValue)}</p>
+                <p className="text-sm font-medium">{formatBRL(customer.minOrderValue)}</p>
               </div>
             </div>
           </section>
