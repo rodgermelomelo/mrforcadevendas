@@ -41,7 +41,7 @@ const areas = [
   },
   { to: "/admin/representantes", icon: Users, title: "Representantes", text: "quero gerenciar os representantes também, ver lista da carteira de cliente, analisar pedidos, e etc..." },
   { to: "/admin/clientes", icon: Building2, title: "Clientes", text: "Tabela, condição, restrição, limite e valor mínimo." },
-  { to: "/admin/produtos", icon: Package, title: "Produtos, estoque e preços", text: "Catálogo, quantidade em estoque e os 6 valores por tabela em uma tela só." },
+  { to: "/admin/produtos", icon: Package, title: "Produtos, estoque e preços", text: "Implemente edição em lote de marca nos produtos para eu corrigir rapidamente a marca de vários itens de uma vez." },
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Implementar um fluxo para eu criar automaticamente um usuário de autenticação para cada representante, com atribuição de perfil e validação antes de salvar." },
   { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Grupos, segmentos, cobranças e condições." },
   { to: "/admin/regras", icon: Scale, title: "Regras comerciais", text: "Matriz de aprovação por exceção, faixa e autoridade." },
