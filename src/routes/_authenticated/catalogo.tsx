@@ -366,6 +366,10 @@ function Catalogo() {
           <p className="mt-1 text-sm text-muted-foreground">
             Tente ajustar os filtros ou o termo de busca.
           </p>
+          <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-info/10 px-4 py-2 text-xs text-info border border-info/20">
+            <Sparkles className="h-3 w-3" />
+            <span>Nota: O catálogo oculta automaticamente produtos de marcas que foram desativadas administrativamente.</span>
+          </div>
           <Button variant="outline" onClick={clearFilters} className="mt-6 rounded-xl">
             Limpar todos os filtros
           </Button>

@@ -129,10 +129,21 @@ function Carteira() {
       </p>
 
       {results.length === 0 ? (
-        <div className="surface-card p-10 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="surface-card flex min-h-[40vh] flex-col items-center justify-center p-12 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <Search className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold">Nenhum cliente encontrado</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Nenhum cliente da sua carteira corresponde a “{term}”.
           </p>
+          <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-info/10 px-4 py-2 text-xs text-info border border-info/20 max-w-sm mx-auto">
+            <ShieldAlert className="h-3 w-3" />
+            <span>Nota: Clientes inativos ou desativados administrativamente não são exibidos na carteira comercial.</span>
+          </div>
+          <Button variant="outline" onClick={() => setTerm("")} className="mt-6 rounded-xl">
+            Limpar busca
+          </Button>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
