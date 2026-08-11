@@ -27,7 +27,8 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function Dashboard() {
   const { orders, hydrated, customer, customers, erpLastUpdate, sellerName } = useSales();
-  const { openCustomerPicker } = useCustomerPicker();
+  const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
+  const recentCustomers = customers.filter(c => orders.some(o => o.customerId === c.erpCode)).slice(0, 3);
 
   const totalSold = orders
     .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
