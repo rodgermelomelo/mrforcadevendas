@@ -168,7 +168,7 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
         key={`${prefix}-${c.id}`}
         value={`${c.tradeName} ${c.legalName} ${c.erpCode} ${c.taxId} ${c.city}`}
         onSelect={() => startWithCustomer(c.id)}
-        className="items-start gap-3 rounded-xl py-3"
+        className="items-start gap-3 rounded-xl py-3 data-[selected=true]:[&_*]:text-accent-foreground"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
