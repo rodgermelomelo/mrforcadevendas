@@ -493,7 +493,10 @@ export const listProducts = createServerFn({ method: "POST" })
 
     const applyBase = (q: any) => {
       let out = q;
-      if (term) out = out.or(`erp_code.ilike.%${term}%,name.ilike.%${term}%`);
+      if (term) {
+        // Se o termo for exatamente uma marca ou categoria, filtramos direto
+        out = out.or(`erp_code.ilike.%${term}%,name.ilike.%${term}%,brand.ilike.%${term}%,category.ilike.%${term}%`);
+      }
       if (data.groupCode) out = out.eq("group_code", data.groupCode);
       if (catalogFilter === "liberado") out = out.eq("released", true).eq("active", true);
       if (catalogFilter === "fora") out = out.eq("released", false);
