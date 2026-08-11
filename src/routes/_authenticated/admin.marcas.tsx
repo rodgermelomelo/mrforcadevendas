@@ -2,10 +2,12 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Save, Search, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, Search, Plus, Trash2, Box } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPage } from "@/components/admin/admin-page";
-import { listRegistries, updateRegistry, type CodeLabelRow } from "@/lib/admin-data.functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { listRegistries, updateRegistry, listProducts, type CodeLabelRow } from "@/lib/admin-data.functions";
+import { ProductDetailDialog } from "@/components/admin/product-detail-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/marcas")({
   component: BrandsAdminPage,
@@ -25,6 +27,9 @@ function BrandsAdminPage() {
   const load = useServerFn(listRegistries);
   const save = useServerFn(updateRegistry);
   const [term, setTerm] = useState("");
+  const [viewingBrandProducts, setViewingBrandProducts] = useState<string | null>(null);
+  const [openProductCode, setOpenProductCode] = useState<string | null>(null);
+
 
   const query = useQuery({ 
     queryKey: ["admin", "registries"], 
@@ -42,9 +47,12 @@ function BrandsAdminPage() {
   });
 
   const brands: CodeLabelRow[] = query.data?.brands ?? [];
+  const groups = (query.data?.groups ?? []).map(g => ({ code: g.code, label: g.label }));
+
   const filtered = brands
     .filter((b) => b.code.toLowerCase().includes(term.trim().toLowerCase()))
     .slice(0, 100);
+
 
   return (
     <AdminPage
@@ -70,31 +78,38 @@ function BrandsAdminPage() {
           {filtered.map((brand) => (
             <div 
               key={brand.code}
-              className={`group flex flex-col gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md ${
+              onClick={() => setViewingBrandProducts(brand.code)}
+              className={`group flex flex-col gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md cursor-pointer ${
                 brand.active ? "border-border bg-card" : "border-border/50 bg-muted/30 opacity-75"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold text-foreground">{brand.code}</h3>
-                  <p className="text-xs text-muted-foreground">{brand.label}</p>
+                  <p className="text-xs text-muted-foreground">{brand.productCount} produtos</p>
                 </div>
                 <div className="flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full bg-border p-1 transition-colors data-[active=true]:bg-primary"
                      data-active={brand.active}
-                     onClick={() => mutation.mutate({
-                       kind: "brands",
-                       code: brand.code,
-                       label: brand.code,
-                       active: !brand.active,
-                       metadata: brand.metadata
-                     })}
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       mutation.mutate({
+                         kind: "brands",
+                         code: brand.code,
+                         label: brand.code,
+                         active: !brand.active,
+                         metadata: brand.metadata
+                       });
+                     }}
                 >
                   <div className={`h-4 w-4 rounded-full bg-white transition-transform ${brand.active ? "translate-x-4" : "translate-x-0"}`} />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label 
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <input
                     type="checkbox"
                     checked={brand.metadata?.isCategory}
@@ -134,6 +149,90 @@ function BrandsAdminPage() {
           )}
         </div>
       )}
+      
+      <BrandProductsDialog 
+        brandName={viewingBrandProducts} 
+        onOpenChange={(open) => !open && setViewingBrandProducts(null)} 
+        onOpenProduct={setOpenProductCode}
+      />
+
+      <ProductDetailDialog
+        erpCode={openProductCode}
+        groups={groups}
+        onOpenChange={(open) => !open && setOpenProductCode(null)}
+      />
     </AdminPage>
+  );
+}
+
+function BrandProductsDialog({ 
+  brandName, 
+  onOpenChange,
+  onOpenProduct
+}: { 
+  brandName: string | null; 
+  onOpenChange: (open: boolean) => void;
+  onOpenProduct: (code: string) => void;
+}) {
+  const load = useServerFn(listProducts);
+  const query = useQuery({
+    queryKey: ["admin", "brand-products", brandName],
+    queryFn: () => load({ data: { term: brandName ?? "", page: 0 } }), // O listProducts filtra por term que bate com marca se o term for a marca exata ou parte
+    // Mas idealmente o listProducts deveria ter filtro de marca.
+    // Olhando listProducts, ele usa ilike em erp_code ou name.
+    // Vamos ajustar para passar o brandName como term por enquanto, 
+    // ou melhor, vamos assumir que o listProducts já foi melhorado antes para aceitar filtros.
+    // Na verdade, listProducts aceita 'term'. Se eu passar o nome da marca, ele vai achar produtos que tem o nome da marca no nome.
+    enabled: !!brandName,
+  });
+
+  return (
+    <Dialog open={!!brandName} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Produtos da Marca: {brandName}</DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex-1 overflow-y-auto pr-2">
+          {query.isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : query.data?.rows?.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Nenhum produto encontrado para esta marca.
+            </div>
+          ) : (
+            <div className="grid gap-2">
+              {query.data?.rows
+                .filter(p => p.brand === brandName) // Garantindo filtro exato no client caso o server term search seja amplo
+                .map((product) => (
+                <button
+                  key={product.erpCode}
+                  onClick={() => onOpenProduct(product.erpCode)}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                >
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Box className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{product.displayName || product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.erpCode} · {product.unit}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold">{product.stock} em estoque</p>
+                    <p className="text-[10px] text-muted-foreground">{product.priceTables} tabelas</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

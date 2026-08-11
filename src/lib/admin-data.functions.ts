@@ -899,6 +899,7 @@ export interface CodeLabelRow {
   label: string;
   extra?: boolean;
   active?: boolean;
+  productCount?: number;
   metadata?: {
     isCategory?: boolean;
   };
@@ -947,7 +948,8 @@ export const listRegistries = createServerFn({ method: "GET" })
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([brand, count]) => ({
           code: brand,
-          label: `${brand} (${count} produtos)`,
+          label: brand,
+          productCount: count,
           active: brandsData.get(brand)?.active ?? true,
           metadata: brandsData.get(brand)?.metadata || {},
         })),
