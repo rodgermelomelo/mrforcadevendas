@@ -48,7 +48,7 @@ function CustomersPage() {
   const query = useQuery({
     queryKey: ["admin", "customers", term, page, sellerFilter, restrictedFilter, activeFilter],
     queryFn: () => load({ data: { 
-      term, 
+      term: term || undefined, 
       page, 
       sellerErpCode: sellerFilter || undefined,
       restricted: restrictedFilter,
