@@ -305,57 +305,262 @@ export interface AdminProduct {
   displayName: string | null;
   imageUrl: string | null;
   groupCode: string | null;
+  brand: string | null;
   unit: string;
   isLaunch: boolean;
   released: boolean;
   active: boolean;
   stock: number;
   priceTables: number;
+  hasPrice: boolean;
+  hasUnmappedTable: boolean;
+}
+
+export interface ProductListInput {
+  term?: string;
+  page?: number;
+  stockFilter?: string;
+  priceFilter?: string;
+  catalogFilter?: string;
+  groupCode?: string;
+  sort?: string;
+}
+
+const PRODUCT_PAGE_SIZE = 25;
+
+/** Coleta códigos (limitado) para filtros que dependem de outras tabelas. */
+async function codesFrom(builder: any): Promise<Set<string>> {
+  const { data } = await builder.limit(20000);
+  return new Set((data ?? []).map((r: any) => r.product_erp_code as string));
 }
 
 export const listProducts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { term?: string; page?: number }) => input ?? {})
+  .inputValidator((input: ProductListInput) => input ?? {})
   .handler(async ({ data, context }): Promise<{ rows: AdminProduct[]; total: number }> => {
     await assertAdmin(context);
     const page = Math.max(0, data.page ?? 0);
-    const size = 25;
-    let query = context.supabase.from("products").select("*", { count: "exact" });
+    const size = PRODUCT_PAGE_SIZE;
     const term = (data.term ?? "").trim();
-    if (term) query = query.or(`erp_code.ilike.%${term}%,name.ilike.%${term}%`);
-    const { data: rows, count, error } = await query.order("erp_code").range(page * size, page * size + size - 1);
-    if (error) throw new Error(error.message);
+    const stockFilter = data.stockFilter ?? "todos";
+    const priceFilter = data.priceFilter ?? "todos";
+    const catalogFilter = data.catalogFilter ?? "todos";
+    const sort = data.sort ?? "codigo";
 
-    const codes = (rows ?? []).map((p: any) => p.erp_code);
+    // Tabelas de preço sem nível mapeado (bloqueiam exibição de preço).
+    const { data: tables } = await context.supabase.from("price_tables").select("code, mapped_level");
+    const unmapped = new Set(
+      (tables ?? []).filter((t: any) => t.mapped_level === null).map((t: any) => t.code as string),
+    );
+
+    // Restrição por códigos, quando o filtro depende de estoque/preço.
+    let restrict: Set<string> | null = null;
+    const intersect = (next: Set<string>) => {
+      restrict = restrict === null ? next : new Set([...restrict].filter((c) => next.has(c)));
+    };
+
+    if (stockFilter !== "todos") {
+      let q = context.supabase.from("inventory_snapshots").select("product_erp_code");
+      if (stockFilter === "com_estoque") q = q.gt("quantity", 0);
+      if (stockFilter === "sem_estoque") q = q.lte("quantity", 0);
+      if (stockFilter === "negativo") q = q.lt("quantity", 0);
+      intersect(await codesFrom(q));
+    }
+
+    if (priceFilter === "com_preco" || priceFilter === "sem_preco") {
+      const withPrice = await codesFrom(context.supabase.from("product_prices").select("product_erp_code"));
+      if (priceFilter === "com_preco") intersect(withPrice);
+      else {
+        const { data: all } = await context.supabase.from("products").select("erp_code").limit(20000);
+        intersect(new Set((all ?? []).map((p: any) => p.erp_code).filter((c: string) => !withPrice.has(c))));
+      }
+    }
+    if (priceFilter === "sem_nivel") {
+      const codes =
+        unmapped.size === 0
+          ? new Set<string>()
+          : await codesFrom(
+              context.supabase
+                .from("product_prices")
+                .select("product_erp_code")
+                .in("price_table_code", [...unmapped]),
+            );
+      intersect(codes);
+    }
+
+    const applyBase = (q: any) => {
+      let out = q;
+      if (term) out = out.or(`erp_code.ilike.%${term}%,name.ilike.%${term}%`);
+      if (data.groupCode) out = out.eq("group_code", data.groupCode);
+      if (catalogFilter === "liberado") out = out.eq("released", true).eq("active", true);
+      if (catalogFilter === "fora") out = out.eq("released", false);
+      if (catalogFilter === "inativo") out = out.eq("active", false);
+      if (catalogFilter === "lancamento") out = out.eq("is_launch", true);
+      if (restrict !== null) out = out.in("erp_code", restrict.size > 0 ? [...restrict] : ["__none__"]);
+      return out;
+    };
+
+    let rows: any[] = [];
+    let total = 0;
+
+    if (sort === "estoque_desc" || sort === "estoque_asc") {
+      // Ordenação por estoque exige o conjunto completo de códigos filtrados.
+      const { data: codesRows } = await applyBase(context.supabase.from("products").select("erp_code")).limit(20000);
+      const codes = (codesRows ?? []).map((p: any) => p.erp_code as string);
+      const stockAll = new Map<string, number>();
+      if (codes.length > 0) {
+        const { data: inv } = await context.supabase
+          .from("inventory_snapshots")
+          .select("product_erp_code, quantity")
+          .in("product_erp_code", codes);
+        for (const i of inv ?? []) stockAll.set(i.product_erp_code, Number(i.quantity));
+      }
+      codes.sort((a, b) => {
+        const diff = (stockAll.get(a) ?? 0) - (stockAll.get(b) ?? 0);
+        return sort === "estoque_asc" ? diff : -diff;
+      });
+      total = codes.length;
+      const pageCodes = codes.slice(page * size, page * size + size);
+      if (pageCodes.length > 0) {
+        const { data: pageRows } = await context.supabase.from("products").select("*").in("erp_code", pageCodes);
+        const byCode = new Map((pageRows ?? []).map((p: any) => [p.erp_code, p]));
+        rows = pageCodes.map((c) => byCode.get(c)).filter(Boolean);
+      }
+    } else {
+      const orderCol = sort === "nome" ? "name" : "erp_code";
+      const {
+        data: pageRows,
+        count,
+        error,
+      } = await applyBase(context.supabase.from("products").select("*", { count: "exact" }))
+        .order(orderCol)
+        .range(page * size, page * size + size - 1);
+      if (error) throw new Error(error.message);
+      rows = pageRows ?? [];
+      total = count ?? 0;
+    }
+
+    const codes = rows.map((p: any) => p.erp_code);
     const [invRes, priceRes, enrichRes] = await Promise.all([
       context.supabase.from("inventory_snapshots").select("product_erp_code, quantity").in("product_erp_code", codes),
-      context.supabase.from("product_prices").select("product_erp_code").in("product_erp_code", codes),
+      context.supabase.from("product_prices").select("product_erp_code, price_table_code").in("product_erp_code", codes),
       context.supabase.from("product_enrichments").select("*").in("product_erp_code", codes),
     ]);
     const stock = new Map((invRes.data ?? []).map((i: any) => [i.product_erp_code, Number(i.quantity)]));
     const priceCount = new Map<string, number>();
+    const unmappedByCode = new Map<string, boolean>();
     for (const p of priceRes.data ?? []) {
       priceCount.set(p.product_erp_code, (priceCount.get(p.product_erp_code) ?? 0) + 1);
+      if (unmapped.has(p.price_table_code)) unmappedByCode.set(p.product_erp_code, true);
     }
     const enrich = new Map((enrichRes.data ?? []).map((e: any) => [e.product_erp_code, e]));
 
     return {
-      total: count ?? 0,
-      rows: (rows ?? []).map((p: any) => ({
+      total,
+      rows: rows.map((p: any) => ({
         erpCode: p.erp_code,
         name: p.name,
         displayName: enrich.get(p.erp_code)?.display_name ?? null,
         imageUrl: enrich.get(p.erp_code)?.image_url ?? null,
         groupCode: p.group_code,
+        brand: p.brand ?? null,
         unit: p.unit,
         isLaunch: p.is_launch,
         released: p.released,
         active: p.active,
         stock: stock.get(p.erp_code) ?? 0,
         priceTables: priceCount.get(p.erp_code) ?? 0,
+        hasPrice: (priceCount.get(p.erp_code) ?? 0) > 0,
+        hasUnmappedTable: unmappedByCode.get(p.erp_code) ?? false,
       })),
     };
   });
+
+/* ------------------------- DETALHE DO PRODUTO (modal) --------------------- */
+
+export interface ProductDetail {
+  product: AdminProduct;
+  description: string | null;
+  updatedAt: string | null;
+  missingSince: string | null;
+  stockCapturedAt: string | null;
+  eans: string[];
+  prices: {
+    priceTableCode: string;
+    priceTableName: string;
+    values: number[];
+    mappedLevel: number | null;
+    levelLabel: string | null;
+    applicable: number | null;
+  }[];
+}
+
+export const getProductDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { erpCode: string }) => {
+    if (!input?.erpCode) throw new Error("Produto inválido.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<ProductDetail> => {
+    await assertAdmin(context);
+    const code = data.erpCode;
+
+    const [prodRes, enrichRes, invRes, priceRes, tableRes, eanRes] = await Promise.all([
+      context.supabase.from("products").select("*").eq("erp_code", code).maybeSingle(),
+      context.supabase.from("product_enrichments").select("*").eq("product_erp_code", code).maybeSingle(),
+      context.supabase.from("inventory_snapshots").select("*").eq("product_erp_code", code).maybeSingle(),
+      context.supabase.from("product_prices").select("*").eq("product_erp_code", code),
+      context.supabase.from("price_tables").select("code, name, mapped_level, level_label"),
+      context.supabase.from("product_eans").select("ean").eq("product_erp_code", code),
+    ]);
+
+    const p: any = prodRes.data;
+    if (!p) throw new Error("Produto não encontrado.");
+    const e: any = enrichRes.data;
+    const tableByCode = new Map((tableRes.data ?? []).map((t: any) => [t.code, t]));
+
+    const prices = (priceRes.data ?? [])
+      .map((r: any) => {
+        const t: any = tableByCode.get(r.price_table_code);
+        const values = [r.value_1, r.value_2, r.value_3, r.value_4, r.value_5, r.value_6].map(Number);
+        const level = (t?.mapped_level ?? null) as number | null;
+        return {
+          priceTableCode: r.price_table_code,
+          priceTableName: (t?.name as string) ?? "Tabela desconhecida",
+          values,
+          mappedLevel: level,
+          levelLabel: (t?.level_label as string) ?? null,
+          applicable: level ? (values[level - 1] ?? null) : null,
+        };
+      })
+      .sort((a, b) => a.priceTableCode.localeCompare(b.priceTableCode));
+
+    return {
+      product: {
+        erpCode: p.erp_code,
+        name: p.name,
+        displayName: e?.display_name ?? null,
+        imageUrl: e?.image_url ?? null,
+        groupCode: p.group_code,
+        brand: p.brand ?? null,
+        unit: p.unit,
+        isLaunch: p.is_launch,
+        released: p.released,
+        active: p.active,
+        stock: invRes.data ? Number((invRes.data as any).quantity) : 0,
+        priceTables: prices.length,
+        hasPrice: prices.length > 0,
+        hasUnmappedTable: prices.some((x) => x.mappedLevel === null),
+      },
+      description: e?.description ?? null,
+      updatedAt: p.updated_at ?? null,
+      missingSince: p.missing_since ?? null,
+      stockCapturedAt: invRes.data ? ((invRes.data as any).captured_at ?? null) : null,
+      eans: (eanRes.data ?? []).map((x: any) => x.ean),
+      prices,
+    };
+  });
+
 
 export const updateProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
