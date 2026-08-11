@@ -4,13 +4,14 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { MapPin, ShieldAlert, Clock3, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
-  CommandDialog,
+  Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -211,7 +212,10 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
     <CustomerPickerContext.Provider value={value}>
       {children}
 
-      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="overflow-hidden p-0">
+          <DialogTitle className="sr-only">Selecionar cliente</DialogTitle>
+          <Command shouldFilter={false} className="[&_[cmdk-input]]:h-12">
         <CommandInput
           value={term}
           onValueChange={setTerm}
@@ -234,7 +238,9 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
             {results.map(renderRow)}
           </CommandGroup>
         </CommandList>
-      </CommandDialog>
+          </Command>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
