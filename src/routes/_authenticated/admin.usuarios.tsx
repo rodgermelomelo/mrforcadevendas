@@ -70,7 +70,7 @@ function UsersPage() {
   return (
     <AdminPage
       title="Usuários e papéis"
-      description="Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas explicitamente aqui."
+      description="Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas explicitamente aqui. Criar um usuário para cada representante."
     >
       {usersQuery.isLoading ? (
         <div className="grid place-items-center py-16 text-muted-foreground">
