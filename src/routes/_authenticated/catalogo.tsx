@@ -474,7 +474,7 @@ function ProductCard({
           {product.brand}
         </Badge>
         <Badge variant="outline" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm">
-          {product.group}
+          {(product as any).category || product.group}
         </Badge>
       </div>
       <div className="relative aspect-square bg-muted">
