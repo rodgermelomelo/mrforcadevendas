@@ -19,6 +19,7 @@ import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminCadastrosRouteImport } from './routes/_authenticated/admin.cadastros'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
+import { Route as AuthenticatedAdminDiagnosticoRouteImport } from './routes/_authenticated/admin.diagnostico'
 import { Route as AuthenticatedAdminImportacoesRouteImport } from './routes/_authenticated/admin.importacoes'
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
 import { Route as AuthenticatedAdminRegrasRouteImport } from './routes/_authenticated/admin.regras'
@@ -78,6 +79,12 @@ const AuthenticatedAdminClientesRoute =
   AuthenticatedAdminClientesRouteImport.update({
     id: '/admin/clientes',
     path: '/admin/clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDiagnosticoRoute =
+  AuthenticatedAdminDiagnosticoRouteImport.update({
+    id: '/admin/diagnostico',
+    path: '/admin/diagnostico',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminImportacoesRoute =
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/diagnostico': typeof AuthenticatedAdminDiagnosticoRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/admin/regras': typeof AuthenticatedAdminRegrasRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/diagnostico': typeof AuthenticatedAdminDiagnosticoRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/admin/regras': typeof AuthenticatedAdminRegrasRoute
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/_authenticated/admin/diagnostico': typeof AuthenticatedAdminDiagnosticoRoute
   '/_authenticated/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/_authenticated/admin/regras': typeof AuthenticatedAdminRegrasRoute
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/admin/cadastros'
     | '/admin/clientes'
+    | '/admin/diagnostico'
     | '/admin/importacoes'
     | '/admin/produtos'
     | '/admin/regras'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/cadastros'
     | '/admin/clientes'
+    | '/admin/diagnostico'
     | '/admin/importacoes'
     | '/admin/produtos'
     | '/admin/regras'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/admin/cadastros'
     | '/_authenticated/admin/clientes'
+    | '/_authenticated/admin/diagnostico'
     | '/_authenticated/admin/importacoes'
     | '/_authenticated/admin/produtos'
     | '/_authenticated/admin/regras'
@@ -339,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/diagnostico': {
+      id: '/_authenticated/admin/diagnostico'
+      path: '/admin/diagnostico'
+      fullPath: '/admin/diagnostico'
+      preLoaderRoute: typeof AuthenticatedAdminDiagnosticoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/importacoes': {
       id: '/_authenticated/admin/importacoes'
       path: '/admin/importacoes'
@@ -412,6 +432,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminCadastrosRoute: typeof AuthenticatedAdminCadastrosRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
+  AuthenticatedAdminDiagnosticoRoute: typeof AuthenticatedAdminDiagnosticoRoute
   AuthenticatedAdminImportacoesRoute: typeof AuthenticatedAdminImportacoesRoute
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
   AuthenticatedAdminRegrasRoute: typeof AuthenticatedAdminRegrasRoute
@@ -431,6 +452,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminCadastrosRoute: AuthenticatedAdminCadastrosRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
+  AuthenticatedAdminDiagnosticoRoute: AuthenticatedAdminDiagnosticoRoute,
   AuthenticatedAdminImportacoesRoute: AuthenticatedAdminImportacoesRoute,
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
   AuthenticatedAdminRegrasRoute: AuthenticatedAdminRegrasRoute,
