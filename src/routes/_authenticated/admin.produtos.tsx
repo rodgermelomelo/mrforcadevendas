@@ -76,6 +76,8 @@ const SORTS = [
 function ProductsPage() {
   const load = useServerFn(listProducts);
   const loadRegistries = useServerFn(listRegistries);
+  const bulkUpdate = useServerFn(bulkUpdateProductBrand);
+  const queryClient = useQueryClient();
 
   const [term, setTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("todos");
@@ -85,6 +87,10 @@ function ProductsPage() {
   const [sort, setSort] = useState("codigo");
   const [page, setPage] = useState(0);
   const [openCode, setOpenCode] = useState<string | null>(null);
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [newBrand, setNewBrand] = useState("");
+
 
   const reset = () => setPage(0);
 
