@@ -54,11 +54,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <p className="mt-auto px-3 text-xs leading-relaxed text-muted-foreground">
-          Dados atualizados em
-          <br />
-          {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
-        </p>
+        <div className="mt-auto space-y-3 px-3">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {sellerName}
+            <br />
+            Dados atualizados em {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
+          </p>
+          <button
+            type="button"
+            onClick={signOut}
+            className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" /> Sair
+          </button>
+        </div>
+
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
