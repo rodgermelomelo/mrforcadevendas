@@ -507,7 +507,7 @@ function ProductCard({
       <div className="flex flex-1 flex-col p-3">
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
-          {product.group} · {product.erpCode}
+          {(product as any).category || product.group} · {product.erpCode}
         </p>
         <h3 className="mt-1 line-clamp-2 text-sm font-semibold">{product.name}</h3>
 
