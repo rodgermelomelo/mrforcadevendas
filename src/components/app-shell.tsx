@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Users,
@@ -7,9 +7,11 @@ import {
   ShoppingCart,
   ClipboardList,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getIsAdmin } from "@/lib/admin.functions";
 import { useSales } from "@/lib/state/sales-store";
 import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: isAdmin } = useQuery({ queryKey: ["is-admin"], queryFn: () => getIsAdmin() });
 
   const signOut = async () => {
     await queryClient.cancelQueries();
@@ -73,6 +76,26 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
+        {isAdmin && (
+          <div className="mt-6 border-t border-sidebar-border pt-4">
+            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Administração
+            </p>
+            <Link
+              to="/admin/importacoes"
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive("/admin", false)
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+              )}
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span className="truncate">Central de Importações</span>
+            </Link>
+          </div>
+        )}
+
         <div className="mt-auto space-y-3 px-3">
           <p className="text-xs leading-relaxed text-muted-foreground">
             {sellerName}
