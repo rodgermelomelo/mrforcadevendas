@@ -95,7 +95,13 @@ function RegistriesPage() {
               kind={tab}
               row={row}
               saving={mutation.isPending}
-              onSave={(label, isStandard) => mutation.mutate({ kind: tab, code: row.code, label, isStandard })}
+              onSave={(label, isStandard) =>
+                mutation.mutate(
+                  isStandard === undefined
+                    ? { kind: tab, code: row.code, label }
+                    : { kind: tab, code: row.code, label, isStandard },
+                )
+              }
             />
           ))}
           {filtered.length === 0 && (

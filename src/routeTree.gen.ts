@@ -17,6 +17,7 @@ import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminCadastrosRouteImport } from './routes/_authenticated/admin.cadastros'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminImportacoesRouteImport } from './routes/_authenticated/admin.importacoes'
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
@@ -66,6 +67,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminCadastrosRoute =
+  AuthenticatedAdminCadastrosRouteImport.update({
+    id: '/admin/cadastros',
+    path: '/admin/cadastros',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminClientesRoute =
   AuthenticatedAdminClientesRouteImport.update({
     id: '/admin/clientes',
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
@@ -146,6 +154,7 @@ export interface FileRoutesByTo {
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/': typeof AuthenticatedIndexRoute
+  '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
@@ -166,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/admin/cadastros'
     | '/admin/clientes'
     | '/admin/importacoes'
     | '/admin/produtos'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/catalogo'
     | '/'
+    | '/admin/cadastros'
     | '/admin/clientes'
     | '/admin/importacoes'
     | '/admin/produtos'
@@ -223,6 +235,7 @@ export interface FileRouteTypes {
     | '/_authenticated/carteira'
     | '/_authenticated/catalogo'
     | '/_authenticated/'
+    | '/_authenticated/admin/cadastros'
     | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/importacoes'
     | '/_authenticated/admin/produtos'
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/cadastros': {
+      id: '/_authenticated/admin/cadastros'
+      path: '/admin/cadastros'
+      fullPath: '/admin/cadastros'
+      preLoaderRoute: typeof AuthenticatedAdminCadastrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/clientes': {
       id: '/_authenticated/admin/clientes'
       path: '/admin/clientes'
@@ -370,6 +390,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCarteiraRoute: typeof AuthenticatedCarteiraRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminCadastrosRoute: typeof AuthenticatedAdminCadastrosRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminImportacoesRoute: typeof AuthenticatedAdminImportacoesRoute
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
@@ -387,6 +408,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCarteiraRoute: AuthenticatedCarteiraRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminCadastrosRoute: AuthenticatedAdminCadastrosRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminImportacoesRoute: AuthenticatedAdminImportacoesRoute,
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
@@ -410,13 +432,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
