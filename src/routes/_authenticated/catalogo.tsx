@@ -89,7 +89,7 @@ function Catalogo() {
       if (a.isLaunch !== b.isLaunch) return a.isLaunch ? -1 : 1;
       return a.erpCode.localeCompare(b.erpCode);
     });
-  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table]);
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
 
   const pagedItems = useMemo(() => {
     return filtered.slice(0, page * ITEMS_PER_PAGE);
