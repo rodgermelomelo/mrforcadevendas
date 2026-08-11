@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomerPicker } from "@/components/customer-picker";
+import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { CustomerDetailDialog } from "@/components/admin/customer-detail-dialog";
 import { Customer } from "@/lib/domain/types";
 
@@ -57,12 +58,15 @@ function Carteira() {
             tabela dele.
           </p>
         </div>
-        <Button
-          onClick={() => openCustomerPicker({ startNewOrder: true })}
-          className="shrink-0 rounded-xl bg-brand-gradient shadow-lift"
-        >
-          <Plus className="mr-1 h-4 w-4" /> Novo pedido
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-start gap-2">
+          <NewCustomerDialog onCreated={(id) => startWithCustomer(id)} />
+          <Button
+            onClick={() => openCustomerPicker({ startNewOrder: true })}
+            className="rounded-xl bg-brand-gradient shadow-lift"
+          >
+            <Plus className="mr-1 h-4 w-4" /> Novo pedido
+          </Button>
+        </div>
       </header>
 
       {customer && (
