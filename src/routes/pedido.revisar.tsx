@@ -38,7 +38,7 @@ function RevisarPedido() {
   const {
     customer, table, lines, subtotal, discountValue, total, orderDiscountPercent,
     isBonus, notes, paymentTerm, setItemDiscount, setOrderDiscount, setBonus, setNotes,
-    sellerName, saveOrder, orders,
+    sellerName, submitting,
   } = sales;
   const navigate = useNavigate();
 
