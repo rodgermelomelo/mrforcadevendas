@@ -234,11 +234,7 @@ export function summarize(
   };
 }
 
-type AdminClient = {
-  from: (table: string) => {
-    upsert: (rows: unknown[], opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-  };
-};
+type AdminClient = any;
 
 /** Upsert idempotente em lotes (deduplicando pela chave de conflito). */
 export async function upsertAll(
