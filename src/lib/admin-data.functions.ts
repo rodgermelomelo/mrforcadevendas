@@ -678,6 +678,7 @@ export const updateProduct = createServerFn({ method: "POST" })
       unit?: string;
       displayName?: string | null;
       imageUrl?: string | null;
+      brand?: string | null;
     }) => {
       if (!input?.erpCode) throw new Error("Produto inválido.");
       return input;
@@ -691,6 +692,7 @@ export const updateProduct = createServerFn({ method: "POST" })
     if (data.active !== undefined) patch["active"] = data.active;
     if (data.groupCode !== undefined) patch["group_code"] = data.groupCode || null;
     if (data.unit !== undefined) patch["unit"] = data.unit;
+    if (data.brand !== undefined) patch["brand"] = data.brand || null;
     if (Object.keys(patch).length > 0) {
       patch["updated_at"] = new Date().toISOString();
       const { error } = await context.supabase.from("products").update(patch as never).eq("erp_code", data.erpCode);
