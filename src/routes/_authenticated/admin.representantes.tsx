@@ -71,7 +71,7 @@ function SellersPage() {
   return (
     <AdminPage
       title="Representantes"
-      description="Os representantes vêm do ERP. Aqui você ativa/desativa e define quais usuários enxergam cada carteira."
+      description="quero gerenciar os representantes também, ver lista da carteira de cliente, analisar pedidos, e etc..."
     >
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
