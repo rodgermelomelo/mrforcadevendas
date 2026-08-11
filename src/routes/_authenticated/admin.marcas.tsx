@@ -27,6 +27,9 @@ function BrandsAdminPage() {
   const load = useServerFn(listRegistries);
   const save = useServerFn(updateRegistry);
   const [term, setTerm] = useState("");
+  const [viewingBrandProducts, setViewingBrandProducts] = useState<string | null>(null);
+  const [openProductCode, setOpenProductCode] = useState<string | null>(null);
+
 
   const query = useQuery({ 
     queryKey: ["admin", "registries"], 
