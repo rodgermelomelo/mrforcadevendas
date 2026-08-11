@@ -4,6 +4,7 @@ import { useSales } from "@/lib/state/sales-store";
 import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { statusLabel } from "@/lib/orders/status";
 import { Button } from "@/components/ui/button";
+import { useCustomerPicker } from "@/components/customer-picker";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function Dashboard() {
   const { orders, hydrated, customer, customers, erpLastUpdate } = useSales();
+  const { openCustomerPicker } = useCustomerPicker();
 
   const totalSold = orders
     .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
@@ -50,10 +52,12 @@ function Dashboard() {
             Dados atualizados em {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
           </p>
         </div>
-        <Button asChild size="lg" className="shrink-0 rounded-xl bg-brand-gradient shadow-lift">
-          <Link to="/carteira">
-            Novo pedido <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
+        <Button
+          size="lg"
+          onClick={() => openCustomerPicker({ startNewOrder: true })}
+          className="shrink-0 rounded-xl bg-brand-gradient shadow-lift"
+        >
+          Novo pedido <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </header>
 
@@ -98,8 +102,12 @@ function Dashboard() {
               <p className="text-sm text-muted-foreground">
                 Você ainda não criou pedidos. Comece escolhendo um cliente da sua carteira.
               </p>
-              <Button asChild variant="outline" className="mt-4 rounded-xl">
-                <Link to="/carteira">Abrir minha carteira</Link>
+              <Button
+                variant="outline"
+                className="mt-4 rounded-xl"
+                onClick={() => openCustomerPicker({ startNewOrder: true })}
+              >
+                Escolher cliente e começar
               </Button>
             </div>
           ) : (

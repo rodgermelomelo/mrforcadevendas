@@ -1,10 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, ShieldAlert, MapPin } from "lucide-react";
+import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X } from "lucide-react";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useCustomerPicker } from "@/components/customer-picker";
 
 export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
@@ -24,8 +26,8 @@ export const Route = createFileRoute("/_authenticated/carteira")({
 
 function Carteira() {
   const [term, setTerm] = useState("");
-  const { selectCustomer, customer, customers, priceTables, hydrated } = useSales();
-  const navigate = useNavigate();
+  const { customer, customers, priceTables, itemCount, clearCustomer } = useSales();
+  const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
 
   const results = useMemo(() => {
     const q = term.trim().toLowerCase().replace(/[.\-/]/g, "");
@@ -39,20 +41,56 @@ function Carteira() {
     );
   }, [term, customers]);
 
-  const start = (id: string) => {
-    selectCustomer(id);
-    void navigate({ to: "/catalogo" });
-  };
-
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold sm:text-4xl">Minha carteira</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Selecionar um cliente é o ponto de partida do pedido — os preços são calculados pela tabela
-          dele.
-        </p>
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold sm:text-4xl">Minha carteira</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Selecionar um cliente é o ponto de partida do pedido — os preços são calculados pela
+            tabela dele.
+          </p>
+        </div>
+        <Button
+          onClick={() => openCustomerPicker({ startNewOrder: true })}
+          className="shrink-0 rounded-xl bg-brand-gradient shadow-lift"
+        >
+          <Plus className="mr-1 h-4 w-4" /> Novo pedido
+        </Button>
       </header>
+
+      {customer && (
+        <div className="surface-card flex flex-wrap items-center gap-3 border-primary/30 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              Em atendimento
+            </p>
+            <p className="truncate text-sm font-semibold">
+              {customer.tradeName} · {customer.erpCode}
+              {itemCount > 0 && (
+                <span className="ml-2 text-xs font-medium text-muted-foreground">
+                  {itemCount} {itemCount === 1 ? "item" : "itens"} no carrinho
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to="/catalogo">
+                <PackageSearch className="mr-1 h-4 w-4" /> Ir para o catálogo
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to="/carrinho">
+                <ShoppingCart className="mr-1 h-4 w-4" /> Ver carrinho
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" className="rounded-xl" onClick={clearCustomer}>
+              <X className="mr-1 h-4 w-4" /> Encerrar
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -75,10 +113,23 @@ function Carteira() {
           {results.map((c) => {
             const table = priceTables.find((t) => t.code === c.priceTableCode);
             const selected = customer?.id === c.id;
+            const hasOtherCart = itemCount > 0 && Boolean(customer) && !selected;
             return (
               <article
                 key={c.id}
-                className="surface-card flex flex-col p-5 transition-shadow hover:shadow-lift"
+                role="button"
+                tabIndex={0}
+                onClick={() => startWithCustomer(c.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    startWithCustomer(c.id);
+                  }
+                }}
+                className={cn(
+                  "surface-card flex cursor-pointer flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  selected && "border-primary/50 ring-1 ring-primary/30",
+                )}
               >
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                   <div className="min-w-0">
@@ -119,13 +170,49 @@ function Carteira() {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => start(c.id)}
-                  className="mt-5 w-full rounded-xl"
-                  variant={selected ? "outline" : "default"}
-                >
-                  {selected ? "Continuar atendimento" : "Atender este cliente"}
-                </Button>
+                <div className="mt-5 grid gap-2">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startWithCustomer(c.id);
+                    }}
+                    className="w-full rounded-xl"
+                    variant={selected ? "outline" : "default"}
+                  >
+                    {selected
+                      ? itemCount > 0
+                        ? `Continuar atendimento (${itemCount})`
+                        : "Continuar atendimento"
+                      : hasOtherCart
+                        ? "Trocar cliente"
+                        : "Atender este cliente"}
+                  </Button>
+                  {selected && itemCount > 0 && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full rounded-xl"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Link to="/carrinho">Ver carrinho</Link>
+                    </Button>
+                  )}
+                  {!selected && hasOtherCart && (
+                    <p className="text-[11px] text-muted-foreground">
+                      O carrinho atual de {customer?.tradeName} será descartado.
+                    </p>
+                  )}
+                  {table?.mappedLevel === null && (
+                    <p className="text-[11px] text-warning">
+                      Preço pendente de configuração — o pedido ficará bloqueado.
+                    </p>
+                  )}
+                  {c.restricted && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Cliente com restrição — o pedido irá para aprovação.
+                    </p>
+                  )}
+                </div>
               </article>
             );
           })}

@@ -8,6 +8,7 @@ import {
   ClipboardList,
   LogOut,
   ShieldCheck,
+  Plus,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import { getIsAdmin } from "@/lib/admin.functions";
 import { useSales } from "@/lib/state/sales-store";
 import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
+import { CustomerPickerProvider, useCustomerPicker } from "@/components/customer-picker";
 
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
@@ -25,6 +27,15 @@ const nav = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <CustomerPickerProvider>
+      <AppShellInner>{children}</AppShellInner>
+    </CustomerPickerProvider>
+  );
+}
+
+function AppShellInner({ children }: { children: ReactNode }) {
+  const { openCustomerPicker } = useCustomerPicker();
   const { itemCount, customer, erpLastUpdate, sellerName } = useSales();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const queryClient = useQueryClient();
@@ -54,6 +65,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="block truncate text-xs text-muted-foreground">MR Cosméticos</span>
           </span>
         </Link>
+        <button
+          type="button"
+          onClick={() => openCustomerPicker({ startNewOrder: true })}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 py-2.5 text-sm font-semibold text-primary-foreground shadow-lift transition-opacity hover:opacity-95"
+        >
+          <Plus className="h-4 w-4" /> Novo pedido
+        </button>
         <nav className="flex flex-col gap-1">
           {nav.map((item) => (
             <Link
@@ -127,6 +145,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </span>
               </span>
             </div>
+            <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => openCustomerPicker({ startNewOrder: true })}
+              className="grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground"
+              aria-label="Novo pedido"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
             <Link
               to="/carrinho"
               className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card"
@@ -139,6 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </span>
               )}
             </Link>
+            </div>
           </div>
         </header>
 

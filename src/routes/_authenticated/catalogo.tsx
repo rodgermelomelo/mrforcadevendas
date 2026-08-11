@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatBRL, resolvePrice } from "@/lib/pricing";
 import { productImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useCustomerPicker } from "@/components/customer-picker";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
 
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 
 function Catalogo() {
   const { customer, table, addItem, itemCount, products, productGroups } = useSales();
+  const { openCustomerPicker } = useCustomerPicker();
   const [term, setTerm] = useState("");
   const [group, setGroup] = useState<string>("Todos");
   const [onlyLaunch, setOnlyLaunch] = useState(false);
@@ -66,11 +68,19 @@ function Catalogo() {
           )}
         </div>
         <div className="flex shrink-0 gap-2">
-          {!customer && (
-            <Button asChild variant="outline" className="rounded-xl">
-              <Link to="/carteira">
-                <UserPlus className="mr-1 h-4 w-4" /> Selecionar cliente
-              </Link>
+          {customer ? (
+            <Button
+              onClick={() => openCustomerPicker({ startNewOrder: true })}
+              className="rounded-xl bg-brand-gradient shadow-lift"
+            >
+              <PlusIcon className="mr-1 h-4 w-4" /> Novo pedido
+            </Button>
+          ) : (
+            <Button
+              onClick={() => openCustomerPicker()}
+              className="rounded-xl bg-brand-gradient shadow-lift"
+            >
+              <UserPlus className="mr-1 h-4 w-4" /> Selecionar cliente
             </Button>
           )}
           <Button asChild variant="outline" className="shrink-0 rounded-xl">
@@ -122,7 +132,7 @@ function Catalogo() {
             <Sparkles className="h-3 w-3" /> Lançamentos
           </button>
           <span className="mx-1 w-px shrink-0 self-stretch bg-border" />
-          {["Todos", ...productGroups].map((g) => (
+          {Array.from(new Set(["Todos", ...productGroups])).map((g) => (
             <button
               key={g}
               onClick={() => setGroup(g)}
