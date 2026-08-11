@@ -131,7 +131,7 @@ function Catalogo() {
       }
     });
     return Array.from(availableGroups).sort();
-  }, [products, selectedBrands]);
+  }, [products, selectedBrands, brandMetadata]);
 
   const toggleBrand = (b: string) => {
     setSelectedBrands((prev) =>
