@@ -214,7 +214,7 @@ export interface AdminCustomer {
 
 export const listCustomers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { term?: string; page?: number; sellerErpCode?: string | undefined; restricted?: boolean | undefined; active?: boolean | undefined }) => input ?? {})
+  .inputValidator((input: { term?: string | undefined; page?: number; sellerErpCode?: string | undefined; restricted?: boolean | undefined; active?: boolean | undefined }) => input ?? {})
   .handler(async ({ data, context }): Promise<{ rows: AdminCustomer[]; total: number }> => {
     await assertAdmin(context);
     const page = Math.max(0, data.page ?? 0);
