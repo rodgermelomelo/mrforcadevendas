@@ -1,6 +1,15 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, PackageSearch, ShoppingCart, ClipboardList } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  LayoutDashboard,
+  Users,
+  PackageSearch,
+  ShoppingCart,
+  ClipboardList,
+  LogOut,
+} from "lucide-react";
 import type { ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useSales } from "@/lib/state/sales-store";
 import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
@@ -14,11 +23,21 @@ const nav = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { itemCount, customer, erpLastUpdate } = useSales();
+  const { itemCount, customer, erpLastUpdate, sellerName } = useSales();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const signOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    void navigate({ to: "/auth", replace: true });
+  };
 
   const isActive = (to: string, exact: boolean) =>
     exact ? pathname === to : pathname.startsWith(to);
+
 
   return (
     <div className="flex min-h-screen">
