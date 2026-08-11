@@ -272,8 +272,8 @@ function ProductsPage() {
                 onClick={() => setOpenCode(product.erpCode)}
                 className="flex flex-1 items-center gap-3 text-left"
               >
+                <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
 
-              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                 ) : (
