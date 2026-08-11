@@ -68,7 +68,11 @@ function Catalogo() {
       }
       
       // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles
-      if (selectedGroups.length > 0 && !selectedGroups.includes(pCategory)) return false;
+      if (selectedGroups.length > 0) {
+        const brandName = p.brand;
+        const isGroupSelected = (brandName && selectedGroups.includes(brandName)) || selectedGroups.includes(pCategory);
+        if (!isGroupSelected) return false;
+      }
 
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
