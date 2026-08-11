@@ -899,6 +899,7 @@ export interface CodeLabelRow {
   label: string;
   extra?: boolean;
   active?: boolean;
+  productCount?: number;
   metadata?: {
     isCategory?: boolean;
   };
