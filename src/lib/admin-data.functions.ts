@@ -883,7 +883,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
     const target = map[data.kind];
     const patch: Record<string, unknown> = { [target.field]: data.label };
     if (data.kind === "paymentTerms" && data.isStandard !== undefined) patch["is_standard"] = data.isStandard;
-    const { error } = await context.supabase.from(target.table).update(patch as never).eq(target.key, data.code);
+    const { error } = await context.supabase.from(target.table).update(patch as never).eq(target.key as any, data.code);
     if (error) throw new Error(error.message);
     await audit(context, target.table, data.code, "update", { label: data.label });
     return { ok: true };
