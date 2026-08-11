@@ -53,8 +53,8 @@ function ProductsPage() {
 
   return (
     <AdminPage
-      title="Produtos"
-      description="O catálogo comercial nasce dos produtos liberados pelo ERP. Aqui você ajusta visibilidade, lançamentos e o enriquecimento (nunca apagado pela importação)."
+      title="Produtos e Estoque"
+      description="Gestão unificada do catálogo e quantidades. Aqui você ajusta visibilidade e lançamentos, acompanhando em tempo real a posição enviada pelo ERP (registro tipo 27)."
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
