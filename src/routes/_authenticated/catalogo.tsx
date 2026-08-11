@@ -125,7 +125,8 @@ function Catalogo() {
     const availableGroups = new Set<string>();
     products.forEach(p => {
       const pCategory = (p as any).category || p.group;
-      if (selectedBrands.length === 0 || (p.brand && selectedBrands.includes(p.brand))) {
+      const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
+      if (selectedBrands.length === 0 || (p.brand && (selectedBrands.includes(p.brand) || (parentBrand && selectedBrands.includes(parentBrand))))) {
         availableGroups.add(pCategory);
       }
     });
