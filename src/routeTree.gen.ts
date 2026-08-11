@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminImportacoesRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
 import { Route as AuthenticatedAdminRepresentantesRouteImport } from './routes/_authenticated/admin.representantes'
 import { Route as AuthenticatedAdminTabelasPrecoRouteImport } from './routes/_authenticated/admin.tabelas-preco'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedPedidoRevisarRouteImport } from './routes/_authenticated/pedido.revisar'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
@@ -95,6 +96,12 @@ const AuthenticatedAdminTabelasPrecoRoute =
     path: '/admin/tabelas-preco',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/admin/usuarios',
+    path: '/admin/usuarios',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPedidoRevisarRoute =
   AuthenticatedPedidoRevisarRouteImport.update({
     id: '/pedido/revisar',
@@ -126,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
   '/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
   '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -143,6 +151,7 @@ export interface FileRoutesByTo {
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
   '/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
   '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -162,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/_authenticated/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
   '/_authenticated/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
   '/_authenticated/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/admin/produtos'
     | '/admin/representantes'
     | '/admin/tabelas-preco'
+    | '/admin/usuarios'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
     | '/admin/'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/admin/produtos'
     | '/admin/representantes'
     | '/admin/tabelas-preco'
+    | '/admin/usuarios'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
     | '/admin'
@@ -216,6 +228,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/produtos'
     | '/_authenticated/admin/representantes'
     | '/_authenticated/admin/tabelas-preco'
+    | '/_authenticated/admin/usuarios'
     | '/_authenticated/pedido/revisar'
     | '/_authenticated/pedidos/$orderId'
     | '/_authenticated/admin/'
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTabelasPrecoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedido/revisar': {
       id: '/_authenticated/pedido/revisar'
       path: '/pedido/revisar'
@@ -355,6 +375,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
   AuthenticatedAdminRepresentantesRoute: typeof AuthenticatedAdminRepresentantesRoute
   AuthenticatedAdminTabelasPrecoRoute: typeof AuthenticatedAdminTabelasPrecoRoute
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedPedidoRevisarRoute: typeof AuthenticatedPedidoRevisarRoute
   AuthenticatedPedidosOrderIdRoute: typeof AuthenticatedPedidosOrderIdRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -371,6 +392,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
   AuthenticatedAdminRepresentantesRoute: AuthenticatedAdminRepresentantesRoute,
   AuthenticatedAdminTabelasPrecoRoute: AuthenticatedAdminTabelasPrecoRoute,
+  AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedPedidoRevisarRoute: AuthenticatedPedidoRevisarRoute,
   AuthenticatedPedidosOrderIdRoute: AuthenticatedPedidosOrderIdRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -388,3 +410,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
