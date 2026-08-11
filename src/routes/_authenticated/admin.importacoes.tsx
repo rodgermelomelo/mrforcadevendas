@@ -6,6 +6,7 @@ import { Upload, FileCheck2, AlertTriangle, ShieldAlert, Loader2, CheckCircle2 }
 import { toast } from "sonner";
 import { analyzeErpFile, publishErpFile, getIsAdmin } from "@/lib/admin.functions";
 import { formatDateTimeBR } from "@/lib/pricing";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/importacoes")({
   component: ImportacoesPage,
@@ -40,7 +41,19 @@ function ImportacoesPage() {
   const queryClient = useQueryClient();
   const analyze = useServerFn(analyzeErpFile);
   const publish = useServerFn(publishErpFile);
-  const adminQuery = useQuery({ queryKey: ["is-admin"], queryFn: () => getIsAdmin() });
+  const adminQuery = useQuery({
+    queryKey: ["is-admin"],
+    retry: false,
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return false;
+      try {
+        return await getIsAdmin();
+      } catch {
+        return false;
+      }
+    },
+  });
 
   const [content, setContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
