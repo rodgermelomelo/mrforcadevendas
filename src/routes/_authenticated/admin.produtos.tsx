@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Search, Save, ImageOff } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
 import { listProducts, updateProduct, listRegistries, type AdminProduct } from "@/lib/admin-data.functions";
 
