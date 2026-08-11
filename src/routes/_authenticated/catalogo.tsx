@@ -49,8 +49,12 @@ function Catalogo() {
   const filtered = useMemo(() => {
     const q = term.trim().toLowerCase();
     const result = products.filter((p) => {
-      if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
+      // Se houver marcas selecionadas, o produto deve pertencer a uma delas
       if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
+      
+      // Se houver grupos selecionados, o produto deve pertencer a um deles
+      if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
+
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
       if (!q) return true;
@@ -105,9 +109,15 @@ function Catalogo() {
   }, [products]);
 
   const groups = useMemo(() => {
-    const set = new Set(productGroups);
-    return Array.from(set).sort();
-  }, [productGroups]);
+    // Se houver marcas selecionadas, mostrar apenas as categorias (grupos) que possuem produtos nessas marcas
+    const availableGroups = new Set<string>();
+    products.forEach(p => {
+      if (selectedBrands.length === 0 || (p.brand && selectedBrands.includes(p.brand))) {
+        availableGroups.add(p.group);
+      }
+    });
+    return Array.from(availableGroups).sort();
+  }, [products, selectedBrands]);
 
   const toggleBrand = (b: string) => {
     setSelectedBrands((prev) =>
@@ -443,6 +453,7 @@ function ProductCard({
   const [qty, setQty] = useState(1);
   const price = resolvePrice(product, table);
   const outOfStock = product.stock <= 0;
+
   // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
   const blocked = hasCustomer && (outOfStock || !price.ok);
   const dimmed = hasCustomer ? blocked : outOfStock;
@@ -450,10 +461,19 @@ function ProductCard({
   return (
     <article
       className={cn(
-        "surface-card flex flex-col overflow-hidden transition-shadow",
+        "surface-card flex flex-col overflow-hidden transition-shadow relative group",
         dimmed ? "opacity-70 grayscale" : "hover:shadow-lift",
       )}
     >
+      {/* Brand & Category badges on hover */}
+      <div className="absolute left-2 top-2 z-10 flex flex-col gap-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm border-primary/20 text-primary">
+          {product.brand}
+        </Badge>
+        <Badge variant="outline" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm">
+          {product.group}
+        </Badge>
+      </div>
       <div className="relative aspect-square bg-muted">
         {productImage(product.imageUrl) ? (
           <img
