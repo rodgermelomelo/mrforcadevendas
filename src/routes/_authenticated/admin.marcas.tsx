@@ -253,15 +253,13 @@ function BrandProductsDialog({
             <div className="flex justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-          ) : query.data?.rows?.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               Nenhum produto encontrado para esta marca.
             </div>
           ) : (
             <div className="grid gap-2">
-              {query.data?.rows
-                .filter(p => p.brand === brandName) // Garantindo filtro exato no client caso o server term search seja amplo
-                .map((product) => (
+              {products.map((product) => (
                 <button
                   key={product.erpCode}
                   onClick={() => onOpenProduct(product.erpCode)}
