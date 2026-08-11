@@ -40,7 +40,19 @@ function ImportacoesPage() {
   const queryClient = useQueryClient();
   const analyze = useServerFn(analyzeErpFile);
   const publish = useServerFn(publishErpFile);
-  const adminQuery = useQuery({ queryKey: ["is-admin"], queryFn: () => getIsAdmin() });
+  const adminQuery = useQuery({
+    queryKey: ["is-admin"],
+    retry: false,
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return false;
+      try {
+        return await getIsAdmin();
+      } catch {
+        return false;
+      }
+    },
+  });
 
   const [content, setContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
