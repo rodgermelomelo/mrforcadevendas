@@ -193,6 +193,100 @@ export const setSellerLink = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* =========================== DETALHE DO VENDEDOR ========================== */
+
+export interface SellerDetail {
+  seller: AdminSeller;
+  customers: {
+    erpCode: string;
+    tradeName: string;
+    city: string;
+    uf: string;
+    restricted: boolean;
+    active: boolean;
+  }[];
+  recentOrders: {
+    id: string;
+    number: string;
+    customerName: string;
+    total: number;
+    status: string;
+    createdAt: string;
+  }[];
+  stats: {
+    totalCustomers: number;
+    totalOrders: number;
+    totalValue: number;
+    pendingApprovals: number;
+  };
+}
+
+export const getSellerDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { erpCode: string }) => {
+    if (!input?.erpCode) throw new Error("Representante inválido.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<SellerDetail> => {
+    await assertAdmin(context);
+    const code = data.erpCode;
+
+    const [sellersRes, customersRes, ordersRes, linksRes, profilesRes] = await Promise.all([
+      context.supabase.from("erp_sellers").select("*").eq("erp_code", code).maybeSingle(),
+      context.supabase.from("customers").select("erp_code, trade_name, city, uf, restricted, active").eq("seller_erp_code", code).order("trade_name"),
+      context.supabase.from("orders").select("id, number, customer_name, total, status, created_at").eq("seller_erp_code", code).order("created_at", { ascending: false }).limit(20),
+      context.supabase.from("user_erp_seller_links").select("user_id").eq("seller_erp_code", code),
+      context.supabase.from("profiles").select("id, full_name, email"),
+    ]);
+
+    const s = sellersRes.data;
+    if (!s) throw new Error("Representante não encontrado.");
+
+    const profileLabel = new Map(
+      (profilesRes.data ?? []).map((p: any) => [p.id, p.full_name || p.email || p.id.slice(0, 8)]),
+    );
+
+    const seller: AdminSeller = {
+      erpCode: s.erp_code,
+      name: s.name,
+      active: s.active,
+      customerCount: customersRes.data?.length ?? 0,
+      users: (linksRes.data ?? []).map((l: any) => ({
+        userId: l.user_id,
+        label: String(profileLabel.get(l.user_id) ?? l.user_id.slice(0, 8)),
+      })),
+    };
+
+    const orders = ordersRes.data ?? [];
+    const stats = {
+      totalCustomers: seller.customerCount,
+      totalOrders: orders.length,
+      totalValue: orders.reduce((acc: number, o: any) => acc + Number(o.total), 0),
+      pendingApprovals: orders.filter((o: any) => o.status === "pending_approval").length,
+    };
+
+    return {
+      seller,
+      customers: (customersRes.data ?? []).map((c: any) => ({
+        erpCode: c.erp_code,
+        tradeName: c.trade_name,
+        city: c.city,
+        uf: c.uf,
+        restricted: c.restricted,
+        active: c.active,
+      })),
+      recentOrders: orders.map((o: any) => ({
+        id: o.id,
+        number: o.number,
+        customerName: o.customer_name,
+        total: Number(o.total),
+        status: o.status,
+        createdAt: o.created_at,
+      })),
+      stats,
+    };
+  });
+
 /* ================================= CLIENTES =============================== */
 
 export interface AdminCustomer {

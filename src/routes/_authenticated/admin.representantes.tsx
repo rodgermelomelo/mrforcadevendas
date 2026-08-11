@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, Link2, Link2Off } from "lucide-react";
+import { Loader2, Search, Link2, Link2Off, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
 import { listSellers, updateSeller, setSellerLink, listUsers } from "@/lib/admin-data.functions";
+import { SellerDetailDialog } from "@/components/admin/seller-detail-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/representantes")({
   component: SellersPage,
@@ -32,6 +33,7 @@ function SellersPage() {
 
   const [term, setTerm] = useState("");
   const [page, setPage] = useState(0);
+  const [viewingSeller, setViewingSeller] = useState<string | null>(null);
 
   const sellersQuery = useQuery({ queryKey: ["admin", "sellers"], queryFn: () => loadSellers() });
   const usersQuery = useQuery({ queryKey: ["admin", "users"], queryFn: () => loadUsers() });
@@ -104,15 +106,25 @@ function SellersPage() {
                     {seller.users.length > 0 && ` · ${seller.users.map((u) => u.label).join(", ")}`}
                   </p>
                 </div>
-                <label className="flex shrink-0 items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={seller.active}
-                    onChange={(e) => activeMutation.mutate({ erpCode: seller.erpCode, active: e.target.checked })}
-                    className="h-4 w-4 accent-[hsl(var(--primary))]"
-                  />
-                  Ativo
-                </label>
+                <div className="flex shrink-0 items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setViewingSeller(seller.erpCode)}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    title="Ver detalhes e carteira"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <label className="flex shrink-0 items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={seller.active}
+                      onChange={(e) => activeMutation.mutate({ erpCode: seller.erpCode, active: e.target.checked })}
+                      className="h-4 w-4 accent-[hsl(var(--primary))]"
+                    />
+                    Ativo
+                  </label>
+                </div>
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -141,6 +153,11 @@ function SellersPage() {
           <Pager page={page} total={filtered.length} size={SIZE} onChange={setPage} />
         </div>
       )}
+
+      <SellerDetailDialog 
+        erpCode={viewingSeller} 
+        onClose={() => setViewingSeller(null)} 
+      />
     </AdminPage>
   );
 }
