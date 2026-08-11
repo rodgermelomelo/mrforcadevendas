@@ -136,19 +136,25 @@ async function main(): Promise<void> {
     quantity: inv.quantity ?? 0,
   }));
 
-  const customers = records.customers.map((c) => ({
-    erp_code: c.erpCode,
-    legal_name: c.legalName || `CLIENTE ${c.erpCode}`,
-    trade_name: c.tradeName || c.legalName || `CLIENTE ${c.erpCode}`,
-    tax_id: c.taxId || "",
-    city: c.city || "",
-    uf: c.uf || "",
-    price_table_code: c.priceTableCode || "000",
-    seller_erp_code: c.erpSellerCode,
-    credit_limit: c.creditLimit ?? 0, // 🟡 financeiro pendente de confirmação (Q6)
-    restricted: false,
-    active: true,
-  }));
+  // Dedup por erp_code: o ERP traz ~16 códigos de cliente repetidos; sem isso o
+  // upsert em lote falha com "ON CONFLICT ... cannot affect row a second time".
+  const customersByCode = new Map<string, Record<string, unknown>>();
+  for (const c of records.customers) {
+    customersByCode.set(c.erpCode, {
+      erp_code: c.erpCode,
+      legal_name: c.legalName || `CLIENTE ${c.erpCode}`,
+      trade_name: c.tradeName || c.legalName || `CLIENTE ${c.erpCode}`,
+      tax_id: c.taxId || "",
+      city: c.city || "",
+      uf: c.uf || "",
+      price_table_code: c.priceTableCode || "000",
+      seller_erp_code: c.erpSellerCode,
+      credit_limit: c.creditLimit ?? 0, // 🟡 financeiro pendente de confirmação (Q6)
+      restricted: false,
+      active: true,
+    });
+  }
+  const customers = [...customersByCode.values()];
 
   // Diagnóstico do catálogo → catalog_review
   const catalogCodes = new Set(records.products.map((p) => p.erpCode));
