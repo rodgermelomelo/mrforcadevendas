@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminCadastrosRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminImportacoesRouteImport } from './routes/_authenticated/admin.importacoes'
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
+import { Route as AuthenticatedAdminRegrasRouteImport } from './routes/_authenticated/admin.regras'
 import { Route as AuthenticatedAdminRepresentantesRouteImport } from './routes/_authenticated/admin.representantes'
 import { Route as AuthenticatedAdminTabelasPrecoRouteImport } from './routes/_authenticated/admin.tabelas-preco'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
@@ -91,6 +92,12 @@ const AuthenticatedAdminProdutosRoute =
     path: '/admin/produtos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminRegrasRoute =
+  AuthenticatedAdminRegrasRouteImport.update({
+    id: '/admin/regras',
+    path: '/admin/regras',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminRepresentantesRoute =
   AuthenticatedAdminRepresentantesRouteImport.update({
     id: '/admin/representantes',
@@ -139,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/regras': typeof AuthenticatedAdminRegrasRoute
   '/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
   '/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -158,6 +166,7 @@ export interface FileRoutesByTo {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/regras': typeof AuthenticatedAdminRegrasRoute
   '/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
   '/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -179,6 +188,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/_authenticated/admin/regras': typeof AuthenticatedAdminRegrasRoute
   '/_authenticated/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
   '/_authenticated/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/admin/clientes'
     | '/admin/importacoes'
     | '/admin/produtos'
+    | '/admin/regras'
     | '/admin/representantes'
     | '/admin/tabelas-preco'
     | '/admin/usuarios'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/admin/clientes'
     | '/admin/importacoes'
     | '/admin/produtos'
+    | '/admin/regras'
     | '/admin/representantes'
     | '/admin/tabelas-preco'
     | '/admin/usuarios'
@@ -239,6 +251,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/importacoes'
     | '/_authenticated/admin/produtos'
+    | '/_authenticated/admin/regras'
     | '/_authenticated/admin/representantes'
     | '/_authenticated/admin/tabelas-preco'
     | '/_authenticated/admin/usuarios'
@@ -340,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProdutosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/regras': {
+      id: '/_authenticated/admin/regras'
+      path: '/admin/regras'
+      fullPath: '/admin/regras'
+      preLoaderRoute: typeof AuthenticatedAdminRegrasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/representantes': {
       id: '/_authenticated/admin/representantes'
       path: '/admin/representantes'
@@ -394,6 +414,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminImportacoesRoute: typeof AuthenticatedAdminImportacoesRoute
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
+  AuthenticatedAdminRegrasRoute: typeof AuthenticatedAdminRegrasRoute
   AuthenticatedAdminRepresentantesRoute: typeof AuthenticatedAdminRepresentantesRoute
   AuthenticatedAdminTabelasPrecoRoute: typeof AuthenticatedAdminTabelasPrecoRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
@@ -412,6 +433,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminImportacoesRoute: AuthenticatedAdminImportacoesRoute,
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
+  AuthenticatedAdminRegrasRoute: AuthenticatedAdminRegrasRoute,
   AuthenticatedAdminRepresentantesRoute: AuthenticatedAdminRepresentantesRoute,
   AuthenticatedAdminTabelasPrecoRoute: AuthenticatedAdminTabelasPrecoRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
