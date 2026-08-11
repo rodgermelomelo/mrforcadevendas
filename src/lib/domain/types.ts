@@ -45,7 +45,9 @@ export interface Customer {
   priceTableCode: string;
   paymentTerm: string;
   restricted: boolean;
-  restrictionReason?: string;
+  restrictionReason?: string | undefined;
+  sellerErpCode?: string;
+
   creditLimit: number;
   openBalance: number;
   minOrderValue: number;
