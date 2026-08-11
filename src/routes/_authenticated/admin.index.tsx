@@ -10,8 +10,6 @@ import {
   Scale,
   Stethoscope,
   ScrollText,
-  Boxes,
-  CircleDollarSign,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,10 +41,8 @@ const areas = [
   },
   { to: "/admin/representantes", icon: Users, title: "Representantes", text: "Ative representantes e vincule usuários às carteiras." },
   { to: "/admin/clientes", icon: Building2, title: "Clientes", text: "Tabela, condição, restrição, limite e valor mínimo." },
-  { to: "/admin/produtos", icon: Package, title: "Produtos e Estoque", text: "Liberação no catálogo, lançamentos, enriquecimento e posição de estoque unificada." },
+  { to: "/admin/produtos", icon: Package, title: "Produtos, estoque e preços", text: "Catálogo, quantidade em estoque e os 6 valores por tabela em uma tela só." },
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Papéis e visibilidade configurável de equipe." },
-  { to: "/admin/estoque", icon: Boxes, title: "Consulta de estoque", text: "Busca rápida de disponibilidade por produto (registro 27)." },
-  { to: "/admin/precos", icon: CircleDollarSign, title: "Preços por produto", text: "Os 6 valores por tabela e o preço aplicável." },
   { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Grupos, segmentos, cobranças e condições." },
   { to: "/admin/regras", icon: Scale, title: "Regras comerciais", text: "Matriz de aprovação por exceção, faixa e autoridade." },
   { to: "/admin/diagnostico", icon: Stethoscope, title: "Diagnóstico do catálogo", text: "Classificação dos códigos vindos do ERP." },
