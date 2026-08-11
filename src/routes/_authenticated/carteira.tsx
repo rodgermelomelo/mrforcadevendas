@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X, Users } from "lucide-react";
+import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X, Users, Info } from "lucide-react";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomerPicker } from "@/components/customer-picker";
+import { CustomerDetailDialog } from "@/components/admin/customer-detail-dialog";
+import { Customer } from "@/lib/domain/types";
 
 export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
@@ -28,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/carteira")({
 function Carteira() {
   const [term, setTerm] = useState("");
   const [sellerFilter, setSellerFilter] = useState("all");
+  const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
   const { customer, customers, priceTables, sellers, itemCount, clearCustomer } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
 
@@ -154,31 +157,41 @@ function Carteira() {
             return (
               <article
                 key={c.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => startWithCustomer(c.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    startWithCustomer(c.id);
-                  }
-                }}
                 className={cn(
-                  "surface-card flex cursor-pointer flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "surface-card flex flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   selected && "border-primary/50 ring-1 ring-primary/30",
                 )}
               >
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                <div 
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 cursor-pointer"
+                  onClick={() => startWithCustomer(c.id)}
+                >
                   <div className="min-w-0">
                     <h2 className="truncate text-base font-semibold">{c.tradeName}</h2>
                     <p className="truncate text-xs text-muted-foreground">{c.legalName}</p>
                   </div>
-                  <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                    {c.erpCode}
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                      {c.erpCode}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailCustomer(c);
+                      }}
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                <dl className="mt-4 space-y-1.5 text-xs text-muted-foreground">
+                <div 
+                  className="mt-4 space-y-1.5 text-xs text-muted-foreground cursor-pointer"
+                  onClick={() => startWithCustomer(c.id)}
+                >
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">
@@ -189,9 +202,12 @@ function Carteira() {
                   <div className="truncate">
                     Segmento {c.segment} · Condição {c.paymentTerm}
                   </div>
-                </dl>
+                </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div 
+                  className="mt-4 flex flex-wrap gap-2 cursor-pointer"
+                  onClick={() => startWithCustomer(c.id)}
+                >
                   <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
                     {table ? `${table.code} · ${table.name}` : "Sem tabela"}
                   </span>
@@ -255,6 +271,12 @@ function Carteira() {
           })}
         </div>
       )}
+
+      <CustomerDetailDialog 
+        customer={detailCustomer} 
+        open={!!detailCustomer} 
+        onOpenChange={(open) => !open && setDetailCustomer(null)} 
+      />
     </div>
   );
 }
