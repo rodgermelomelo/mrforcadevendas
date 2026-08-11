@@ -1,24 +1,183 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, AlertTriangle, TrendingUp, Wallet, PackageCheck } from "lucide-react";
+import { useSales } from "@/lib/state/sales-store";
+import { customers, erpLastUpdate } from "@/lib/demo/data";
+import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
+import { statusLabel } from "@/lib/orders/status";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Dashboard do vendedor — MR Força de Vendas" },
+      {
+        name: "description",
+        content:
+          "Acompanhe metas, pedidos em análise, clientes que precisam de atenção e crie novos pedidos da sua carteira.",
+      },
+      { property: "og:title", content: "Dashboard do vendedor — MR Força de Vendas" },
+      {
+        property: "og:description",
+        content: "Painel comercial da equipe MR Cosméticos: metas, pedidos e carteira.",
+      },
+    ],
+  }),
+  component: Dashboard,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Dashboard() {
+  const { orders, hydrated, customer } = useSales();
+
+  const totalSold = orders
+    .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
+    .reduce((acc, o) => acc + o.total, 0);
+  const counts = {
+    analise: orders.filter((o) => o.status === "pending_approval").length,
+    aprovados: orders.filter((o) => o.status === "approved" || o.status === "auto_approved").length,
+    correcao: orders.filter((o) => o.status === "changes_requested").length,
+    erp: orders.filter((o) => o.integrationStatus === "awaiting_erp_integration").length,
+  };
+  const attention = customers.filter((c) => c.restricted || c.openBalance / c.creditLimit > 0.8);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="mx-auto w-full max-w-6xl space-y-8">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm text-muted-foreground">Bom dia, Ana</p>
+          <h1 className="mt-1 text-3xl font-bold sm:text-4xl">
+            Seu <span className="text-brand-gradient">painel comercial</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Dados atualizados em {formatDateTimeBR(erpLastUpdate)}
+          </p>
+        </div>
+        <Button asChild size="lg" className="shrink-0 rounded-xl bg-brand-gradient shadow-lift">
+          <Link to="/carteira">
+            Novo pedido <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
+        </Button>
+      </header>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Meta do mês"
+          value="Em breve"
+          hint="Preparado para receber metas do ERP"
+        />
+        <MetricCard
+          icon={<Wallet className="h-4 w-4" />}
+          label="Total vendido"
+          value={hydrated ? formatBRL(totalSold) : "—"}
+          hint="Pedidos confirmados e auto-aprovados"
+        />
+        <MetricCard
+          icon={<PackageCheck className="h-4 w-4" />}
+          label="Pedidos em análise"
+          value={hydrated ? String(counts.analise) : "—"}
+          hint={`${counts.aprovados} aprovados · ${counts.correcao} em correção`}
+        />
+        <MetricCard
+          icon={<ArrowRight className="h-4 w-4" />}
+          label="Aguardando ERP"
+          value={hydrated ? String(counts.erp) : "—"}
+          hint="Somente pedidos confirmados são enviados"
+        />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="surface-card p-5">
+          <h2 className="text-lg font-semibold">Últimos pedidos</h2>
+          {!hydrated ? (
+            <div className="mt-4 space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-14 animate-pulse rounded-xl bg-muted" />
+              ))}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="mt-6 rounded-xl border border-dashed border-border p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Você ainda não criou pedidos. Comece escolhendo um cliente da sua carteira.
+              </p>
+              <Button asChild variant="outline" className="mt-4 rounded-xl">
+                <Link to="/carteira">Abrir minha carteira</Link>
+              </Button>
+            </div>
+          ) : (
+            <ul className="mt-4 divide-y divide-border">
+              {orders.slice(0, 5).map((o) => (
+                <li key={o.id}>
+                  <Link
+                    to="/pedidos/$orderId"
+                    params={{ orderId: o.id }}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium">{o.customerName}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {o.number} · {statusLabel[o.status]}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm font-semibold">{formatBRL(o.total)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="surface-card p-5">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <AlertTriangle className="h-4 w-4 text-warning" /> Clientes que precisam de atenção
+          </h2>
+          <ul className="mt-4 space-y-3">
+            {attention.map((c) => (
+              <li key={c.id} className="rounded-xl border border-border p-3">
+                <p className="truncate text-sm font-medium">{c.tradeName}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {c.restricted
+                    ? (c.restrictionReason ?? "Cliente com restrição")
+                    : "Saldo em aberto próximo do limite"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {customer && (
+        <p className="text-sm text-muted-foreground">
+          Cliente em atendimento: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
+          <Link to="/catalogo" className="text-primary underline-offset-4 hover:underline">
+            continuar no catálogo
+          </Link>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function MetricCard({
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="surface-card p-5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </span>
+        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+      </div>
+      <p className="mt-3 text-2xl font-bold">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </div>
   );
 }
