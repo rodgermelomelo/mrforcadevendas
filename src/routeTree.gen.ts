@@ -13,6 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
 import { Route as CarteiraRouteImport } from './routes/carteira'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
+import { Route as PedidoRevisarRouteImport } from './routes/pedido.revisar'
+import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
+import { Route as PedidosOrderIdRouteImport } from './routes/pedidos.$orderId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +37,39 @@ const CatalogoRoute = CatalogoRouteImport.update({
   path: '/catalogo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PedidoRevisarRoute = PedidoRevisarRouteImport.update({
+  id: '/pedido/revisar',
+  path: '/pedido/revisar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidosIndexRoute = PedidosIndexRouteImport.update({
+  id: '/pedidos/',
+  path: '/pedidos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidosOrderIdRoute = PedidosOrderIdRouteImport.update({
+  id: '/pedidos/$orderId',
+  path: '/pedidos/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
   '/carteira': typeof CarteiraRoute
   '/catalogo': typeof CatalogoRoute
+  '/pedido/revisar': typeof PedidoRevisarRoute
+  '/pedidos/$orderId': typeof PedidosOrderIdRoute
+  '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
   '/carteira': typeof CarteiraRoute
   '/catalogo': typeof CatalogoRoute
+  '/pedido/revisar': typeof PedidoRevisarRoute
+  '/pedidos/$orderId': typeof PedidosOrderIdRoute
+  '/pedidos': typeof PedidosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +77,38 @@ export interface FileRoutesById {
   '/carrinho': typeof CarrinhoRoute
   '/carteira': typeof CarteiraRoute
   '/catalogo': typeof CatalogoRoute
+  '/pedido/revisar': typeof PedidoRevisarRoute
+  '/pedidos/$orderId': typeof PedidosOrderIdRoute
+  '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/carrinho' | '/carteira' | '/catalogo'
+  fullPaths:
+    | '/'
+    | '/carrinho'
+    | '/carteira'
+    | '/catalogo'
+    | '/pedido/revisar'
+    | '/pedidos/$orderId'
+    | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/carrinho' | '/carteira' | '/catalogo'
-  id: '__root__' | '/' | '/carrinho' | '/carteira' | '/catalogo'
+  to:
+    | '/'
+    | '/carrinho'
+    | '/carteira'
+    | '/catalogo'
+    | '/pedido/revisar'
+    | '/pedidos/$orderId'
+    | '/pedidos'
+  id:
+    | '__root__'
+    | '/'
+    | '/carrinho'
+    | '/carteira'
+    | '/catalogo'
+    | '/pedido/revisar'
+    | '/pedidos/$orderId'
+    | '/pedidos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +116,9 @@ export interface RootRouteChildren {
   CarrinhoRoute: typeof CarrinhoRoute
   CarteiraRoute: typeof CarteiraRoute
   CatalogoRoute: typeof CatalogoRoute
+  PedidoRevisarRoute: typeof PedidoRevisarRoute
+  PedidosOrderIdRoute: typeof PedidosOrderIdRoute
+  PedidosIndexRoute: typeof PedidosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +151,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pedido/revisar': {
+      id: '/pedido/revisar'
+      path: '/pedido/revisar'
+      fullPath: '/pedido/revisar'
+      preLoaderRoute: typeof PedidoRevisarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedidos/': {
+      id: '/pedidos/'
+      path: '/pedidos'
+      fullPath: '/pedidos/'
+      preLoaderRoute: typeof PedidosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedidos/$orderId': {
+      id: '/pedidos/$orderId'
+      path: '/pedidos/$orderId'
+      fullPath: '/pedidos/$orderId'
+      preLoaderRoute: typeof PedidosOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   CarrinhoRoute: CarrinhoRoute,
   CarteiraRoute: CarteiraRoute,
   CatalogoRoute: CatalogoRoute,
+  PedidoRevisarRoute: PedidoRevisarRoute,
+  PedidosOrderIdRoute: PedidosOrderIdRoute,
+  PedidosIndexRoute: PedidosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
