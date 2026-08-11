@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, X, ArrowUpDown, ChevronDown, Building2, Tag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
