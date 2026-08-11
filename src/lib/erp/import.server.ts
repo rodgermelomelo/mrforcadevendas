@@ -94,7 +94,6 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) brand = g.label.split(" ")[0] || g.label;
     }
-
     
     return {
       erp_code: p.erpCode,
