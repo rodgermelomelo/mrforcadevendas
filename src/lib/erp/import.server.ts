@@ -215,19 +215,26 @@ type AdminClient = {
   };
 };
 
-/** Upsert idempotente em lotes. */
+/** Upsert idempotente em lotes (deduplicando pela chave de conflito). */
 export async function upsertAll(
   sb: AdminClient,
   table: string,
   rows: Record<string, unknown>[],
   onConflict: string,
 ): Promise<number> {
-  for (let i = 0; i < rows.length; i += CHUNK) {
-    const { error } = await sb.from(table).upsert(rows.slice(i, i + CHUNK), { onConflict });
+  const keys = onConflict.split(",").map((k) => k.trim());
+  const byKey = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    byKey.set(keys.map((k) => String(row[k] ?? "")).join("\u0001"), row);
+  }
+  const unique = [...byKey.values()];
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const { error } = await sb.from(table).upsert(unique.slice(i, i + CHUNK), { onConflict });
     if (error) throw new Error(`upsert ${table}: ${error.message}`);
   }
-  return rows.length;
+  return unique.length;
 }
+
 
 /** Publica todas as entidades (ordem de dependência). */
 export async function publishEntities(sb: AdminClient, e: ImportEntities): Promise<Record<string, number>> {
