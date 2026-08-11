@@ -406,7 +406,7 @@ export const listProducts = createServerFn({ method: "POST" })
     if (sort === "estoque_desc" || sort === "estoque_asc") {
       // Ordenação por estoque exige o conjunto completo de códigos filtrados.
       const { data: codesRows } = await applyBase(context.supabase.from("products").select("erp_code")).limit(20000);
-      const codes = (codesRows ?? []).map((p: any) => p.erp_code as string);
+      const codes: string[] = (codesRows ?? []).map((p: any) => p.erp_code as string);
       const stockAll = new Map<string, number>();
       if (codes.length > 0) {
         const { data: inv } = await context.supabase
@@ -415,17 +415,18 @@ export const listProducts = createServerFn({ method: "POST" })
           .in("product_erp_code", codes);
         for (const i of inv ?? []) stockAll.set(i.product_erp_code, Number(i.quantity));
       }
-      codes.sort((a, b) => {
+      codes.sort((a: string, b: string) => {
         const diff = (stockAll.get(a) ?? 0) - (stockAll.get(b) ?? 0);
         return sort === "estoque_asc" ? diff : -diff;
       });
       total = codes.length;
-      const pageCodes = codes.slice(page * size, page * size + size);
+      const pageCodes: string[] = codes.slice(page * size, page * size + size);
       if (pageCodes.length > 0) {
         const { data: pageRows } = await context.supabase.from("products").select("*").in("erp_code", pageCodes);
         const byCode = new Map((pageRows ?? []).map((p: any) => [p.erp_code, p]));
-        rows = pageCodes.map((c) => byCode.get(c)).filter(Boolean);
+        rows = pageCodes.map((c: string) => byCode.get(c)).filter(Boolean);
       }
+
     } else {
       const orderCol = sort === "nome" ? "name" : "erp_code";
       const {
