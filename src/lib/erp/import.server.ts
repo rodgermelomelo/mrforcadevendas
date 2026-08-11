@@ -98,7 +98,10 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     // Fallback de marca pelo grupo
     if (brand === "OUTROS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
-      if (g?.label) brand = g.label.split(" ")[0].toUpperCase() || g.label.toUpperCase();
+      if (g?.label) {
+        const parts = g.label.split(" ");
+        brand = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
+      }
     }
 
     // 2. Identificar CATEGORIA (Substituindo o "Grupo" ERP pela categoria semântica)
