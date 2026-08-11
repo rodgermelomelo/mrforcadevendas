@@ -26,6 +26,20 @@ const nav = [
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
 ] as const;
 
+const adminNav = [
+  { to: "/admin", label: "Visão geral" },
+  { to: "/admin/tabelas-preco", label: "Tabelas de preço" },
+  { to: "/admin/representantes", label: "Representantes" },
+  { to: "/admin/clientes", label: "Clientes" },
+  { to: "/admin/produtos", label: "Produtos" },
+  { to: "/admin/usuarios", label: "Usuários e papéis" },
+  { to: "/admin/cadastros", label: "Cadastros gerais" },
+  { to: "/admin/regras", label: "Regras comerciais" },
+  { to: "/admin/diagnostico", label: "Diagnóstico do catálogo" },
+  { to: "/admin/importacoes", label: "Importações" },
+  { to: "/admin/auditoria", label: "Auditoria" },
+] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <CustomerPickerProvider>
@@ -99,18 +113,21 @@ function AppShellInner({ children }: { children: ReactNode }) {
             <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Administração
             </p>
-            <Link
-              to="/admin/importacoes"
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive("/admin", false)
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-              )}
-            >
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span className="truncate">Central de Importações</span>
-            </Link>
+            {adminNav.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                  isActive(item.to, true)
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                )}
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            ))}
           </div>
         )}
 

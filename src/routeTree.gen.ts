@@ -16,7 +16,17 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
 import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
+import { Route as AuthenticatedAdminCadastrosRouteImport } from './routes/_authenticated/admin.cadastros'
+import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
+import { Route as AuthenticatedAdminDiagnosticoRouteImport } from './routes/_authenticated/admin.diagnostico'
 import { Route as AuthenticatedAdminImportacoesRouteImport } from './routes/_authenticated/admin.importacoes'
+import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
+import { Route as AuthenticatedAdminRegrasRouteImport } from './routes/_authenticated/admin.regras'
+import { Route as AuthenticatedAdminRepresentantesRouteImport } from './routes/_authenticated/admin.representantes'
+import { Route as AuthenticatedAdminTabelasPrecoRouteImport } from './routes/_authenticated/admin.tabelas-preco'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedPedidoRevisarRouteImport } from './routes/_authenticated/pedido.revisar'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
@@ -55,10 +65,69 @@ const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   path: '/catalogo',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminAuditoriaRoute =
+  AuthenticatedAdminAuditoriaRouteImport.update({
+    id: '/admin/auditoria',
+    path: '/admin/auditoria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminCadastrosRoute =
+  AuthenticatedAdminCadastrosRouteImport.update({
+    id: '/admin/cadastros',
+    path: '/admin/cadastros',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminClientesRoute =
+  AuthenticatedAdminClientesRouteImport.update({
+    id: '/admin/clientes',
+    path: '/admin/clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDiagnosticoRoute =
+  AuthenticatedAdminDiagnosticoRouteImport.update({
+    id: '/admin/diagnostico',
+    path: '/admin/diagnostico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminImportacoesRoute =
   AuthenticatedAdminImportacoesRouteImport.update({
     id: '/admin/importacoes',
     path: '/admin/importacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminProdutosRoute =
+  AuthenticatedAdminProdutosRouteImport.update({
+    id: '/admin/produtos',
+    path: '/admin/produtos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRegrasRoute =
+  AuthenticatedAdminRegrasRouteImport.update({
+    id: '/admin/regras',
+    path: '/admin/regras',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRepresentantesRoute =
+  AuthenticatedAdminRepresentantesRouteImport.update({
+    id: '/admin/representantes',
+    path: '/admin/representantes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTabelasPrecoRoute =
+  AuthenticatedAdminTabelasPrecoRouteImport.update({
+    id: '/admin/tabelas-preco',
+    path: '/admin/tabelas-preco',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/admin/usuarios',
+    path: '/admin/usuarios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPedidoRevisarRoute =
@@ -87,9 +156,19 @@ export interface FileRoutesByFullPath {
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/diagnostico': typeof AuthenticatedAdminDiagnosticoRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
+  '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/regras': typeof AuthenticatedAdminRegrasRoute
+  '/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
+  '/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
   '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -99,9 +178,19 @@ export interface FileRoutesByTo {
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/': typeof AuthenticatedIndexRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/diagnostico': typeof AuthenticatedAdminDiagnosticoRoute
   '/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
+  '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/regras': typeof AuthenticatedAdminRegrasRoute
+  '/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
+  '/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
   '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -113,9 +202,19 @@ export interface FileRoutesById {
   '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/_authenticated/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
+  '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/_authenticated/admin/diagnostico': typeof AuthenticatedAdminDiagnosticoRoute
   '/_authenticated/admin/importacoes': typeof AuthenticatedAdminImportacoesRoute
+  '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/_authenticated/admin/regras': typeof AuthenticatedAdminRegrasRoute
+  '/_authenticated/admin/representantes': typeof AuthenticatedAdminRepresentantesRoute
+  '/_authenticated/admin/tabelas-preco': typeof AuthenticatedAdminTabelasPrecoRoute
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/pedido/revisar': typeof AuthenticatedPedidoRevisarRoute
   '/_authenticated/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -127,9 +226,19 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/admin/auditoria'
+    | '/admin/cadastros'
+    | '/admin/clientes'
+    | '/admin/diagnostico'
     | '/admin/importacoes'
+    | '/admin/produtos'
+    | '/admin/regras'
+    | '/admin/representantes'
+    | '/admin/tabelas-preco'
+    | '/admin/usuarios'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
+    | '/admin/'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,9 +248,19 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/catalogo'
     | '/'
+    | '/admin/auditoria'
+    | '/admin/cadastros'
+    | '/admin/clientes'
+    | '/admin/diagnostico'
     | '/admin/importacoes'
+    | '/admin/produtos'
+    | '/admin/regras'
+    | '/admin/representantes'
+    | '/admin/tabelas-preco'
+    | '/admin/usuarios'
     | '/pedido/revisar'
     | '/pedidos/$orderId'
+    | '/admin'
     | '/pedidos'
   id:
     | '__root__'
@@ -152,9 +271,19 @@ export interface FileRouteTypes {
     | '/_authenticated/carteira'
     | '/_authenticated/catalogo'
     | '/_authenticated/'
+    | '/_authenticated/admin/auditoria'
+    | '/_authenticated/admin/cadastros'
+    | '/_authenticated/admin/clientes'
+    | '/_authenticated/admin/diagnostico'
     | '/_authenticated/admin/importacoes'
+    | '/_authenticated/admin/produtos'
+    | '/_authenticated/admin/regras'
+    | '/_authenticated/admin/representantes'
+    | '/_authenticated/admin/tabelas-preco'
+    | '/_authenticated/admin/usuarios'
     | '/_authenticated/pedido/revisar'
     | '/_authenticated/pedidos/$orderId'
+    | '/_authenticated/admin/'
     | '/_authenticated/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -215,11 +344,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCatalogoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/auditoria': {
+      id: '/_authenticated/admin/auditoria'
+      path: '/admin/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/cadastros': {
+      id: '/_authenticated/admin/cadastros'
+      path: '/admin/cadastros'
+      fullPath: '/admin/cadastros'
+      preLoaderRoute: typeof AuthenticatedAdminCadastrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/clientes': {
+      id: '/_authenticated/admin/clientes'
+      path: '/admin/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AuthenticatedAdminClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/diagnostico': {
+      id: '/_authenticated/admin/diagnostico'
+      path: '/admin/diagnostico'
+      fullPath: '/admin/diagnostico'
+      preLoaderRoute: typeof AuthenticatedAdminDiagnosticoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/importacoes': {
       id: '/_authenticated/admin/importacoes'
       path: '/admin/importacoes'
       fullPath: '/admin/importacoes'
       preLoaderRoute: typeof AuthenticatedAdminImportacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/produtos': {
+      id: '/_authenticated/admin/produtos'
+      path: '/admin/produtos'
+      fullPath: '/admin/produtos'
+      preLoaderRoute: typeof AuthenticatedAdminProdutosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/regras': {
+      id: '/_authenticated/admin/regras'
+      path: '/admin/regras'
+      fullPath: '/admin/regras'
+      preLoaderRoute: typeof AuthenticatedAdminRegrasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/representantes': {
+      id: '/_authenticated/admin/representantes'
+      path: '/admin/representantes'
+      fullPath: '/admin/representantes'
+      preLoaderRoute: typeof AuthenticatedAdminRepresentantesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/tabelas-preco': {
+      id: '/_authenticated/admin/tabelas-preco'
+      path: '/admin/tabelas-preco'
+      fullPath: '/admin/tabelas-preco'
+      preLoaderRoute: typeof AuthenticatedAdminTabelasPrecoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pedido/revisar': {
@@ -251,9 +450,19 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCarteiraRoute: typeof AuthenticatedCarteiraRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
+  AuthenticatedAdminCadastrosRoute: typeof AuthenticatedAdminCadastrosRoute
+  AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
+  AuthenticatedAdminDiagnosticoRoute: typeof AuthenticatedAdminDiagnosticoRoute
   AuthenticatedAdminImportacoesRoute: typeof AuthenticatedAdminImportacoesRoute
+  AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
+  AuthenticatedAdminRegrasRoute: typeof AuthenticatedAdminRegrasRoute
+  AuthenticatedAdminRepresentantesRoute: typeof AuthenticatedAdminRepresentantesRoute
+  AuthenticatedAdminTabelasPrecoRoute: typeof AuthenticatedAdminTabelasPrecoRoute
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedPedidoRevisarRoute: typeof AuthenticatedPedidoRevisarRoute
   AuthenticatedPedidosOrderIdRoute: typeof AuthenticatedPedidosOrderIdRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
 }
 
@@ -262,9 +471,19 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCarteiraRoute: AuthenticatedCarteiraRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
+  AuthenticatedAdminCadastrosRoute: AuthenticatedAdminCadastrosRoute,
+  AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
+  AuthenticatedAdminDiagnosticoRoute: AuthenticatedAdminDiagnosticoRoute,
   AuthenticatedAdminImportacoesRoute: AuthenticatedAdminImportacoesRoute,
+  AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
+  AuthenticatedAdminRegrasRoute: AuthenticatedAdminRegrasRoute,
+  AuthenticatedAdminRepresentantesRoute: AuthenticatedAdminRepresentantesRoute,
+  AuthenticatedAdminTabelasPrecoRoute: AuthenticatedAdminTabelasPrecoRoute,
+  AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedPedidoRevisarRoute: AuthenticatedPedidoRevisarRoute,
   AuthenticatedPedidosOrderIdRoute: AuthenticatedPedidosOrderIdRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedPedidosIndexRoute: AuthenticatedPedidosIndexRoute,
 }
 
@@ -279,13 +498,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

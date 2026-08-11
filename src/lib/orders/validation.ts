@@ -38,6 +38,12 @@ export const approvalMatrix: ApprovalRule[] = [
   { exception: "bonus_order", authority: "gerente_comercial" },
 ];
 
+/** Substitui a matriz em memória pela versão configurada no banco (approval_rules). */
+export function setApprovalMatrix(rules: ApprovalRule[]): void {
+  if (rules.length === 0) return;
+  approvalMatrix.splice(0, approvalMatrix.length, ...rules);
+}
+
 const authorityRank: Record<Authority, number> = {
   vendedor_externo: 0,
   vendedor_interno: 0,
