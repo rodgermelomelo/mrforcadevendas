@@ -79,15 +79,27 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     }
   }
 
-  const products = records.products.map((p) => ({
-    erp_code: p.erpCode,
-    name: p.officialDescription || `Produto ${p.erpCode}`,
-    group_code: p.erpGroupCode || null,
-    unit: p.unit || "UN",
-    is_launch: false,
-    released: true,
-    active: true,
-  }));
+  const products = records.products.map((p) => {
+    // Tenta extrair a marca da descrição oficial ou usa o grupo como fallback
+    // Ex: "DS 06 PINCEL LABIAL DAILUS" -> "DAILUS"
+    // Heurística baseada nos exemplos reais: palavras finais ou marcas conhecidas
+    const desc = p.officialDescription || "";
+    let brand = "Outros";
+    if (desc.includes("DAILUS")) brand = "DAILUS";
+    else if (desc.includes("ACEMAR")) brand = "ACEMAR";
+    else if (desc.includes("FOX")) brand = "FOX";
+    
+    return {
+      erp_code: p.erpCode,
+      name: desc || `Produto ${p.erpCode}`,
+      group_code: p.erpGroupCode || null,
+      brand,
+      unit: p.unit || "UN",
+      is_launch: false,
+      released: true,
+      active: true,
+    };
+  });
 
   const product_prices = records.prices.map((pr) => ({
     product_erp_code: pr.erpProductCode,
