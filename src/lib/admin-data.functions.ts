@@ -846,6 +846,7 @@ export interface CodeLabelRow {
   code: string;
   label: string;
   extra?: boolean;
+  active?: boolean;
 }
 
 export interface RegistriesData {
