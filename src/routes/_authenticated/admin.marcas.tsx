@@ -47,9 +47,12 @@ function BrandsAdminPage() {
   });
 
   const brands: CodeLabelRow[] = query.data?.brands ?? [];
+  const groups = (query.data?.groups ?? []).map(g => ({ code: g.code, label: g.label }));
+
   const filtered = brands
     .filter((b) => b.code.toLowerCase().includes(term.trim().toLowerCase()))
     .slice(0, 100);
+
 
   return (
     <AdminPage
