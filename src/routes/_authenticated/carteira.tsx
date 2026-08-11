@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X } from "lucide-react";
+import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X, Users } from "lucide-react";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomerPicker } from "@/components/customer-picker";
 
 export const Route = createFileRoute("/_authenticated/carteira")({
@@ -26,20 +27,22 @@ export const Route = createFileRoute("/_authenticated/carteira")({
 
 function Carteira() {
   const [term, setTerm] = useState("");
-  const { customer, customers, priceTables, itemCount, clearCustomer } = useSales();
+  const [sellerFilter, setSellerFilter] = useState("all");
+  const { customer, customers, priceTables, sellers, itemCount, clearCustomer } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
 
   const results = useMemo(() => {
     const q = term.trim().toLowerCase().replace(/[.\-/]/g, "");
-    if (!q) return customers;
-    return customers.filter((c) =>
-      [c.erpCode, c.legalName, c.tradeName, c.taxId, c.city]
+    return customers.filter((c) => {
+      if (sellerFilter !== "all" && c.sellerErpCode !== sellerFilter) return false;
+      if (!q) return true;
+      return [c.erpCode, c.legalName, c.tradeName, c.taxId, c.city]
         .join(" ")
         .toLowerCase()
         .replace(/[.\-/]/g, "")
-        .includes(q),
-    );
-  }, [term, customers]);
+        .includes(q);
+    });
+  }, [term, customers, sellerFilter]);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -92,15 +95,38 @@ function Carteira() {
         </div>
       )}
 
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder="Código, razão social, nome fantasia, CNPJ ou cidade"
-          className="h-12 rounded-xl bg-card pl-11 text-base"
-        />
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Código, razão social, nome fantasia, CNPJ ou cidade"
+            className="h-12 rounded-xl bg-card pl-11 text-base"
+          />
+        </div>
+        {sellers.length > 1 && (
+          <Select value={sellerFilter} onValueChange={setSellerFilter}>
+            <SelectTrigger className="h-12 rounded-xl bg-card sm:w-72">
+              <Users className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+              <SelectValue placeholder="Todos os representantes" />
+            </SelectTrigger>
+            <SelectContent className="max-h-80">
+              <SelectItem value="all">Todos os representantes ({customers.length})</SelectItem>
+              {sellers.map((s) => (
+                <SelectItem key={s.code} value={s.code}>
+                  {s.code} · {s.name} ({s.customerCount})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")} clientes
+        {sellerFilter !== "all" && ` · representante ${sellerFilter}`}
+      </p>
 
       {results.length === 0 ? (
         <div className="surface-card p-10 text-center">

@@ -53,6 +53,7 @@ interface SalesContextValue extends DraftState {
   total: number;
   itemCount: number;
   sellerName: string;
+  sellers: { code: string; name: string; customerCount: number }[];
   role: string | null;
   selectCustomer: (id: string) => void;
   clearCustomer: () => void;
@@ -173,6 +174,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     total,
     itemCount,
     sellerName: workspaceQuery.data?.sellerName ?? "Vendedor",
+    sellers: workspaceQuery.data?.sellers ?? [],
     role: (workspaceQuery.data as any)?.role ?? null,
     selectCustomer: (id) =>
       setState((prev) => ({

@@ -10,6 +10,7 @@ export interface WorkspaceData {
   groups: string[];
   sellerName: string;
   sellerCodes: string[];
+  sellers: { code: string; name: string; customerCount: number }[];
   lastUpdate: string | null;
   approvalRules: ApprovalRule[];
   role: string | null;
@@ -33,6 +34,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       profileRes,
       rulesRes,
       roleRes,
+      sellersRes,
     ] = await Promise.all([
       supabase.from("customers").select("*").eq("active", true).order("trade_name"),
       supabase.from("products").select("*").eq("active", true).order("erp_code"),
@@ -45,6 +47,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
       supabase.from("approval_rules").select("*").eq("active", true),
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      supabase.from("erp_sellers").select("erp_code, name").order("erp_code"),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
@@ -124,6 +127,22 @@ export const getWorkspace = createServerFn({ method: "GET" })
         .sort()
         .at(-1) ?? null;
 
+    // Representantes com contagem de clientes visíveis (para filtro da carteira).
+    const custCountBySeller = new Map<string, number>();
+    for (const c of customers) {
+      const code = c.sellerErpCode;
+      if (!code) continue;
+      custCountBySeller.set(code, (custCountBySeller.get(code) ?? 0) + 1);
+    }
+    const sellers = (sellersRes.data ?? [])
+      .map((s) => ({
+        code: s.erp_code,
+        name: s.name || `Representante ${s.erp_code}`,
+        customerCount: custCountBySeller.get(s.erp_code) ?? 0,
+      }))
+      .filter((s) => s.customerCount > 0)
+      .sort((a, b) => b.customerCount - a.customerCount);
+
     return {
       customers,
       products,
@@ -131,6 +150,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       groups: (groupsRes.data ?? []).map((g) => g.name),
       sellerName: profileRes.data?.full_name || profileRes.data?.email || "Vendedor",
       sellerCodes: (linksRes.data ?? []).map((l) => l.seller_erp_code),
+      sellers,
       lastUpdate,
       approvalRules,
       role: roleRes.data?.role || null,

@@ -66,7 +66,12 @@ function Catalogo() {
         const pB = resB.ok ? resB.value : 0;
         return sortBy === "price-asc" ? pA - pB : pB - pA;
       }
-      return 0;
+      // relevância (padrão): produtos com estoque primeiro, depois lançamentos, depois código
+      const availA = a.stock > 0 ? 1 : 0;
+      const availB = b.stock > 0 ? 1 : 0;
+      if (availA !== availB) return availB - availA;
+      if (a.isLaunch !== b.isLaunch) return a.isLaunch ? -1 : 1;
+      return a.erpCode.localeCompare(b.erpCode);
     });
   }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table]);
 
