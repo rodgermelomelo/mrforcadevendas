@@ -453,6 +453,18 @@ function ProductCard({
   const [qty, setQty] = useState(1);
   const price = resolvePrice(product, table);
   const outOfStock = product.stock <= 0;
+
+  return (
+    <article className="surface-card flex flex-col overflow-hidden transition-shadow hover:shadow-lift group">
+      {/* Brand & Category badges */}
+      <div className="absolute left-2 top-2 z-10 flex flex-col gap-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm border-primary/20 text-primary">
+          {product.brand}
+        </Badge>
+        <Badge variant="outline" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm">
+          {product.group}
+        </Badge>
+      </div>
   // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
   const blocked = hasCustomer && (outOfStock || !price.ok);
   const dimmed = hasCustomer ? blocked : outOfStock;
