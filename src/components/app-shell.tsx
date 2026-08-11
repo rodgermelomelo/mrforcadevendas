@@ -33,6 +33,7 @@ const adminNav = [
   { to: "/admin/tabelas-preco", label: "Tabelas de preço" },
   { to: "/admin/representantes", label: "Representantes" },
   { to: "/admin/marcas", label: "Marcas" },
+  { to: "/admin/categorias", label: "Categorias" },
   { to: "/admin/provisionar", label: "Provisionar acessos" },
   { to: "/admin/clientes", label: "Clientes" },
   { to: "/admin/produtos", label: "Produtos, estoque e preços" },
