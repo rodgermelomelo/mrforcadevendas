@@ -50,7 +50,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("approval_rules").select("*").eq("active", true),
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("erp_sellers").select("erp_code, name").order("erp_code"),
-      supabase.from("brands").select("name").eq("active", true),
+      supabase.from("brands").select("name, active, metadata").eq("active", true),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
