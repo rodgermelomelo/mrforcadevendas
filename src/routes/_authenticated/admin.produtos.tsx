@@ -103,6 +103,34 @@ function ProductsPage() {
 
   const select = "rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary";
 
+  const bulkMutation = useMutation({
+    mutationFn: (brand: string) => bulkUpdate({ data: { erpCodes: selectedCodes, brand } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "registries"] });
+      toast.success(`${selectedCodes.length} produtos atualizados.`);
+      setSelectedCodes([]);
+      setBulkDialogOpen(false);
+      setNewBrand("");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Erro ao atualizar produtos.");
+    },
+  });
+
+  const toggleAll = () => {
+    if (selectedCodes.length === (query.data?.rows?.length ?? 0)) {
+      setSelectedCodes([]);
+    } else {
+      setSelectedCodes(query.data?.rows?.map((r) => r.erpCode) ?? []);
+    }
+  };
+
+  const toggleOne = (code: string) => {
+    setSelectedCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  };
+
+
   return (
     <AdminPage
       title="Produtos, estoque e preços"
