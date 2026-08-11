@@ -128,5 +128,5 @@ export interface Order {
   integrationStatus: IntegrationStatus;
   requiredAuthority: Authority | null;
   contentHash: string;
-  history: { at: string; label: string; detail?: string }[];
+  history: { at: string; label: string; detail?: string | undefined }[];
 }
