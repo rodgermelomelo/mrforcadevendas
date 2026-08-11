@@ -840,6 +840,58 @@ export const setUserVisibility = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const createUserWithRoleAndSeller = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { email: string; name: string; role: AppRole; sellerCode?: string }) => {
+    if (!input.email || !input.name || !input.role) throw new Error("Dados incompletos.");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Senha temporária
+    const rand = Math.random().toString(36).slice(2, 10);
+    const tempPassword = `Mr${rand}!7`;
+
+    // 1. Criar no Auth
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { full_name: data.name },
+    });
+
+    if (authErr || !authData.user) throw new Error(authErr?.message || "Erro ao criar usuário no Auth.");
+
+    const userId = authData.user.id;
+
+    // 2. Papel
+    // O trigger handle_new_user pode ter criado 'vendedor_externo'
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+    const { error: roleErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: userId, role: data.role });
+    if (roleErr) throw new Error(`Usuário criado, mas falha ao atribuir papel: ${roleErr.message}`);
+
+    // 3. Vínculo com representante (opcional)
+    if (data.sellerCode) {
+      const { error: linkErr } = await supabaseAdmin.from("user_erp_seller_links").insert({
+        user_id: userId,
+        seller_erp_code: data.sellerCode,
+      });
+      if (linkErr) throw new Error(`Usuário criado, mas falha ao vincular representante: ${linkErr.message}`);
+    }
+
+    await audit(context, "users", userId, "create_user", {
+      email: data.email,
+      role: data.role,
+      sellerCode: data.sellerCode,
+    });
+
+    return { ok: true, tempPassword };
+  });
+
 /* ============================== CADASTROS GERAIS ========================== */
 
 export interface CodeLabelRow {
