@@ -80,11 +80,13 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
   }
 
   const products = records.products.map((p) => {
-    // Tenta extrair a marca da descrição oficial ou usa o grupo como fallback
-    // Ex: "DS 06 PINCEL LABIAL DAILUS" -> "DAILUS"
-    // Heurística baseada nos exemplos reais: palavras finais ou marcas conhecidas
-    const desc = p.officialDescription || "";
-    let brand = "Outros";
+    // Tenta extrair a marca e a categoria da descrição oficial
+    // Heurística baseada nos exemplos reais e na estrutura desejada: MARCA -> CATEGORIA -> PRODUTO
+    const desc = (p.officialDescription || "").toUpperCase();
+    let brand = "OUTROS";
+    let category = "DIVERSOS";
+
+    // 1. Identificar MARCA
     if (desc.includes("DAILUS")) brand = "DAILUS";
     else if (desc.includes("ACEMAR")) brand = "ACEMAR";
     else if (desc.includes("ÁGUA DE CHEIRO")) brand = "ÁGUA DE CHEIRO";
@@ -93,17 +95,53 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     else if (desc.includes("VERNISSAGE")) brand = "VERNISSAGE";
     else if (desc.includes("FOX")) brand = "FOX";
     
-    // Fallback: se o grupo for conhecido e não achou marca, usa o grupo como marca
-    if (brand === "Outros" && p.erpGroupCode) {
+    // Fallback de marca pelo grupo
+    if (brand === "OUTROS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
-      if (g?.label) brand = g.label.split(" ")[0] || g.label;
+      if (g?.label) {
+        const parts = g.label.split(" ");
+        brand = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
+      }
+    }
+
+    // 2. Identificar CATEGORIA (Substituindo o "Grupo" ERP pela categoria semântica)
+    // Ex: "DS 06 PINCEL LABIAL DAILUS" -> Categoria: "PINCEL LABIAL"
+    // Ex: "DAILUS BATOM MATTE" -> Categoria: "BATOM"
+    // Ex: "ACEMAR AMACIANTE" -> Categoria: "AMACIANTE"
+    
+    const categories = [
+      "AMACIANTE", "AMOLECEDOR", "BASE", "BATOM", "BLUSH", "ESMALTE", 
+      "PINCEL", "PÓ COMPACTO", "CORRETIVO", "ILUMINADOR", "MÁSCARA", 
+      "DELINEADOR", "Sombra", "REMOVEDOR", "HIDRATANTE", "SABONETE",
+      "PERFUME", "COLÔNIA", "BODY SPLASH", "ÓLEO", "SHAMPOO", "CONDICIONADOR"
+    ];
+
+    for (const cat of categories) {
+      if (desc.includes(cat)) {
+        category = cat;
+        break;
+      }
+    }
+
+    // Fallback de categoria: Usa o nome do grupo ERP se não encontrou palavra-chave
+    if (category === "DIVERSOS" && p.erpGroupCode) {
+      const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
+      if (g?.label) {
+        // Limpa o nome do grupo (remove a marca se ela estiver no início)
+        let groupName = g.label.toUpperCase();
+        if (groupName.startsWith(brand)) {
+          groupName = groupName.replace(brand, "").trim();
+        }
+        category = groupName || "DIVERSOS";
+      }
     }
     
     return {
       erp_code: p.erpCode,
-      name: desc || `Produto ${p.erpCode}`,
+      name: p.officialDescription || `Produto ${p.erpCode}`,
       group_code: p.erpGroupCode || null,
       brand,
+      category, // Adicionamos categoria lógica
       unit: p.unit || "UN",
       is_launch: false,
       released: true,

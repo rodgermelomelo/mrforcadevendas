@@ -59,6 +59,7 @@ export interface Product {
   erpCode: string;
   name: string;
   group: string;
+  category?: string | undefined;
   brand?: string | undefined;
   unit: string;
   stock: number;

@@ -49,16 +49,18 @@ function Catalogo() {
   const filtered = useMemo(() => {
     const q = term.trim().toLowerCase();
     const result = products.filter((p) => {
+      const pCategory = (p as any).category || p.group;
+      
       // Se houver marcas selecionadas, o produto deve pertencer a uma delas
       if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
       
-      // Se houver grupos selecionados, o produto deve pertencer a um deles
-      if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
+      // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles
+      if (selectedGroups.length > 0 && !selectedGroups.includes(pCategory)) return false;
 
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
       if (!q) return true;
-      return `${p.name} ${p.erpCode} ${p.group} ${p.brand || ""}`.toLowerCase().includes(q);
+      return `${p.name} ${p.erpCode} ${pCategory} ${p.brand || ""}`.toLowerCase().includes(q);
     });
 
     return result.sort((a, b) => {
@@ -109,11 +111,12 @@ function Catalogo() {
   }, [products]);
 
   const groups = useMemo(() => {
-    // Se houver marcas selecionadas, mostrar apenas as categorias (grupos) que possuem produtos nessas marcas
+    // Se houver marcas selecionadas, mostrar apenas as categorias que possuem produtos nessas marcas
     const availableGroups = new Set<string>();
     products.forEach(p => {
+      const pCategory = (p as any).category || p.group;
       if (selectedBrands.length === 0 || (p.brand && selectedBrands.includes(p.brand))) {
-        availableGroups.add(p.group);
+        availableGroups.add(pCategory);
       }
     });
     return Array.from(availableGroups).sort();
@@ -471,7 +474,7 @@ function ProductCard({
           {product.brand}
         </Badge>
         <Badge variant="outline" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm">
-          {product.group}
+          {(product as any).category || product.group}
         </Badge>
       </div>
       <div className="relative aspect-square bg-muted">
@@ -504,7 +507,7 @@ function ProductCard({
       <div className="flex flex-1 flex-col p-3">
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
-          {product.group} · {product.erpCode}
+          {(product as any).category || product.group} · {product.erpCode}
         </p>
         <h3 className="mt-1 line-clamp-2 text-sm font-semibold">{product.name}</h3>
 

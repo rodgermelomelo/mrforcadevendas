@@ -894,6 +894,7 @@ export type Database = {
         Row: {
           active: boolean
           brand: string | null
+          category: string | null
           created_at: string
           erp_code: string
           group_code: string | null
@@ -908,6 +909,7 @@ export type Database = {
         Insert: {
           active?: boolean
           brand?: string | null
+          category?: string | null
           created_at?: string
           erp_code: string
           group_code?: string | null
@@ -922,6 +924,7 @@ export type Database = {
         Update: {
           active?: boolean
           brand?: string | null
+          category?: string | null
           created_at?: string
           erp_code?: string
           group_code?: string | null
