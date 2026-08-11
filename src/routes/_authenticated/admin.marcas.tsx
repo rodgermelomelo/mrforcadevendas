@@ -235,14 +235,11 @@ function BrandProductsDialog({
   const load = useServerFn(listProducts);
   const query = useQuery({
     queryKey: ["admin", "brand-products", brandName],
-    queryFn: () => load({ data: { term: brandName ?? "", page: 0 } }), // O listProducts filtra por term que bate com marca se o term for a marca exata ou parte
-    // Mas idealmente o listProducts deveria ter filtro de marca.
-    // Olhando listProducts, ele usa ilike em erp_code ou name.
-    // Vamos ajustar para passar o brandName como term por enquanto, 
-    // ou melhor, vamos assumir que o listProducts já foi melhorado antes para aceitar filtros.
-    // Na verdade, listProducts aceita 'term'. Se eu passar o nome da marca, ele vai achar produtos que tem o nome da marca no nome.
+    queryFn: () => load({ data: { term: brandName ?? "", page: 0 } }),
     enabled: !!brandName,
   });
+
+  const products = (query.data?.rows ?? []).filter(p => p.brand === brandName || p.erpCode === brandName);
 
   return (
     <Dialog open={!!brandName} onOpenChange={onOpenChange}>
@@ -256,15 +253,13 @@ function BrandProductsDialog({
             <div className="flex justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-          ) : query.data?.rows?.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               Nenhum produto encontrado para esta marca.
             </div>
           ) : (
             <div className="grid gap-2">
-              {query.data?.rows
-                .filter(p => p.brand === brandName) // Garantindo filtro exato no client caso o server term search seja amplo
-                .map((product) => (
+              {products.map((product) => (
                 <button
                   key={product.erpCode}
                   onClick={() => onOpenProduct(product.erpCode)}
