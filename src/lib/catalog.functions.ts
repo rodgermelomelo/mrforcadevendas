@@ -48,6 +48,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("approval_rules").select("*").eq("active", true),
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("erp_sellers").select("erp_code, name").order("erp_code"),
+      supabase.from("brands").select("name").eq("active", true),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
@@ -66,6 +67,8 @@ export const getWorkspace = createServerFn({ method: "GET" })
     const stock = new Map((inventoryRes.data ?? []).map((i) => [i.product_erp_code, Number(i.quantity)]));
     const image = new Map((enrichRes.data ?? []).map((e) => [e.product_erp_code, e.image_url]));
 
+    const activeBrands = new Set((brandsRes.data ?? []).map((b: any) => b.name));
+    
     const pricesByProduct = new Map<string, Record<string, number[]>>();
     for (const row of pricesRes.data ?? []) {
       const current = pricesByProduct.get(row.product_erp_code) ?? {};

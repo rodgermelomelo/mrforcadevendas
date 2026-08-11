@@ -96,12 +96,14 @@ function RegistriesPage() {
               kind={tab}
               row={row}
               saving={mutation.isPending}
-              onSave={(label, isStandard) =>
-                mutation.mutate(
-                  isStandard === undefined
-                    ? { kind: tab, code: row.code, label }
-                    : { kind: tab, code: row.code, label, isStandard },
-                )
+              onSave={(label, isStandard, active) =>
+                mutation.mutate({
+                  kind: tab,
+                  code: row.code,
+                  label,
+                  isStandard,
+                  active,
+                })
               }
             />
           ))}
@@ -125,11 +127,12 @@ function RegistryRow({
   kind: Kind;
   row: CodeLabelRow;
   saving: boolean;
-  onSave: (label: string, isStandard?: boolean) => void;
+  onSave: (label: string, isStandard?: boolean, active?: boolean) => void;
 }) {
   const [label, setLabel] = useState(row.label);
   const [isStandard, setIsStandard] = useState(Boolean(row.extra));
-  const dirty = label !== row.label || isStandard !== Boolean(row.extra);
+  const [active, setActive] = useState(row.active ?? true);
+  const dirty = label !== row.label || isStandard !== Boolean(row.extra) || active !== (row.active ?? true);
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
@@ -152,11 +155,22 @@ function RegistryRow({
           Padrão
         </label>
       )}
+      {kind === "brands" && (
+        <label className="flex shrink-0 items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={active}
+            onChange={(e) => setActive(e.target.checked)}
+            className="h-4 w-4 accent-[hsl(var(--primary))]"
+          />
+          Ativa
+        </label>
+      )}
       <div className="flex gap-2">
         <button
           type="button"
           disabled={!dirty || saving}
-          onClick={() => onSave(label, kind === "paymentTerms" ? isStandard : undefined)}
+          onClick={() => onSave(label, kind === "paymentTerms" ? isStandard : undefined, kind === "brands" ? active : undefined)}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-40"
         >
           {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Salvar
