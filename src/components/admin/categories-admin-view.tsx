@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 25;
 
-export function CategoriesAdminView({ filterBrand: initialFilterBrand }: { filterBrand?: string }) {
+export function CategoriesAdminView({ filterBrand: initialFilterBrand }: { filterBrand?: string | undefined }) {
   const queryClient = useQueryClient();
   const listFn = useServerFn(listProducts);
   const updateFn = useServerFn(updateProduct);
