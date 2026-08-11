@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 function Catalogo() {
-  const { customer, table, addItem, itemCount, products, productGroups, role } = useSales();
+  const { customer, table, addItem, itemCount, products, productGroups, role, brandMetadata } = useSales();
   const { openCustomerPicker } = useCustomerPicker();
   const [term, setTerm] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -51,8 +51,18 @@ function Catalogo() {
     const result = products.filter((p) => {
       const pCategory = (p as any).category || p.group;
       
-      // Se houver marcas selecionadas, o produto deve pertencer a uma delas
-      if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
+      // Filtro de marca e categoria vinculada
+      if (selectedBrands.length > 0) {
+        // O produto deve pertencer à marca OU a uma categoria que pertence a uma das marcas selecionadas
+        const isProductBrandSelected = p.brand && selectedBrands.includes(p.brand);
+        
+        // Se a "marca" do produto é na verdade uma categoria (isCategory: true)
+        // e ela tem um 'parentBrand' que está entre os selecionados
+        const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
+        const isParentBrandSelected = parentBrand && selectedBrands.includes(parentBrand);
+        
+        if (!isProductBrandSelected && !isParentBrandSelected) return false;
+      }
       
       // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles
       if (selectedGroups.length > 0 && !selectedGroups.includes(pCategory)) return false;
@@ -79,7 +89,7 @@ function Catalogo() {
       if (a.isLaunch !== b.isLaunch) return a.isLaunch ? -1 : 1;
       return a.erpCode.localeCompare(b.erpCode);
     });
-  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table]);
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
 
   const pagedItems = useMemo(() => {
     return filtered.slice(0, page * ITEMS_PER_PAGE);
@@ -115,12 +125,13 @@ function Catalogo() {
     const availableGroups = new Set<string>();
     products.forEach(p => {
       const pCategory = (p as any).category || p.group;
-      if (selectedBrands.length === 0 || (p.brand && selectedBrands.includes(p.brand))) {
+      const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
+      if (selectedBrands.length === 0 || (p.brand && (selectedBrands.includes(p.brand) || (parentBrand && selectedBrands.includes(parentBrand))))) {
         availableGroups.add(pCategory);
       }
     });
     return Array.from(availableGroups).sort();
-  }, [products, selectedBrands]);
+  }, [products, selectedBrands, brandMetadata]);
 
   const toggleBrand = (b: string) => {
     setSelectedBrands((prev) =>

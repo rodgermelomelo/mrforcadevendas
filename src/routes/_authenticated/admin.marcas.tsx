@@ -108,7 +108,7 @@ function BrandsAdminPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <label 
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={(e) => e.stopPropagation()}
@@ -127,10 +127,38 @@ function BrandsAdminPage() {
                   />
                   <span className="text-xs font-medium text-muted-foreground">Esta marca é uma Categoria</span>
                 </label>
+                
                 {brand.metadata?.isCategory && (
-                  <p className="text-[10px] text-primary/70 leading-tight">
-                    Itens desta "marca" serão tratados como uma categoria organizacional no catálogo.
-                  </p>
+                  <div 
+                    className="flex flex-col gap-1.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Marca Pai (Opcional)
+                    </label>
+                    <select
+                      value={brand.metadata?.parentBrand || ""}
+                      onChange={(e) => mutation.mutate({
+                        kind: "brands",
+                        code: brand.code,
+                        label: brand.code,
+                        active: brand.active ?? true,
+                        metadata: { ...brand.metadata, parentBrand: e.target.value || null }
+                      })}
+                      className="w-full rounded-lg border border-border bg-muted/50 px-2 py-1 text-[11px] outline-none focus:border-primary"
+                    >
+                      <option value="">Nenhuma</option>
+                      {brands
+                        .filter(b => b.code !== brand.code && !b.metadata?.isCategory)
+                        .map(b => (
+                          <option key={b.code} value={b.code}>{b.code}</option>
+                        ))
+                      }
+                    </select>
+                    <p className="text-[10px] text-primary/70 leading-tight italic">
+                      Ex: "{brand.code}" é uma categoria da marca "{brand.metadata?.parentBrand || '...'}"
+                    </p>
+                  </div>
                 )}
               </div>
               

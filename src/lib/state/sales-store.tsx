@@ -45,6 +45,7 @@ interface SalesContextValue extends DraftState {
   productGroups: string[];
   erpLastUpdate: string | null;
   orders: Order[];
+  brandMetadata: Record<string, any>;
   customer: Customer | null;
   table: PriceTable | undefined;
   lines: CartLine[];
@@ -176,6 +177,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     sellerName: workspaceQuery.data?.sellerName ?? "Vendedor",
     sellers: workspaceQuery.data?.sellers ?? [],
     role: (workspaceQuery.data as any)?.role ?? null,
+    brandMetadata: workspaceQuery.data?.brandMetadata ?? {},
     selectCustomer: (id) =>
       setState((prev) => ({
         ...prev,
