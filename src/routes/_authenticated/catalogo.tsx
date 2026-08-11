@@ -454,9 +454,18 @@ function ProductCard({
   const price = resolvePrice(product, table);
   const outOfStock = product.stock <= 0;
 
+  // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
+  const blocked = hasCustomer && (outOfStock || !price.ok);
+  const dimmed = hasCustomer ? blocked : outOfStock;
+
   return (
-    <article className="surface-card flex flex-col overflow-hidden transition-shadow hover:shadow-lift group">
-      {/* Brand & Category badges */}
+    <article
+      className={cn(
+        "surface-card flex flex-col overflow-hidden transition-shadow relative group",
+        dimmed ? "opacity-70 grayscale" : "hover:shadow-lift",
+      )}
+    >
+      {/* Brand & Category badges on hover */}
       <div className="absolute left-2 top-2 z-10 flex flex-col gap-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
         <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-background/80 backdrop-blur-sm border-primary/20 text-primary">
           {product.brand}
@@ -465,17 +474,6 @@ function ProductCard({
           {product.group}
         </Badge>
       </div>
-  // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
-  const blocked = hasCustomer && (outOfStock || !price.ok);
-  const dimmed = hasCustomer ? blocked : outOfStock;
-
-  return (
-    <article
-      className={cn(
-        "surface-card flex flex-col overflow-hidden transition-shadow",
-        dimmed ? "opacity-70 grayscale" : "hover:shadow-lift",
-      )}
-    >
       <div className="relative aspect-square bg-muted">
         {productImage(product.imageUrl) ? (
           <img
