@@ -110,6 +110,8 @@ export const getWorkspace = createServerFn({ method: "GET" })
       stock: stock.get(p.erp_code) ?? 0,
       isLaunch: p.is_launch,
       imageUrl: image.get(p.erp_code) ?? null,
+      brand: p.brand || (groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros").split(" ")[0],
+
       prices: pricesByProduct.get(p.erp_code) ?? {},
     }));
 

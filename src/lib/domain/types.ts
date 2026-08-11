@@ -59,7 +59,7 @@ export interface Product {
   erpCode: string;
   name: string;
   group: string;
-  brand?: string;
+  brand?: string | undefined;
   unit: string;
   stock: number;
   isLaunch: boolean;
