@@ -6,7 +6,21 @@ import { ImageOff, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
 import { ProductDetailDialog, HealthBadge } from "@/components/admin/product-detail-dialog";
-import { listProducts, listRegistries } from "@/lib/admin-data.functions";
+import { listProducts, listRegistries, bulkUpdateProductBrand } from "@/lib/admin-data.functions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, Tag, X } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin/produtos")({
   component: ProductsPage,
@@ -62,6 +76,8 @@ const SORTS = [
 function ProductsPage() {
   const load = useServerFn(listProducts);
   const loadRegistries = useServerFn(listRegistries);
+  const bulkUpdate = useServerFn(bulkUpdateProductBrand);
+  const queryClient = useQueryClient();
 
   const [term, setTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("todos");
@@ -71,6 +87,10 @@ function ProductsPage() {
   const [sort, setSort] = useState("codigo");
   const [page, setPage] = useState(0);
   const [openCode, setOpenCode] = useState<string | null>(null);
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [newBrand, setNewBrand] = useState("");
+
 
   const reset = () => setPage(0);
 
@@ -82,6 +102,34 @@ function ProductsPage() {
   const groups = (registriesQuery.data?.groups ?? []).map((g) => ({ code: g.code, label: `${g.code} · ${g.label}` }));
 
   const select = "rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary";
+
+  const bulkMutation = useMutation({
+    mutationFn: (brand: string) => bulkUpdate({ data: { erpCodes: selectedCodes, brand } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "registries"] });
+      toast.success(`${selectedCodes.length} produtos atualizados.`);
+      setSelectedCodes([]);
+      setBulkDialogOpen(false);
+      setNewBrand("");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Erro ao atualizar produtos.");
+    },
+  });
+
+  const toggleAll = () => {
+    if (selectedCodes.length === (query.data?.rows?.length ?? 0)) {
+      setSelectedCodes([]);
+    } else {
+      setSelectedCodes(query.data?.rows?.map((r) => r.erpCode) ?? []);
+    }
+  };
+
+  const toggleOne = (code: string) => {
+    setSelectedCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  };
+
 
   return (
     <AdminPage
@@ -198,14 +246,34 @@ function ProductsPage() {
         </p>
       ) : (
         <div className="space-y-2">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+            <Checkbox
+              checked={
+                selectedCodes.length > 0 && selectedCodes.length === (query.data?.rows?.length ?? 0)
+              }
+              onCheckedChange={toggleAll}
+            />
+            <span className="text-sm font-medium text-muted-foreground">Selecionar todos nesta página</span>
+          </div>
+
           {(query.data?.rows ?? []).map((product) => (
-            <button
+            <div
               key={product.erpCode}
-              type="button"
-              onClick={() => setOpenCode(product.erpCode)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
+              className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
             >
-              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
+              <div className="flex h-full items-center pr-1">
+                <Checkbox
+                  checked={selectedCodes.includes(product.erpCode)}
+                  onCheckedChange={() => toggleOne(product.erpCode)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpenCode(product.erpCode)}
+                className="flex flex-1 items-center gap-3 text-left"
+              >
+                <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
+
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                 ) : (
@@ -242,24 +310,106 @@ function ProductsPage() {
                 </span>
               </span>
             </button>
-          ))}
-          <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
+          </div>
+        ))}
+        <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
+      </div>
+    )}
+
+    {query.isFetching && !query.isLoading && (
+      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Atualizando…
+      </p>
+    )}
+
+    {/* Barra de Ações em Lote */}
+    {selectedCodes.length > 0 && (
+      <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full border border-primary/20 bg-white/90 p-2 shadow-2xl backdrop-blur-md dark:bg-zinc-900/90 md:gap-6 md:p-3">
+        <div className="flex items-center gap-2 pl-3 pr-2 md:pl-4">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+            {selectedCodes.length}
+          </span>
+          <span className="hidden text-sm font-medium text-foreground md:inline">selecionados</span>
         </div>
-      )}
+        <div className="h-8 w-px bg-border" />
+        <Button
+          onClick={() => setBulkDialogOpen(true)}
+          className="h-10 rounded-full bg-brand-gradient px-4 font-semibold text-white shadow-lg transition hover:scale-105 active:scale-95 md:px-6"
+        >
+          <Tag className="mr-2 h-4 w-4" />
+          Editar Marca
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSelectedCodes([])}
+          className="h-10 w-10 rounded-full hover:bg-destructive/10 hover:text-destructive"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+    )}
 
-      {query.isFetching && !query.isLoading && (
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Atualizando…
-        </p>
-      )}
+    <ProductDetailDialog
+      erpCode={openCode}
+      groups={groups}
+      onOpenChange={(open) => {
+        if (!open) setOpenCode(null);
+      }}
+    />
 
-      <ProductDetailDialog
-        erpCode={openCode}
-        groups={groups}
-        onOpenChange={(open) => {
-          if (!open) setOpenCode(null);
-        }}
-      />
-    </AdminPage>
-  );
+    {/* Diálogo de Edição em Lote */}
+    <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar marca em lote</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="flex items-center gap-2 rounded-xl bg-primary/5 p-3 text-sm text-primary">
+            <AlertCircle className="h-4 w-4" />
+            Esta ação atualizará {selectedCodes.length} produtos simultaneamente.
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="brand">Nova Marca</Label>
+            <div className="relative">
+              <Input
+                id="brand"
+                value={newBrand}
+                onChange={(e) => setNewBrand(e.target.value)}
+                placeholder="Ex: Dailus, Acemar..."
+                className="rounded-xl pr-20"
+              />
+              <div className="absolute right-2 top-1/2 flex -translate-y-1/2 gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-[10px] text-muted-foreground hover:text-primary"
+                  onClick={() => setNewBrand("")}
+                >
+                  Limpar
+                </Button>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Sugestões: Dailus, Acemar, Água de Cheiro, Divina Flora, Cuccio, Vernissage
+            </p>
+          </div>
+        </div>
+        <DialogFooter className="gap-2 sm:justify-end">
+          <Button variant="outline" onClick={() => setBulkDialogOpen(false)} className="rounded-xl">
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => bulkMutation.mutate(newBrand)}
+            disabled={bulkMutation.isPending}
+            className="rounded-xl bg-brand-gradient text-white"
+          >
+            {bulkMutation.isPending ? "Salvando..." : "Confirmar Alteração"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </AdminPage>
+);
 }
+

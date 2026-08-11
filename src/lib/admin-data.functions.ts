@@ -713,6 +713,41 @@ export const updateProduct = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const bulkUpdateProductBrand = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      erpCodes: string[];
+      brand: string | null;
+    }) => {
+      if (!Array.isArray(input?.erpCodes) || input.erpCodes.length === 0) {
+        throw new Error("Nenhum produto selecionado.");
+      }
+      return input;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("products")
+      .update({
+        brand: data.brand || null,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .in("erp_code", data.erpCodes);
+
+    if (error) throw new Error(error.message);
+
+    await audit(context, "products", "bulk", "bulk_update_brand", {
+      count: data.erpCodes.length,
+      brand: data.brand,
+      codes: data.erpCodes.slice(0, 10), // Apenas os 10 primeiros para o log não ficar gigante
+    });
+
+    return { ok: true };
+  });
+
+
 /* ============================= USUÁRIOS E PAPÉIS ========================== */
 
 export type AppRole =
