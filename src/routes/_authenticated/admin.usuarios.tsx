@@ -8,6 +8,7 @@ import { AdminPage } from "@/components/admin/admin-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ import {
   type AppRole,
   type AdminUser,
 } from "@/lib/admin-data.functions";
+import { ProvisionarView } from "./admin.provisionar";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
   component: UsersPage,
@@ -89,36 +91,53 @@ function UsersPage() {
 
   return (
     <AdminPage
-      title="Usuários e papéis"
-      description="Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas explicitamente aqui."
-      actions={
-        <Button 
-          onClick={() => setCreateOpen(true)}
-          className="rounded-xl bg-brand-gradient shadow-lift"
-        >
-          <UserPlus className="mr-2 h-4 w-4" /> Criar usuário
-        </Button>
-      }
+      title="Usuários, Papéis e Provisionamento"
+      description="Gerencie permissões de acesso e crie usuários para representantes do ERP."
     >
-      {usersQuery.isLoading ? (
-        <div className="grid place-items-center py-16 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {(usersQuery.data ?? []).map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              sellers={(sellersQuery.data ?? []).map((s) => ({ code: s.erpCode, label: `${s.erpCode} · ${s.name}` }))}
-              savingRole={roleMutation.isPending}
-              savingVisibility={visibilityMutation.isPending}
-              onRole={(role) => roleMutation.mutate({ userId: user.id, role })}
-              onVisibility={(codes) => visibilityMutation.mutate({ userId: user.id, sellerCodes: codes })}
-            />
-          ))}
-        </div>
-      )}
+      <Tabs defaultValue="gestao" className="w-full">
+        <TabsList className="mb-6 rounded-xl">
+          <TabsTrigger value="gestao" className="rounded-lg">Gestão de Usuários</TabsTrigger>
+          <TabsTrigger value="provisionar" className="rounded-lg">Provisionar Representantes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="gestao" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas.
+            </p>
+            <Button 
+              onClick={() => setCreateOpen(true)}
+              className="rounded-xl bg-brand-gradient shadow-lift"
+            >
+              <UserPlus className="mr-2 h-4 w-4" /> Criar usuário
+            </Button>
+          </div>
+
+          {usersQuery.isLoading ? (
+            <div className="grid place-items-center py-16 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(usersQuery.data ?? []).map((user) => (
+                <UserCard
+                  key={user.id}
+                  user={user}
+                  sellers={(sellersQuery.data ?? []).map((s) => ({ code: s.erpCode, label: `${s.erpCode} · ${s.name}` }))}
+                  savingRole={roleMutation.isPending}
+                  savingVisibility={visibilityMutation.isPending}
+                  onRole={(role) => roleMutation.mutate({ userId: user.id, role })}
+                  onVisibility={(codes) => visibilityMutation.mutate({ userId: user.id, sellerCodes: codes })}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="provisionar">
+          <ProvisionarView />
+        </TabsContent>
+      </Tabs>
 
       <CreateUserDialog 
         open={createOpen} 

@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/provisionar")({
-  component: Provisionar,
+  component: ProvisionarView,
   head: () => ({
     meta: [
       { title: "Provisionar acessos · MR Força de Vendas" },
@@ -48,7 +48,7 @@ interface RowValidation {
   warnings: string[];
 }
 
-function Provisionar() {
+export function ProvisionarView() {
   const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => getIsAdmin() });
   const sellersQ = useQuery({ queryKey: ["admin", "sellers"], queryFn: () => listSellers() });
   const validateFn = useServerFn(validateProvisioning);
@@ -126,11 +126,10 @@ function Provisionar() {
   const allValid = selectedCount > 0 && selectedItems.every((it) => validation[it.sellerErpCode]?.ok);
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <header>
-        <h1 className="text-3xl font-bold sm:text-4xl">Provisionar acessos</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Crie o usuário de autenticação de cada representante, atribua o perfil e valide antes de salvar.
+        <p className="text-sm text-muted-foreground">
+          Crie o usuário de cada representante, atribua o perfil e valide antes de salvar.
           {" "}Só aparecem representantes <strong>sem usuário</strong>.
         </p>
       </header>
