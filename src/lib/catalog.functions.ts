@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Customer, PriceTable, Product } from "@/lib/domain/types";
+import type { ApprovalRule } from "@/lib/orders/validation";
 
 export interface WorkspaceData {
   customers: Customer[];
@@ -10,6 +11,7 @@ export interface WorkspaceData {
   sellerName: string;
   sellerCodes: string[];
   lastUpdate: string | null;
+  approvalRules: ApprovalRule[];
 }
 
 /** Carrega carteira + catálogo do usuário autenticado (RLS limita a carteira visível). */
@@ -28,6 +30,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       enrichRes,
       linksRes,
       profileRes,
+      rulesRes,
     ] = await Promise.all([
       supabase.from("customers").select("*").eq("active", true).order("trade_name"),
       supabase.from("products").select("*").eq("active", true).order("erp_code"),
@@ -38,7 +41,20 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("product_enrichments").select("*"),
       supabase.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId),
       supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
+      supabase.from("approval_rules").select("*").eq("active", true),
     ]);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const approvalRules: ApprovalRule[] = (rulesRes.data ?? [])
+      .filter((r) => r.valid_from <= today && (r.valid_to === null || r.valid_to >= today))
+      .map((r) => ({
+        exception: r.exception_type as ApprovalRule["exception"],
+        authority: r.authority as ApprovalRule["authority"],
+        ...(r.min_percent === null ? {} : { minPercent: Number(r.min_percent) }),
+        ...(r.max_percent === null ? {} : { maxPercent: Number(r.max_percent) }),
+        ...(r.min_amount === null ? {} : { minAmount: Number(r.min_amount) }),
+        ...(r.max_amount === null ? {} : { maxAmount: Number(r.max_amount) }),
+      }));
 
     const groupName = new Map((groupsRes.data ?? []).map((g) => [g.code, g.name]));
     const stock = new Map((inventoryRes.data ?? []).map((i) => [i.product_erp_code, Number(i.quantity)]));
@@ -111,5 +127,6 @@ export const getWorkspace = createServerFn({ method: "GET" })
       sellerName: profileRes.data?.full_name || profileRes.data?.email || "Vendedor",
       sellerCodes: (linksRes.data ?? []).map((l) => l.seller_erp_code),
       lastUpdate,
+      approvalRules,
     };
   });

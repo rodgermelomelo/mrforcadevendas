@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import type { CartItem, Customer, Order, PriceTable, Product } from "@/lib/domain/types";
 import { resolvePrice } from "@/lib/pricing";
 import { getWorkspace } from "@/lib/catalog.functions";
+import { setApprovalMatrix } from "@/lib/orders/validation";
 import { createOrder, listOrders, type CreateOrderInput } from "@/lib/orders.functions";
 
 const STORAGE_KEY = "mrfv.draft.v2";
@@ -106,6 +107,10 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state, hydrated]);
+
+  useEffect(() => {
+    if (workspaceQuery.data?.approvalRules) setApprovalMatrix(workspaceQuery.data.approvalRules);
+  }, [workspaceQuery.data]);
 
   const customers = useMemo(() => workspaceQuery.data?.customers ?? [], [workspaceQuery.data]);
   const products = useMemo(() => workspaceQuery.data?.products ?? [], [workspaceQuery.data]);
