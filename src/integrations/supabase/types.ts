@@ -14,6 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_methods: {
+        Row: {
+          code: string
+          description: string
+          id: string
+        }
+        Insert: {
+          code: string
+          description: string
+          id?: string
+        }
+        Update: {
+          code?: string
+          description?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      catalog_review: {
+        Row: {
+          classification: string
+          created_at: string
+          detail: string | null
+          erp_code: string
+          id: string
+          reviewed_at: string | null
+        }
+        Insert: {
+          classification: string
+          created_at?: string
+          detail?: string | null
+          erp_code: string
+          id?: string
+          reviewed_at?: string | null
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          detail?: string | null
+          erp_code?: string
+          id?: string
+          reviewed_at?: string | null
+        }
+        Relationships: []
+      }
+      customer_financial_snapshots: {
+        Row: {
+          captured_at: string
+          credit_limit: number
+          customer_erp_code: string
+          id: string
+          open_balance: number
+          overdue_balance: number
+        }
+        Insert: {
+          captured_at?: string
+          credit_limit?: number
+          customer_erp_code: string
+          id?: string
+          open_balance?: number
+          overdue_balance?: number
+        }
+        Update: {
+          captured_at?: string
+          credit_limit?: number
+          customer_erp_code?: string
+          id?: string
+          open_balance?: number
+          overdue_balance?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_financial_snapshots_customer_erp_code_fkey"
+            columns: ["customer_erp_code"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["erp_code"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          active: boolean
+          city: string
+          created_at: string
+          credit_limit: number
+          erp_code: string
+          id: string
+          last_order_at: string | null
+          legal_name: string
+          min_order_value: number
+          missing_since: string | null
+          open_balance: number
+          payment_term: string
+          price_table_code: string
+          restricted: boolean
+          restriction_reason: string | null
+          segment_code: string | null
+          seller_erp_code: string
+          tax_id: string
+          trade_name: string
+          uf: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          city?: string
+          created_at?: string
+          credit_limit?: number
+          erp_code: string
+          id?: string
+          last_order_at?: string | null
+          legal_name: string
+          min_order_value?: number
+          missing_since?: string | null
+          open_balance?: number
+          payment_term?: string
+          price_table_code: string
+          restricted?: boolean
+          restriction_reason?: string | null
+          segment_code?: string | null
+          seller_erp_code: string
+          tax_id: string
+          trade_name: string
+          uf?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          city?: string
+          created_at?: string
+          credit_limit?: number
+          erp_code?: string
+          id?: string
+          last_order_at?: string | null
+          legal_name?: string
+          min_order_value?: number
+          missing_since?: string | null
+          open_balance?: number
+          payment_term?: string
+          price_table_code?: string
+          restricted?: boolean
+          restriction_reason?: string | null
+          segment_code?: string | null
+          seller_erp_code?: string
+          tax_id?: string
+          trade_name?: string
+          uf?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       erp_sellers: {
         Row: {
           active: boolean
@@ -38,6 +190,222 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_snapshots: {
+        Row: {
+          captured_at: string
+          id: string
+          product_erp_code: string
+          quantity: number
+        }
+        Insert: {
+          captured_at?: string
+          id?: string
+          product_erp_code: string
+          quantity?: number
+        }
+        Update: {
+          captured_at?: string
+          id?: string
+          product_erp_code?: string
+          quantity?: number
+        }
+        Relationships: []
+      }
+      payment_terms: {
+        Row: {
+          code: string
+          description: string
+          id: string
+          is_standard: boolean
+        }
+        Insert: {
+          code: string
+          description: string
+          id?: string
+          is_standard?: boolean
+        }
+        Update: {
+          code?: string
+          description?: string
+          id?: string
+          is_standard?: boolean
+        }
+        Relationships: []
+      }
+      price_tables: {
+        Row: {
+          code: string
+          id: string
+          level_label: string | null
+          mapped_level: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          level_label?: string | null
+          mapped_level?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          level_label?: string | null
+          mapped_level?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_eans: {
+        Row: {
+          ean: string
+          id: string
+          product_erp_code: string
+        }
+        Insert: {
+          ean: string
+          id?: string
+          product_erp_code: string
+        }
+        Update: {
+          ean?: string
+          id?: string
+          product_erp_code?: string
+        }
+        Relationships: []
+      }
+      product_enrichments: {
+        Row: {
+          description: string | null
+          display_name: string | null
+          id: string
+          image_path: string | null
+          image_url: string | null
+          product_erp_code: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string | null
+          display_name?: string | null
+          id?: string
+          image_path?: string | null
+          image_url?: string | null
+          product_erp_code: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          display_name?: string | null
+          id?: string
+          image_path?: string | null
+          image_url?: string | null
+          product_erp_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_groups: {
+        Row: {
+          code: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      product_prices: {
+        Row: {
+          id: string
+          price_table_code: string
+          product_erp_code: string
+          updated_at: string
+          value_1: number
+          value_2: number
+          value_3: number
+          value_4: number
+          value_5: number
+          value_6: number
+        }
+        Insert: {
+          id?: string
+          price_table_code: string
+          product_erp_code: string
+          updated_at?: string
+          value_1?: number
+          value_2?: number
+          value_3?: number
+          value_4?: number
+          value_5?: number
+          value_6?: number
+        }
+        Update: {
+          id?: string
+          price_table_code?: string
+          product_erp_code?: string
+          updated_at?: string
+          value_1?: number
+          value_2?: number
+          value_3?: number
+          value_4?: number
+          value_5?: number
+          value_6?: number
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          active: boolean
+          created_at: string
+          erp_code: string
+          group_code: string | null
+          id: string
+          is_launch: boolean
+          missing_since: string | null
+          name: string
+          released: boolean
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          erp_code: string
+          group_code?: string | null
+          id?: string
+          is_launch?: boolean
+          missing_since?: string | null
+          name: string
+          released?: boolean
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          erp_code?: string
+          group_code?: string | null
+          id?: string
+          is_launch?: boolean
+          missing_since?: string | null
+          name?: string
+          released?: boolean
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -59,6 +427,59 @@ export type Database = {
           full_name?: string
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      receivables: {
+        Row: {
+          amount: number
+          customer_erp_code: string
+          document: string
+          due_date: string
+          id: string
+          paid: boolean
+        }
+        Insert: {
+          amount: number
+          customer_erp_code: string
+          document: string
+          due_date: string
+          id?: string
+          paid?: boolean
+        }
+        Update: {
+          amount?: number
+          customer_erp_code?: string
+          document?: string
+          due_date?: string
+          id?: string
+          paid?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivables_customer_erp_code_fkey"
+            columns: ["customer_erp_code"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["erp_code"]
+          },
+        ]
+      }
+      segments: {
+        Row: {
+          code: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
