@@ -41,7 +41,7 @@ function RegistriesPage() {
   const query = useQuery({ queryKey: ["admin", "registries"], queryFn: () => load() });
 
   const mutation = useMutation({
-    mutationFn: (input: { kind: Kind; code: string; label: string; isStandard?: boolean }) => save({ data: input }),
+    mutationFn: (input: { kind: Kind; code: string; label: string; isStandard?: boolean; active?: boolean }) => save({ data: input }),
     onSuccess: async () => {
       toast.success("Cadastro atualizado.");
       await queryClient.invalidateQueries({ queryKey: ["admin", "registries"] });
