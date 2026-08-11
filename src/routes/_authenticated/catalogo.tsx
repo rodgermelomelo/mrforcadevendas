@@ -132,7 +132,7 @@ function Catalogo() {
             <Sparkles className="h-3 w-3" /> Lançamentos
           </button>
           <span className="mx-1 w-px shrink-0 self-stretch bg-border" />
-          {["Todos", ...productGroups].map((g) => (
+          {Array.from(new Set(["Todos", ...productGroups])).map((g) => (
             <button
               key={g}
               onClick={() => setGroup(g)}
