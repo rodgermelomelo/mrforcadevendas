@@ -133,7 +133,9 @@ function RegistryRow({
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
-      <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground">{row.code}</span>
+      <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground">
+        {kind === "brands" ? "MARCA" : row.code}
+      </span>
       <input
         value={label}
         onChange={(e) => setLabel(e.target.value)}
@@ -150,14 +152,16 @@ function RegistryRow({
           Padrão
         </label>
       )}
-      <button
-        type="button"
-        disabled={!dirty || saving}
-        onClick={() => onSave(label, kind === "paymentTerms" ? isStandard : undefined)}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-40"
-      >
-        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Salvar
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={!dirty || saving}
+          onClick={() => onSave(label, kind === "paymentTerms" ? isStandard : undefined)}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-40"
+        >
+          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Salvar
+        </button>
+      </div>
     </div>
   );
 }
