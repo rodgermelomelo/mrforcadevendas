@@ -78,14 +78,15 @@ function BrandsAdminPage() {
           {filtered.map((brand) => (
             <div 
               key={brand.code}
-              className={`group flex flex-col gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md ${
+              onClick={() => setViewingBrandProducts(brand.code)}
+              className={`group flex flex-col gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md cursor-pointer ${
                 brand.active ? "border-border bg-card" : "border-border/50 bg-muted/30 opacity-75"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold text-foreground">{brand.code}</h3>
-                  <p className="text-xs text-muted-foreground">{brand.label}</p>
+                  <p className="text-xs text-muted-foreground">{brand.productCount} produtos</p>
                 </div>
                 <div className="flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full bg-border p-1 transition-colors data-[active=true]:bg-primary"
                      data-active={brand.active}
