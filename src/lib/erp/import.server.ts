@@ -89,6 +89,13 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     else if (desc.includes("ACEMAR")) brand = "ACEMAR";
     else if (desc.includes("FOX")) brand = "FOX";
     
+    // Fallback: se o grupo for conhecido e não achou marca, usa o grupo como marca
+    if (brand === "Outros" && p.erpGroupCode) {
+      const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
+      if (g?.label) brand = g.label.split(" ")[0] || g.label;
+    }
+
+    
     return {
       erp_code: p.erpCode,
       name: desc || `Produto ${p.erpCode}`,
