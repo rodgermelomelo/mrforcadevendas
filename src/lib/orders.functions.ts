@@ -243,6 +243,7 @@ export const createOrder = createServerFn({ method: "POST" })
       revision: 1,
       content_hash: contentHash,
       snapshot: {
+
         customer: customer.erp_code,
         priceTable: data.priceTableCode,
         priceLevel: data.priceLevelLabel,
