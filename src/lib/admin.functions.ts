@@ -97,7 +97,7 @@ export const publishErpFile = createServerFn({ method: "POST" })
         parser_version: result.report.parserVersion,
         file_version: result.report.layoutVersion,
         status: "publishing",
-        totals: { byType: result.report.typeCounts, diagnosis: diagnoseCatalog(result.records) },
+        totals: JSON.parse(JSON.stringify({ byType: result.report.typeCounts, diagnosis: diagnoseCatalog(result.records) })),
         created_by: context.userId,
       })
       .select("id")
