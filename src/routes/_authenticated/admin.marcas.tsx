@@ -32,7 +32,7 @@ function BrandsAdminPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: (input: { kind: "brands"; code: string; label: string; active: boolean }) => 
+    mutationFn: (input: { kind: "brands"; code: string; label: string; active: boolean; metadata?: any }) => 
       save({ data: input }),
     onSuccess: async () => {
       toast.success("Marca atualizada.");
@@ -85,11 +85,35 @@ function BrandsAdminPage() {
                        kind: "brands",
                        code: brand.code,
                        label: brand.code,
-                       active: !brand.active
+                       active: !brand.active,
+                       metadata: brand.metadata
                      })}
                 >
                   <div className={`h-4 w-4 rounded-full bg-white transition-transform ${brand.active ? "translate-x-4" : "translate-x-0"}`} />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={brand.metadata?.isCategory}
+                    onChange={(e) => mutation.mutate({
+                      kind: "brands",
+                      code: brand.code,
+                      label: brand.code,
+                      active: brand.active ?? true,
+                      metadata: { ...brand.metadata, isCategory: e.target.checked }
+                    })}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <span className="text-xs font-medium text-muted-foreground">Esta marca é uma Categoria</span>
+                </label>
+                {brand.metadata?.isCategory && (
+                  <p className="text-[10px] text-primary/70 leading-tight">
+                    Itens desta "marca" serão tratados como uma categoria organizacional no catálogo.
+                  </p>
+                )}
               </div>
               
               <div className="flex items-center justify-between border-t border-border/50 pt-3">
