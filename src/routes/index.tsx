@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, AlertTriangle, TrendingUp, Wallet, PackageCheck } from "lucide-react";
 import { useSales } from "@/lib/state/sales-store";
-import { customers, erpLastUpdate } from "@/lib/demo/data";
 import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { statusLabel } from "@/lib/orders/status";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const { orders, hydrated, customer } = useSales();
+  const { orders, hydrated, customer, customers, erpLastUpdate } = useSales();
 
   const totalSold = orders
     .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
@@ -48,7 +47,7 @@ function Dashboard() {
             Seu <span className="text-brand-gradient">painel comercial</span>
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Dados atualizados em {formatDateTimeBR(erpLastUpdate)}
+            Dados atualizados em {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
           </p>
         </div>
         <Button asChild size="lg" className="shrink-0 rounded-xl bg-brand-gradient shadow-lift">

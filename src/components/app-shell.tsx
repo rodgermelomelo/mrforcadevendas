@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Users, PackageSearch, ShoppingCart, ClipboardList } from "lucide-react";
 import type { ReactNode } from "react";
 import { useSales } from "@/lib/state/sales-store";
-import { erpLastUpdate } from "@/lib/demo/data";
 import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <p className="mt-auto px-3 text-xs leading-relaxed text-muted-foreground">
           Dados atualizados em
           <br />
-          {formatDateTimeBR(erpLastUpdate)}
+          {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
         </p>
       </aside>
 
