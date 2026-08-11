@@ -21,13 +21,14 @@ export const Route = createFileRoute("/_authenticated/admin/cadastros")({
   }),
 });
 
-type Kind = "groups" | "segments" | "billingMethods" | "paymentTerms";
+type Kind = "groups" | "segments" | "billingMethods" | "paymentTerms" | "brands";
 
 const TABS: { key: Kind; label: string }[] = [
   { key: "groups", label: "Grupos de produto" },
   { key: "segments", label: "Segmentos" },
   { key: "billingMethods", label: "Formas de cobrança" },
   { key: "paymentTerms", label: "Condições de pagamento" },
+  { key: "brands", label: "Marcas" },
 ];
 
 function RegistriesPage() {
