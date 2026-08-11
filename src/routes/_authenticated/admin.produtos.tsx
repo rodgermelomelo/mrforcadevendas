@@ -1,21 +1,27 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, Save, ImageOff } from "lucide-react";
-import { toast } from "sonner";
+import { ImageOff, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
-import { listProducts, updateProduct, listRegistries, type AdminProduct } from "@/lib/admin-data.functions";
+import { ProductDetailDialog, HealthBadge } from "@/components/admin/product-detail-dialog";
+import { listProducts, listRegistries } from "@/lib/admin-data.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/produtos")({
   component: ProductsPage,
   head: () => ({
     meta: [
-      { title: "Produtos · MR Força de Vendas" },
-      { name: "description", content: "Libere produtos no catálogo, marque lançamentos e enriqueça nome e imagem." },
-      { property: "og:title", content: "Produtos · MR Força de Vendas" },
-      { property: "og:description", content: "Gestão do catálogo comercial e do enriquecimento de produtos." },
+      { title: "Produtos, estoque e preços · MR Força de Vendas" },
+      {
+        name: "description",
+        content: "Central única de produtos: catálogo, quantidade em estoque e os 6 valores por tabela de preço.",
+      },
+      { property: "og:title", content: "Produtos, estoque e preços · MR Força de Vendas" },
+      {
+        property: "og:description",
+        content: "Gestão unificada do catálogo comercial, estoque do ERP e preços por tabela.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -24,222 +30,236 @@ export const Route = createFileRoute("/_authenticated/admin/produtos")({
 
 const SIZE = 25;
 
+const STOCK_FILTERS = [
+  { key: "todos", label: "Estoque: todos" },
+  { key: "com_estoque", label: "Com estoque" },
+  { key: "sem_estoque", label: "Sem estoque" },
+  { key: "negativo", label: "Negativo" },
+];
+
+const PRICE_FILTERS = [
+  { key: "todos", label: "Preço: todos" },
+  { key: "com_preco", label: "Com preço" },
+  { key: "sem_preco", label: "Sem preço" },
+  { key: "sem_nivel", label: "Tabela sem nível" },
+];
+
+const CATALOG_FILTERS = [
+  { key: "todos", label: "Catálogo: todos" },
+  { key: "liberado", label: "Liberado" },
+  { key: "fora", label: "Fora do catálogo" },
+  { key: "lancamento", label: "Lançamento" },
+  { key: "inativo", label: "Inativo" },
+];
+
+const SORTS = [
+  { key: "codigo", label: "Código" },
+  { key: "nome", label: "Nome" },
+  { key: "estoque_desc", label: "Maior estoque" },
+  { key: "estoque_asc", label: "Menor estoque" },
+];
+
 function ProductsPage() {
-  const queryClient = useQueryClient();
   const load = useServerFn(listProducts);
-  const save = useServerFn(updateProduct);
   const loadRegistries = useServerFn(listRegistries);
 
   const [term, setTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState("todos");
+  const [priceFilter, setPriceFilter] = useState("todos");
+  const [catalogFilter, setCatalogFilter] = useState("todos");
+  const [groupCode, setGroupCode] = useState("");
+  const [sort, setSort] = useState("codigo");
   const [page, setPage] = useState(0);
   const [openCode, setOpenCode] = useState<string | null>(null);
 
+  const reset = () => setPage(0);
+
   const query = useQuery({
-    queryKey: ["admin", "products", term, page],
-    queryFn: () => load({ data: { term, page } }),
+    queryKey: ["admin", "products", term, stockFilter, priceFilter, catalogFilter, groupCode, sort, page],
+    queryFn: () => load({ data: { term, page, stockFilter, priceFilter, catalogFilter, groupCode, sort } }),
   });
   const registriesQuery = useQuery({ queryKey: ["admin", "registries"], queryFn: () => loadRegistries() });
+  const groups = (registriesQuery.data?.groups ?? []).map((g) => ({ code: g.code, label: `${g.code} · ${g.label}` }));
 
-  const mutation = useMutation({
-    mutationFn: (input: Parameters<typeof save>[0]["data"]) => save({ data: input }),
-    onSuccess: async () => {
-      toast.success("Produto atualizado.");
-      setOpenCode(null);
-      await queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-      await queryClient.invalidateQueries({ queryKey: ["workspace"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  const select = "rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary";
 
   return (
     <AdminPage
-      title="Produtos e Estoque"
-      description="Gestão unificada do catálogo e quantidades. Aqui você ajusta visibilidade e lançamentos, acompanhando em tempo real a posição enviada pelo ERP (registro tipo 27)."
+      title="Produtos, estoque e preços"
+      description="Uma única tela para o catálogo: cada produto mostra a quantidade em estoque (registro 27) e os preços por tabela (registro 28). Clique em um produto para ver o detalhe completo e editar."
+      actions={
+        <Button asChild variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5">
+          <Link to="/catalogo">Ver no catálogo</Link>
+        </Button>
+      }
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+      <div className="space-y-3">
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             value={term}
             onChange={(e) => {
               setTerm(e.target.value);
-              setPage(0);
+              reset();
             }}
             placeholder="Buscar por código ou nome"
             className="w-full rounded-2xl border border-border bg-card py-3 pl-10 pr-4 text-sm outline-none focus:border-primary"
           />
         </div>
-        <Button asChild variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5">
-          <Link to="/catalogo">Ver no catálogo</Link>
-        </Button>
-      </div>
 
-      {query.isLoading ? (
-        <div className="grid place-items-center py-16 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {(query.data?.rows ?? []).map((product) => (
-            <div key={product.erpCode} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setOpenCode(openCode === product.erpCode ? null : product.erpCode)}
-                className="flex w-full items-center gap-3 text-left"
-              >
-                <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <ImageOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{product.displayName || product.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {product.erpCode} · {product.unit} ·{" "}
-                    <Link
-                      to="/admin/estoque"
-                      search={{ term: product.erpCode }}
-                      className="text-primary hover:underline"
-                    >
-                      estoque {product.stock.toLocaleString("pt-BR")} (qnt. disponível)
-                    </Link>{" "}
-                    · {product.priceTables} tabelas com preço
-                  </span>
-                </span>
-                <span className="flex shrink-0 gap-1.5">
-                  {product.isLaunch && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      Lançamento
-                    </span>
-                  )}
-                  {!product.released && (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                      Fora do catálogo
-                    </span>
-                  )}
-                </span>
-              </button>
-
-              {openCode === product.erpCode && (
-                <ProductForm
-                  product={product}
-                  saving={mutation.isPending}
-                  groups={(registriesQuery.data?.groups ?? []).map((g) => ({ code: g.code, label: `${g.code} · ${g.label}` }))}
-                  onSave={(patch) => mutation.mutate({ erpCode: product.erpCode, ...patch })}
-                />
-              )}
-            </div>
-          ))}
-          <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
-        </div>
-      )}
-    </AdminPage>
-  );
-}
-
-function ProductForm({
-  product,
-  saving,
-  groups,
-  onSave,
-}: {
-  product: AdminProduct;
-  saving: boolean;
-  groups: { code: string; label: string }[];
-  onSave: (patch: Record<string, unknown>) => void;
-}) {
-  const [form, setForm] = useState({
-    released: product.released,
-    isLaunch: product.isLaunch,
-    active: product.active,
-    groupCode: product.groupCode ?? "",
-    unit: product.unit,
-    displayName: product.displayName ?? "",
-    imageUrl: product.imageUrl ?? "",
-  });
-
-  const field = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
-  const labelCls = "text-xs font-medium text-muted-foreground";
-
-  return (
-    <div className="mt-4 space-y-4 border-t border-border pt-4">
-      <p className="text-xs text-muted-foreground">Descrição oficial do ERP: {product.name}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1">
-          <span className={labelCls}>Nome de exibição</span>
-          <input
-            className={field}
-            value={form.displayName}
-            onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-            placeholder={product.name}
-          />
-        </label>
-        <label className="space-y-1">
-          <span className={labelCls}>URL da imagem</span>
-          <input
-            className={field}
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-            placeholder="https://..."
-          />
-        </label>
-        <label className="space-y-1">
-          <span className={labelCls}>Grupo</span>
-          <select className={field} value={form.groupCode} onChange={(e) => setForm({ ...form, groupCode: e.target.value })}>
-            <option value="">Sem grupo</option>
+        <div className="flex flex-wrap gap-2">
+          <select
+            className={select}
+            value={stockFilter}
+            onChange={(e) => {
+              setStockFilter(e.target.value);
+              reset();
+            }}
+          >
+            {STOCK_FILTERS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className={select}
+            value={priceFilter}
+            onChange={(e) => {
+              setPriceFilter(e.target.value);
+              reset();
+            }}
+          >
+            {PRICE_FILTERS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className={select}
+            value={catalogFilter}
+            onChange={(e) => {
+              setCatalogFilter(e.target.value);
+              reset();
+            }}
+          >
+            {CATALOG_FILTERS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className={select}
+            value={groupCode}
+            onChange={(e) => {
+              setGroupCode(e.target.value);
+              reset();
+            }}
+          >
+            <option value="">Todos os grupos</option>
             {groups.map((g) => (
               <option key={g.code} value={g.code}>
                 {g.label}
               </option>
             ))}
           </select>
-        </label>
-        <label className="space-y-1">
-          <span className={labelCls}>Unidade</span>
-          <input className={field} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
-        </label>
+          <select
+            className={select}
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value);
+              reset();
+            }}
+          >
+            {SORTS.map((s) => (
+              <option key={s.key} value={s.key}>
+                Ordenar: {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          {query.isLoading ? "Carregando…" : `${(query.data?.total ?? 0).toLocaleString("pt-BR")} produtos`}
+        </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 text-sm">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.released}
-            onChange={(e) => setForm({ ...form, released: e.target.checked })}
-            className="h-4 w-4 accent-[hsl(var(--primary))]"
-          />
-          Liberado no catálogo
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.isLaunch}
-            onChange={(e) => setForm({ ...form, isLaunch: e.target.checked })}
-            className="h-4 w-4 accent-[hsl(var(--primary))]"
-          />
-          Lançamento
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => setForm({ ...form, active: e.target.checked })}
-            className="h-4 w-4 accent-[hsl(var(--primary))]"
-          />
-          Ativo
-        </label>
-      </div>
+      {query.isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted" />
+          ))}
+        </div>
+      ) : (query.data?.rows ?? []).length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          Nenhum produto encontrado com esses filtros.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {(query.data?.rows ?? []).map((product) => (
+            <button
+              key={product.erpCode}
+              type="button"
+              onClick={() => setOpenCode(product.erpCode)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
+            >
+              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                ) : (
+                  <ImageOff className="h-4 w-4 text-muted-foreground" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{product.displayName || product.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {product.erpCode} · {product.unit}
+                  {product.brand ? ` · ${product.brand}` : ""}
+                </span>
+                <span className="mt-1.5 flex flex-wrap gap-1.5">
+                  <HealthBadge
+                    tone={product.stock > 0 ? "ok" : product.stock < 0 ? "bad" : "muted"}
+                    label={`Estoque ${product.stock.toLocaleString("pt-BR")}`}
+                  />
+                  <HealthBadge
+                    tone={!product.hasPrice ? "bad" : product.hasUnmappedTable ? "warn" : "ok"}
+                    label={
+                      !product.hasPrice
+                        ? "Sem preço"
+                        : product.hasUnmappedTable
+                          ? "Tabela sem nível"
+                          : `${product.priceTables} tabelas`
+                    }
+                  />
+                  {!product.active ? (
+                    <HealthBadge tone="muted" label="Inativo" />
+                  ) : !product.released ? (
+                    <HealthBadge tone="muted" label="Fora do catálogo" />
+                  ) : null}
+                  {product.isLaunch && <HealthBadge tone="brand" label="Lançamento" />}
+                </span>
+              </span>
+            </button>
+          ))}
+          <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
+        </div>
+      )}
 
-      <button
-        type="button"
-        disabled={saving}
-        onClick={() => onSave(form)}
-        className="inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-      >
-        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar produto
-      </button>
-    </div>
+      {query.isFetching && !query.isLoading && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Atualizando…
+        </p>
+      )}
+
+      <ProductDetailDialog
+        erpCode={openCode}
+        groups={groups}
+        onOpenChange={(open) => {
+          if (!open) setOpenCode(null);
+        }}
+      />
+    </AdminPage>
   );
 }
