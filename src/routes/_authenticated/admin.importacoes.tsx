@@ -6,6 +6,7 @@ import { Upload, FileCheck2, AlertTriangle, ShieldAlert, Loader2, CheckCircle2 }
 import { toast } from "sonner";
 import { analyzeErpFile, publishErpFile, getIsAdmin } from "@/lib/admin.functions";
 import { formatDateTimeBR } from "@/lib/pricing";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/importacoes")({
   component: ImportacoesPage,
