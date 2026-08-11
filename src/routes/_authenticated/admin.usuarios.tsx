@@ -113,25 +113,31 @@ function UsersPage() {
             </Button>
           </div>
 
-      {usersQuery.isLoading ? (
-        <div className="grid place-items-center py-16 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {(usersQuery.data ?? []).map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              sellers={(sellersQuery.data ?? []).map((s) => ({ code: s.erpCode, label: `${s.erpCode} · ${s.name}` }))}
-              savingRole={roleMutation.isPending}
-              savingVisibility={visibilityMutation.isPending}
-              onRole={(role) => roleMutation.mutate({ userId: user.id, role })}
-              onVisibility={(codes) => visibilityMutation.mutate({ userId: user.id, sellerCodes: codes })}
-            />
-          ))}
-        </div>
-      )}
+          {usersQuery.isLoading ? (
+            <div className="grid place-items-center py-16 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(usersQuery.data ?? []).map((user) => (
+                <UserCard
+                  key={user.id}
+                  user={user}
+                  sellers={(sellersQuery.data ?? []).map((s) => ({ code: s.erpCode, label: `${s.erpCode} · ${s.name}` }))}
+                  savingRole={roleMutation.isPending}
+                  savingVisibility={visibilityMutation.isPending}
+                  onRole={(role) => roleMutation.mutate({ userId: user.id, role })}
+                  onVisibility={(codes) => visibilityMutation.mutate({ userId: user.id, sellerCodes: codes })}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="provisionar">
+          <ProvisionarView />
+        </TabsContent>
+      </Tabs>
 
       <CreateUserDialog 
         open={createOpen} 
