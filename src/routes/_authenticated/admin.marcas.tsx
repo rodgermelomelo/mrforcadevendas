@@ -216,8 +216,63 @@ function BrandsAdminPage() {
           {filtered.length === 0 && (
             <div className="col-span-full rounded-2xl border border-dashed border-border p-12 text-center">
               <p className="text-sm text-muted-foreground">Nenhuma marca encontrada.</p>
+        </div>
+      )}
+
+      {/* View per categories (non-assigned ones) */}
+      {!term && categories.filter(c => !c.metadata?.parentBrand).length > 0 && (
+        <div className="mt-8 pt-8 border-t border-border">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Categorias Não Vinculadas</h2>
+              <p className="text-sm text-muted-foreground">Estes itens estão marcados como categoria mas não possuem uma marca pai.</p>
             </div>
-          )}
+            <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+              {categories.filter(c => !c.metadata?.parentBrand).length} itens
+            </div>
+          </div>
+          
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.filter(c => !c.metadata?.parentBrand).map((cat) => (
+              <div 
+                key={cat.code}
+                className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="truncate text-sm font-semibold text-foreground">{cat.code}</h3>
+                  <button
+                    onClick={() => mutation.mutate({
+                      kind: "brands",
+                      code: cat.code,
+                      label: cat.code,
+                      active: cat.active ?? true,
+                      metadata: { ...cat.metadata, isCategory: false }
+                    })}
+                    className="text-[10px] text-primary hover:underline font-bold"
+                  >
+                    Tornar Marca
+                  </button>
+                </div>
+                <div className="flex items-center justify-between border-t border-border/50 pt-2">
+                  <span className="text-[10px] text-muted-foreground">{cat.productCount} produtos</span>
+                  <div className="flex h-5 w-8 shrink-0 cursor-pointer items-center rounded-full bg-border p-0.5 transition-colors data-[active=true]:bg-primary"
+                       data-active={cat.active}
+                       onClick={() => mutation.mutate({
+                         kind: "brands",
+                         code: cat.code,
+                         label: cat.code,
+                         active: !cat.active,
+                         metadata: cat.metadata
+                       })}
+                  >
+                    <div className={`h-3.5 w-3.5 rounded-full bg-white transition-transform ${cat.active ? "translate-x-3.5" : "translate-x-0"}`} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
         </div>
       )}
       
