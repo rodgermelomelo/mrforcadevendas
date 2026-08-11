@@ -214,7 +214,7 @@ export interface AdminCustomer {
 
 export const listCustomers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { term?: string; page?: number }) => input ?? {})
+  .inputValidator((input: { term?: string; page?: number; sellerErpCode?: string; restricted?: boolean; active?: boolean }) => input ?? {})
   .handler(async ({ data, context }): Promise<{ rows: AdminCustomer[]; total: number }> => {
     await assertAdmin(context);
     const page = Math.max(0, data.page ?? 0);
@@ -230,6 +230,15 @@ export const listCustomers = createServerFn({ method: "POST" })
       query = query.or(
         `erp_code.ilike.%${term}%,legal_name.ilike.%${term}%,trade_name.ilike.%${term}%,city.ilike.%${term}%`,
       );
+    }
+    if (data.sellerErpCode) {
+      query = query.eq("seller_erp_code", data.sellerErpCode);
+    }
+    if (data.restricted !== undefined) {
+      query = query.eq("restricted", data.restricted);
+    }
+    if (data.active !== undefined) {
+      query = query.eq("active", data.active);
     }
     const { data: rows, count, error } = await query
       .order("trade_name")

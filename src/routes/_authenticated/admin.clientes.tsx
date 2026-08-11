@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, Save } from "lucide-react";
+import { Loader2, Search, Save, Filter, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
 import {
@@ -41,10 +41,19 @@ function CustomersPage() {
   const [term, setTerm] = useState("");
   const [page, setPage] = useState(0);
   const [openCode, setOpenCode] = useState<string | null>(null);
+  const [sellerFilter, setSellerFilter] = useState("");
+  const [restrictedFilter, setRestrictedFilter] = useState<boolean | undefined>(undefined);
+  const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
 
   const query = useQuery({
-    queryKey: ["admin", "customers", term, page],
-    queryFn: () => load({ data: { term, page } }),
+    queryKey: ["admin", "customers", term, page, sellerFilter, restrictedFilter, activeFilter],
+    queryFn: () => load({ data: { 
+      term, 
+      page, 
+      sellerErpCode: sellerFilter || undefined,
+      restricted: restrictedFilter,
+      active: activeFilter
+    } }),
   });
   const tablesQuery = useQuery({ queryKey: ["admin", "price-tables"], queryFn: () => loadTables() });
   const registriesQuery = useQuery({ queryKey: ["admin", "registries"], queryFn: () => loadRegistries() });
@@ -66,17 +75,86 @@ function CustomersPage() {
       title="Clientes"
       description="Razão social, CNPJ e cidade vêm do ERP e não são editáveis. Os campos comerciais abaixo são gerenciados aqui."
     >
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={term}
-          onChange={(e) => {
-            setTerm(e.target.value);
-            setPage(0);
-          }}
-          placeholder="Buscar por código, razão social, nome fantasia ou cidade"
-          className="w-full rounded-2xl border border-border bg-card py-3 pl-10 pr-4 text-sm outline-none focus:border-primary"
-        />
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={term}
+            onChange={(e) => {
+              setTerm(e.target.value);
+              setPage(0);
+            }}
+            placeholder="Buscar por código, razão social, nome fantasia ou cidade"
+            className="w-full rounded-2xl border border-border bg-card py-3 pl-10 pr-4 text-sm outline-none focus:border-primary shadow-sm"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <select
+              value={sellerFilter}
+              onChange={(e) => {
+                setSellerFilter(e.target.value);
+                setPage(0);
+              }}
+              className="bg-transparent text-sm outline-none"
+            >
+              <option value="">Todos Representantes</option>
+              {(sellersQuery.data ?? []).map((s) => (
+                <option key={s.erpCode} value={s.erpCode}>
+                  {s.erpCode} · {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+            <select
+              value={restrictedFilter === undefined ? "" : String(restrictedFilter)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setRestrictedFilter(val === "" ? undefined : val === "true");
+                setPage(0);
+              }}
+              className="bg-transparent text-sm outline-none"
+            >
+              <option value="">Restrição: Todas</option>
+              <option value="true">Com Restrição</option>
+              <option value="false">Sem Restrição</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+            <select
+              value={activeFilter === undefined ? "" : String(activeFilter)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setActiveFilter(val === "" ? undefined : val === "true");
+                setPage(0);
+              }}
+              className="bg-transparent text-sm outline-none"
+            >
+              <option value="">Status: Todos</option>
+              <option value="true">Ativos</option>
+              <option value="false">Inativos</option>
+            </select>
+          </div>
+
+          {(sellerFilter || restrictedFilter !== undefined || activeFilter !== undefined) && (
+            <button
+              onClick={() => {
+                setSellerFilter("");
+                setRestrictedFilter(undefined);
+                setActiveFilter(undefined);
+                setPage(0);
+              }}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" /> Limpar filtros
+            </button>
+          )}
+        </div>
       </div>
 
       {query.isLoading ? (
