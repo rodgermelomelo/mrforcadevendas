@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatBRL, resolvePrice } from "@/lib/pricing";
 import { productImage } from "@/lib/product-images";
@@ -31,35 +32,62 @@ function Catalogo() {
   const { customer, table, addItem, itemCount, products, productGroups } = useSales();
   const { openCustomerPicker } = useCustomerPicker();
   const [term, setTerm] = useState("");
-  const [group, setGroup] = useState<string>("Todos");
-  const [brand, setBrand] = useState<string>("Todos");
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [onlyLaunch, setOnlyLaunch] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
 
   const filtered = useMemo(() => {
     const q = term.trim().toLowerCase();
     return products.filter((p) => {
-      if (group !== "Todos" && p.group !== group) return false;
-      if (brand !== "Todos" && p.brand !== brand) return false;
+      if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
+      if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
       if (!q) return true;
       return `${p.name} ${p.erpCode} ${p.group} ${p.brand || ""}`.toLowerCase().includes(q);
     });
-  }, [term, group, brand, onlyLaunch, onlyInStock, products]);
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products]);
 
   const brands = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
       if (p.brand) set.add(p.brand);
     });
-    return ["Todos", ...Array.from(set).sort()];
+    return Array.from(set).sort();
   }, [products]);
 
   const groups = useMemo(() => {
-    const set = new Set(["Todos", ...productGroups]);
-    return Array.from(set);
+    const set = new Set(productGroups);
+    return Array.from(set).sort();
   }, [productGroups]);
+
+  const toggleBrand = (b: string) => {
+    setSelectedBrands((prev) =>
+      prev.includes(b) ? prev.filter((i) => i !== b) : [...prev, b]
+    );
+  };
+
+  const toggleGroup = (g: string) => {
+    setSelectedGroups((prev) =>
+      prev.includes(g) ? prev.filter((i) => i !== g) : [...prev, g]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedBrands([]);
+    setSelectedGroups([]);
+    setOnlyLaunch(false);
+    setOnlyInStock(false);
+    setTerm("");
+  };
+
+  const hasActiveFilters =
+    selectedBrands.length > 0 ||
+    selectedGroups.length > 0 ||
+    onlyLaunch ||
+    onlyInStock ||
+    term !== "";
 
   const inStockCount = useMemo(() => products.filter((p) => p.stock > 0).length, [products]);
   const tableBlocked = Boolean(customer) && (!table || table.mappedLevel === null);
@@ -151,19 +179,77 @@ function Catalogo() {
             </button>
           </div>
 
+          {/* Active Chips */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 px-1">
+              {selectedBrands.map((b) => (
+                <Badge
+                  key={b}
+                  variant="secondary"
+                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] bg-primary/10 text-primary border-primary/20"
+                >
+                  {b}
+                  <button onClick={() => toggleBrand(b)} className="hover:text-primary/70">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedGroups.map((g) => (
+                <Badge
+                  key={g}
+                  variant="secondary"
+                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] bg-primary/10 text-primary border-primary/20"
+                >
+                  {g}
+                  <button onClick={() => toggleGroup(g)} className="hover:text-primary/70">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {onlyInStock && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] bg-success/10 text-success border-success/20"
+                >
+                  Com estoque
+                  <button onClick={() => setOnlyInStock(false)} className="hover:text-success/70">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {onlyLaunch && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] bg-brand-gradient text-white border-transparent"
+                >
+                  Lançamento
+                  <button onClick={() => setOnlyLaunch(false)} className="hover:text-white/70">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              <button
+                onClick={clearFilters}
+                className="text-[11px] font-medium text-muted-foreground hover:text-primary underline underline-offset-2 ml-1"
+              >
+                Limpar tudo
+              </button>
+            </div>
+          )}
+
           {/* Brand Filter */}
           <div>
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
-              Filtrar por Empresa
+              Empresa
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {brands.map((b) => (
                 <button
                   key={b}
-                  onClick={() => setBrand(b)}
+                  onClick={() => toggleBrand(b)}
                   className={cn(
                     "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
-                    brand === b
+                    selectedBrands.includes(b)
                       ? "border-transparent bg-primary text-primary-foreground shadow-sm"
                       : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
                   )}
@@ -177,16 +263,16 @@ function Catalogo() {
           {/* Category Filter */}
           <div>
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
-              Filtrar por Categoria
+              Categoria
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {groups.map((g) => (
                 <button
                   key={g}
-                  onClick={() => setGroup(g)}
+                  onClick={() => toggleGroup(g)}
                   className={cn(
                     "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
-                    group === g
+                    selectedGroups.includes(g)
                       ? "border-transparent bg-primary text-primary-foreground shadow-sm"
                       : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
                   )}
