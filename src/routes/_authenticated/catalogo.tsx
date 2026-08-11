@@ -53,19 +53,26 @@ function Catalogo() {
       
       // Filtro de marca e categoria vinculada
       if (selectedBrands.length > 0) {
-        // O produto deve pertencer à marca OU a uma categoria que pertence a uma das marcas selecionadas
-        const isProductBrandSelected = p.brand && selectedBrands.includes(p.brand);
+        const brandName = p.brand;
+        if (!brandName) return false;
         
-        // Se a "marca" do produto é na verdade uma categoria (isCategory: true)
-        // e ela tem um 'parentBrand' que está entre os selecionados
-        const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
-        const isParentBrandSelected = parentBrand && selectedBrands.includes(parentBrand);
+        const metadata = brandMetadata[brandName];
         
-        if (!isProductBrandSelected && !isParentBrandSelected) return false;
+        // Se a marca do produto é uma das marcas selecionadas
+        const isExactBrandSelected = selectedBrands.includes(brandName);
+        
+        // Se a marca do produto é uma categoria e sua marca pai está selecionada
+        const isParentBrandSelected = metadata?.isCategory && metadata?.parentBrand && selectedBrands.includes(metadata.parentBrand);
+        
+        if (!isExactBrandSelected && !isParentBrandSelected) return false;
       }
       
       // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles
-      if (selectedGroups.length > 0 && !selectedGroups.includes(pCategory)) return false;
+      if (selectedGroups.length > 0) {
+        const brandName = p.brand;
+        const isGroupSelected = (brandName && selectedGroups.includes(brandName)) || selectedGroups.includes(pCategory);
+        if (!isGroupSelected) return false;
+      }
 
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
@@ -115,19 +122,46 @@ function Catalogo() {
   const brands = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
-      if (p.brand) set.add(p.brand);
+      // Se o produto tem uma marca, e essa marca tem uma "parentBrand", a marca principal é a parentBrand
+      const brandName = p.brand;
+      if (!brandName) return;
+      
+      const metadata = brandMetadata[brandName];
+      if (metadata?.isCategory && metadata?.parentBrand) {
+        set.add(metadata.parentBrand);
+      } else if (!metadata?.isCategory) {
+        set.add(brandName);
+      }
     });
     return Array.from(set).sort();
-  }, [products]);
+  }, [products, brandMetadata]);
 
   const groups = useMemo(() => {
-    // Se houver marcas selecionadas, mostrar apenas as categorias que possuem produtos nessas marcas
+    // Categorias são os itens que marcamos como isCategory: true vinculados às marcas selecionadas
+    // OU as categorias do ERP (p.category) vinculadas às marcas selecionadas
     const availableGroups = new Set<string>();
+    
     products.forEach(p => {
-      const pCategory = (p as any).category || p.group;
-      const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
-      if (selectedBrands.length === 0 || (p.brand && (selectedBrands.includes(p.brand) || (parentBrand && selectedBrands.includes(parentBrand))))) {
-        availableGroups.add(pCategory);
+      const brandName = p.brand;
+      if (!brandName) return;
+      
+      const metadata = brandMetadata[brandName];
+      const parentBrand = metadata?.parentBrand;
+      
+      // Se não houver marcas selecionadas, ou se a marca/pai do produto estiver selecionada
+      const isRelevant = selectedBrands.length === 0 || 
+                        selectedBrands.includes(brandName) || 
+                        (parentBrand && selectedBrands.includes(parentBrand));
+      
+      if (isRelevant) {
+        // Se for uma categoria manual, mostramos ela mesma como opção de filtro fino
+        if (metadata?.isCategory) {
+          availableGroups.add(brandName);
+        } else {
+          // Se for uma marca principal, mostramos as categorias do ERP dela
+          const pCategory = (p as any).category || p.group;
+          if (pCategory) availableGroups.add(pCategory);
+        }
       }
     });
     return Array.from(availableGroups).sort();
