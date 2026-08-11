@@ -115,10 +115,19 @@ function Catalogo() {
   const brands = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
-      if (p.brand) set.add(p.brand);
+      // Se o produto tem uma marca, e essa marca tem uma "parentBrand", a marca principal é a parentBrand
+      const brandName = p.brand;
+      if (!brandName) return;
+      
+      const metadata = brandMetadata[brandName];
+      if (metadata?.isCategory && metadata?.parentBrand) {
+        set.add(metadata.parentBrand);
+      } else if (!metadata?.isCategory) {
+        set.add(brandName);
+      }
     });
     return Array.from(set).sort();
-  }, [products]);
+  }, [products, brandMetadata]);
 
   const groups = useMemo(() => {
     // Se houver marcas selecionadas, mostrar apenas as categorias que possuem produtos nessas marcas
