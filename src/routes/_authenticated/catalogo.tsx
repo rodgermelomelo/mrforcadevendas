@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { formatBRL, resolvePrice } from "@/lib/pricing";
 import { productImage } from "@/lib/product-images";
@@ -36,10 +37,11 @@ function Catalogo() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [onlyLaunch, setOnlyLaunch] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
+  const [sortBy, setSortBy] = useState<"relevance" | "code" | "price-asc" | "price-desc">("relevance");
 
   const filtered = useMemo(() => {
     const q = term.trim().toLowerCase();
-    return products.filter((p) => {
+    const result = products.filter((p) => {
       if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
       if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
       if (onlyLaunch && !p.isLaunch) return false;
@@ -47,7 +49,19 @@ function Catalogo() {
       if (!q) return true;
       return `${p.name} ${p.erpCode} ${p.group} ${p.brand || ""}`.toLowerCase().includes(q);
     });
-  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products]);
+
+    return result.sort((a, b) => {
+      if (sortBy === "code") return a.erpCode.localeCompare(b.erpCode);
+      if (sortBy.startsWith("price")) {
+        const resA = resolvePrice(a, table);
+        const resB = resolvePrice(b, table);
+        const pA = resA.ok ? resA.value : 0;
+        const pB = resB.ok ? resB.value : 0;
+        return sortBy === "price-asc" ? pA - pB : pB - pA;
+      }
+      return 0; // relevance (default sequence)
+    });
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table]);
 
   const brands = useMemo(() => {
     const set = new Set<string>();
@@ -142,14 +156,30 @@ function Catalogo() {
       )}
 
       <div className="sticky top-0 z-10 space-y-4 bg-background/80 pb-4 backdrop-blur-md sm:pb-6">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            placeholder="Buscar por nome, código, grupo ou empresa"
-            className="h-12 rounded-xl bg-card pl-11 text-base"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="Buscar por nome, código, grupo ou empresa"
+              className="h-12 rounded-xl bg-card pl-11 text-base"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+            <SelectTrigger className="h-12 w-[160px] rounded-xl bg-card border-none shadow-none">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Ordenar" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance">Relevância</SelectItem>
+              <SelectItem value="code">Código</SelectItem>
+              <SelectItem value="price-asc">Menor Preço</SelectItem>
+              <SelectItem value="price-desc">Maior Preço</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-col gap-4">
