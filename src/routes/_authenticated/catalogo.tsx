@@ -296,8 +296,8 @@ function Catalogo() {
 
           {/* Brand Filter */}
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
-              Empresa
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
+              <Building2 className="h-3 w-3" /> Empresa
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {brands.map((b) => (
