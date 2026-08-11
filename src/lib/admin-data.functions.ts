@@ -874,10 +874,11 @@ export const updateRegistry = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const map = {
-      groups: { table: "product_groups", field: "name" },
-      segments: { table: "segments", field: "name" },
-      billingMethods: { table: "billing_methods", field: "description" },
-      paymentTerms: { table: "payment_terms", field: "description" },
+      groups: { table: "product_groups", field: "name", key: "code" },
+      segments: { table: "segments", field: "name", key: "code" },
+      billingMethods: { table: "billing_methods", field: "description", key: "code" },
+      paymentTerms: { table: "payment_terms", field: "description", key: "code" },
+      brands: { table: "products", field: "brand", key: "brand" },
     } as const;
     const target = map[data.kind];
     const patch: Record<string, unknown> = { [target.field]: data.label };
