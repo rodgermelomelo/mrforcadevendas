@@ -101,8 +101,8 @@ function RegistriesPage() {
                   kind: tab,
                   code: row.code,
                   label,
-                  isStandard,
-                  active,
+                    isStandard: isStandard ?? false,
+                    active: active ?? true,
                 })
               }
             />

@@ -35,6 +35,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       rulesRes,
       roleRes,
       sellersRes,
+      brandsRes,
     ] = await Promise.all([
       supabase.from("customers").select("*").eq("active", true).order("trade_name"),
       supabase.from("products").select("*").eq("active", true).order("erp_code"),
@@ -110,19 +111,23 @@ export const getWorkspace = createServerFn({ method: "GET" })
       sellerErpCode: c.seller_erp_code,
     }));
 
-    const products: Product[] = (productsRes.data ?? []).map((p) => ({
-      id: p.id,
-      erpCode: p.erp_code,
-      name: p.name,
-      group: groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros",
-      unit: p.unit,
-      stock: stock.get(p.erp_code) ?? 0,
-      isLaunch: p.is_launch,
-      imageUrl: image.get(p.erp_code) ?? null,
-      brand: p.brand || (groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros").split(" ")[0],
-
-      prices: pricesByProduct.get(p.erp_code) ?? {},
-    }));
+    const products: Product[] = (productsRes.data ?? [])
+      .filter((p) => {
+        const brand = p.brand || (groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros").split(" ")[0];
+        return activeBrands.has(brand);
+      })
+      .map((p) => ({
+        id: p.id,
+        erpCode: p.erp_code,
+        name: p.name,
+        group: groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros",
+        unit: p.unit,
+        stock: stock.get(p.erp_code) ?? 0,
+        isLaunch: p.is_launch,
+        imageUrl: image.get(p.erp_code) ?? null,
+        brand: p.brand || (groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros").split(" ")[0],
+        prices: pricesByProduct.get(p.erp_code) ?? {},
+      }));
 
     const lastUpdate =
       (inventoryRes.data ?? [])
