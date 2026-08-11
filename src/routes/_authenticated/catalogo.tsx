@@ -51,8 +51,19 @@ function Catalogo() {
     const result = products.filter((p) => {
       const pCategory = (p as any).category || p.group;
       
-      // Se houver marcas selecionadas, o produto deve pertencer a uma delas
-      if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
+      // Filtro de marca e categoria vinculada
+      if (selectedBrands.length > 0) {
+        // O produto deve pertencer à marca OU a uma categoria que pertence à marca
+        const isProductBrandSelected = p.brand && selectedBrands.includes(p.brand);
+        
+        // Se a "marca" do produto é na verdade uma categoria vinculada a uma das marcas selecionadas
+        // Precisamos verificar os metadados das marcas/categorias.
+        // Como o 'products' no sales-store não tem os metadados de marca, 
+        // e 'selectedBrands' contém os nomes das marcas selecionadas, 
+        // a lógica de "escolher de qual marca ela é" na verdade altera como filtramos.
+        
+        if (!isProductBrandSelected) return false;
+      }
       
       // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles
       if (selectedGroups.length > 0 && !selectedGroups.includes(pCategory)) return false;
