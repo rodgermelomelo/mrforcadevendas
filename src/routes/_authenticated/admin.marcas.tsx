@@ -112,57 +112,81 @@ function BrandsAdminPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <label 
-                  className="flex items-center gap-2 cursor-pointer"
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Categorias Vinculadas
+                    </label>
+                    <span className="text-[10px] font-medium text-primary">
+                      {categories.filter(c => c.metadata?.parentBrand === brand.code).length}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {categories.filter(c => c.metadata?.parentBrand === brand.code).length > 0 ? (
+                      categories
+                        .filter(c => c.metadata?.parentBrand === brand.code)
+                        .map(cat => (
+                          <div 
+                            key={cat.code}
+                            className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground"
+                          >
+                            <Tag className="h-2.5 w-2.5 text-primary/70" />
+                            {cat.code}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                mutation.mutate({
+                                  kind: "brands",
+                                  code: cat.code,
+                                  label: cat.code,
+                                  active: cat.active ?? true,
+                                  metadata: { ...cat.metadata, parentBrand: null, isCategory: false }
+                                });
+                              }}
+                              className="ml-1 text-muted-foreground hover:text-destructive"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))
+                    ) : (
+                      <span className="text-[10px] italic text-muted-foreground">Nenhuma categoria vinculada</span>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  className="flex flex-col gap-1.5 pt-2 border-t border-border/50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <input
-                    type="checkbox"
-                    checked={brand.metadata?.isCategory}
-                    onChange={(e) => mutation.mutate({
-                      kind: "brands",
-                      code: brand.code,
-                      label: brand.code,
-                      active: brand.active ?? true,
-                      metadata: { ...brand.metadata, isCategory: e.target.checked }
-                    })}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-xs font-medium text-muted-foreground">Esta marca é uma Categoria</span>
-                </label>
-                
-                {brand.metadata?.isCategory && (
-                  <div 
-                    className="flex flex-col gap-1.5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Marca Pai (Opcional)
-                    </label>
-                    <select
-                      value={brand.metadata?.parentBrand || ""}
-                      onChange={(e) => mutation.mutate({
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Vincular Categoria
+                  </label>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const catCode = e.target.value;
+                      if (!catCode) return;
+                      const cat = categories.find(c => c.code === catCode);
+                      mutation.mutate({
                         kind: "brands",
-                        code: brand.code,
-                        label: brand.code,
-                        active: brand.active ?? true,
-                        metadata: { ...brand.metadata, parentBrand: e.target.value || null }
-                      })}
-                      className="w-full rounded-lg border border-border bg-muted/50 px-2 py-1 text-[11px] outline-none focus:border-primary"
-                    >
-                      <option value="">Nenhuma</option>
-                      {brands
-                        .filter(b => b.code !== brand.code && !b.metadata?.isCategory)
-                        .map(b => (
-                          <option key={b.code} value={b.code}>{b.code}</option>
-                        ))
-                      }
-                    </select>
-                    <p className="text-[10px] text-primary/70 leading-tight italic">
-                      Ex: "{brand.code}" é uma categoria da marca "{brand.metadata?.parentBrand || '...'}"
-                    </p>
-                  </div>
-                )}
+                        code: catCode,
+                        label: catCode,
+                        active: cat?.active ?? true,
+                        metadata: { ...cat?.metadata, parentBrand: brand.code, isCategory: true }
+                      });
+                    }}
+                    className="w-full rounded-lg border border-border bg-muted/50 px-2 py-1 text-[11px] outline-none focus:border-primary"
+                  >
+                    <option value="">Selecionar categoria...</option>
+                    {categories
+                      .filter(c => c.metadata?.parentBrand !== brand.code)
+                      .map(c => (
+                        <option key={c.code} value={c.code}>{c.code}</option>
+                      ))
+                    }
+                  </select>
+                </div>
               </div>
               
               <div className="flex items-center justify-between border-t border-border/50 pt-3">
@@ -175,7 +199,7 @@ function BrandsAdminPage() {
                   className="flex items-center gap-1.5 text-[11px] font-bold text-primary hover:underline"
                 >
                   <Tag className="h-3.5 w-3.5" />
-                  Categorias
+                  Gerenciar
                 </button>
                 <div className="flex items-center gap-3">
                   <span className={`text-[11px] font-bold uppercase tracking-wider ${brand.active ? "text-emerald-600" : "text-muted-foreground"}`}>
