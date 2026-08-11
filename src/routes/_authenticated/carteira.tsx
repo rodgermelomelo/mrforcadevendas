@@ -6,7 +6,7 @@ import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/carteira")({
+export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
     meta: [
       { title: "Minha carteira — MR Força de Vendas" },

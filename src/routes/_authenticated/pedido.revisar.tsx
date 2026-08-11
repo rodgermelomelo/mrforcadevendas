@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/pedido/revisar")({
+export const Route = createFileRoute("/_authenticated/pedido/revisar")({
   head: () => ({
     meta: [
       { title: "Revisar pedido — MR Força de Vendas" },

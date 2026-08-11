@@ -5,7 +5,7 @@ import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/carrinho")({
+export const Route = createFileRoute("/_authenticated/carrinho")({
   head: () => ({
     meta: [
       { title: "Carrinho do pedido — MR Força de Vendas" },

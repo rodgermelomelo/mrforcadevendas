@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
 
-export const Route = createFileRoute("/catalogo")({
+export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
     meta: [
       { title: "Catálogo comercial — MR Força de Vendas" },
