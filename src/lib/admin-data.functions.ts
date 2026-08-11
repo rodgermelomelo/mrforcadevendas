@@ -902,6 +902,7 @@ export interface CodeLabelRow {
   productCount?: number;
   metadata?: {
     isCategory?: boolean;
+    parentBrand?: string | null;
   };
 }
 
