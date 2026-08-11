@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 function Catalogo() {
-  const { customer, table, addItem, itemCount, products, productGroups, role } = useSales();
+  const { customer, table, addItem, itemCount, products, productGroups, role, brandMetadata } = useSales();
   const { openCustomerPicker } = useCustomerPicker();
   const [term, setTerm] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -53,16 +53,15 @@ function Catalogo() {
       
       // Filtro de marca e categoria vinculada
       if (selectedBrands.length > 0) {
-        // O produto deve pertencer à marca OU a uma categoria que pertence à marca
+        // O produto deve pertencer à marca OU a uma categoria que pertence a uma das marcas selecionadas
         const isProductBrandSelected = p.brand && selectedBrands.includes(p.brand);
         
-        // Se a "marca" do produto é na verdade uma categoria vinculada a uma das marcas selecionadas
-        // Precisamos verificar os metadados das marcas/categorias.
-        // Como o 'products' no sales-store não tem os metadados de marca, 
-        // e 'selectedBrands' contém os nomes das marcas selecionadas, 
-        // a lógica de "escolher de qual marca ela é" na verdade altera como filtramos.
+        // Se a "marca" do produto é na verdade uma categoria (isCategory: true)
+        // e ela tem um 'parentBrand' que está entre os selecionados
+        const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
+        const isParentBrandSelected = parentBrand && selectedBrands.includes(parentBrand);
         
-        if (!isProductBrandSelected) return false;
+        if (!isProductBrandSelected && !isParentBrandSelected) return false;
       }
       
       // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles

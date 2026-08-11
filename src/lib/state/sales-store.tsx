@@ -177,6 +177,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     sellerName: workspaceQuery.data?.sellerName ?? "Vendedor",
     sellers: workspaceQuery.data?.sellers ?? [],
     role: (workspaceQuery.data as any)?.role ?? null,
+    brandMetadata: workspaceQuery.data?.brandMetadata ?? {},
     selectCustomer: (id) =>
       setState((prev) => ({
         ...prev,
