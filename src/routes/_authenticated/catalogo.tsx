@@ -133,13 +133,31 @@ function Catalogo() {
   }, [products, brandMetadata]);
 
   const groups = useMemo(() => {
-    // Se houver marcas selecionadas, mostrar apenas as categorias que possuem produtos nessas marcas
+    // Categorias são os itens que marcamos como isCategory: true vinculados às marcas selecionadas
+    // OU as categorias do ERP (p.category) vinculadas às marcas selecionadas
     const availableGroups = new Set<string>();
+    
     products.forEach(p => {
-      const pCategory = (p as any).category || p.group;
-      const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
-      if (selectedBrands.length === 0 || (p.brand && (selectedBrands.includes(p.brand) || (parentBrand && selectedBrands.includes(parentBrand))))) {
-        availableGroups.add(pCategory);
+      const brandName = p.brand;
+      if (!brandName) return;
+      
+      const metadata = brandMetadata[brandName];
+      const parentBrand = metadata?.parentBrand;
+      
+      // Se não houver marcas selecionadas, ou se a marca/pai do produto estiver selecionada
+      const isRelevant = selectedBrands.length === 0 || 
+                        selectedBrands.includes(brandName) || 
+                        (parentBrand && selectedBrands.includes(parentBrand));
+      
+      if (isRelevant) {
+        // Se for uma categoria manual, mostramos ela mesma como opção de filtro fino
+        if (metadata?.isCategory) {
+          availableGroups.add(brandName);
+        } else {
+          // Se for uma marca principal, mostramos as categorias do ERP dela
+          const pCategory = (p as any).category || p.group;
+          if (pCategory) availableGroups.add(pCategory);
+        }
       }
     });
     return Array.from(availableGroups).sort();
