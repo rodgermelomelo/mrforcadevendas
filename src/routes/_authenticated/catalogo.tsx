@@ -53,15 +53,18 @@ function Catalogo() {
       
       // Filtro de marca e categoria vinculada
       if (selectedBrands.length > 0) {
-        // O produto deve pertencer à marca OU a uma categoria que pertence a uma das marcas selecionadas
-        const isProductBrandSelected = p.brand && selectedBrands.includes(p.brand);
+        const brandName = p.brand;
+        if (!brandName) return false;
         
-        // Se a "marca" do produto é na verdade uma categoria (isCategory: true)
-        // e ela tem um 'parentBrand' que está entre os selecionados
-        const parentBrand = p.brand ? brandMetadata[p.brand]?.parentBrand : null;
-        const isParentBrandSelected = parentBrand && selectedBrands.includes(parentBrand);
+        const metadata = brandMetadata[brandName];
         
-        if (!isProductBrandSelected && !isParentBrandSelected) return false;
+        // Se a marca do produto é uma das marcas selecionadas
+        const isExactBrandSelected = selectedBrands.includes(brandName);
+        
+        // Se a marca do produto é uma categoria e sua marca pai está selecionada
+        const isParentBrandSelected = metadata?.isCategory && metadata?.parentBrand && selectedBrands.includes(metadata.parentBrand);
+        
+        if (!isExactBrandSelected && !isParentBrandSelected) return false;
       }
       
       // Se houver grupos (categorias) selecionados, o produto deve pertencer a um deles
