@@ -14,16 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      erp_sellers: {
+        Row: {
+          active: boolean
+          created_at: string
+          erp_code: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          erp_code: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          erp_code?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_visibility: {
+        Row: {
+          created_at: string
+          id: string
+          seller_erp_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seller_erp_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seller_erp_code?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_visibility_seller_erp_code_fkey"
+            columns: ["seller_erp_code"]
+            isOneToOne: false
+            referencedRelation: "erp_sellers"
+            referencedColumns: ["erp_code"]
+          },
+        ]
+      }
+      user_erp_seller_links: {
+        Row: {
+          created_at: string
+          id: string
+          seller_erp_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seller_erp_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seller_erp_code?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_erp_seller_links_seller_erp_code_fkey"
+            columns: ["seller_erp_code"]
+            isOneToOne: false
+            referencedRelation: "erp_sellers"
+            referencedColumns: ["erp_code"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_see_seller: {
+        Args: { _code: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_approver: { Args: { _user_id: string }; Returns: boolean }
+      visible_seller_codes: { Args: { _user_id: string }; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "vendedor_externo"
+        | "vendedor_interno"
+        | "supervisor"
+        | "gerente_comercial"
+        | "administrador"
+        | "operador_integracao"
+      commercial_status:
+        | "draft"
+        | "validating"
+        | "pending_approval"
+        | "changes_requested"
+        | "rejected"
+        | "auto_approved"
+        | "approved"
+        | "confirmed"
+      integration_status:
+        | "not_ready"
+        | "awaiting_erp_integration"
+        | "sending"
+        | "accepted_by_erp"
+        | "integration_error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +310,32 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "vendedor_externo",
+        "vendedor_interno",
+        "supervisor",
+        "gerente_comercial",
+        "administrador",
+        "operador_integracao",
+      ],
+      commercial_status: [
+        "draft",
+        "validating",
+        "pending_approval",
+        "changes_requested",
+        "rejected",
+        "auto_approved",
+        "approved",
+        "confirmed",
+      ],
+      integration_status: [
+        "not_ready",
+        "awaiting_erp_integration",
+        "sending",
+        "accepted_by_erp",
+        "integration_error",
+      ],
+    },
   },
 } as const
