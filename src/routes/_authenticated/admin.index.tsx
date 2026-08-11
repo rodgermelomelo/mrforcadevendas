@@ -43,7 +43,7 @@ const areas = [
   { to: "/admin/clientes", icon: Building2, title: "Clientes", text: "Tabela, condição, restrição, limite e valor mínimo." },
   { to: "/admin/produtos", icon: Package, title: "Produtos, estoque e preços", text: "Implemente edição em lote de marca nos produtos para eu corrigir rapidamente a marca de vários itens de uma vez." },
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Implementar um fluxo para eu criar automaticamente um usuário de autenticação para cada representante, com atribuição de perfil e validação antes de salvar." },
-  { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Grupos, segmentos, cobranças e condições." },
+  { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Adicione uma página de administração de marcas com contagem de produtos e botões para editar ou desativar marcas." },
   { to: "/admin/regras", icon: Scale, title: "Regras comerciais", text: "Matriz de aprovação por exceção, faixa e autoridade." },
   { to: "/admin/diagnostico", icon: Stethoscope, title: "Diagnóstico do catálogo", text: "Classificação dos códigos vindos do ERP." },
   { to: "/admin/importacoes", icon: Upload, title: "Central de Importações", text: "Upload e publicação atômica do dados.txt." },
