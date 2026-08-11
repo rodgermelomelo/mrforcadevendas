@@ -347,7 +347,7 @@ function Catalogo() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="surface-card p-12 text-center">
+        <div className="surface-card flex min-h-[40vh] flex-col items-center justify-center p-12 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Search className="h-8 w-8 text-muted-foreground/50" />
           </div>
