@@ -818,18 +818,28 @@ export interface RegistriesData {
   segments: CodeLabelRow[];
   billingMethods: CodeLabelRow[];
   paymentTerms: CodeLabelRow[];
+  brands: CodeLabelRow[];
 }
 
 export const listRegistries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<RegistriesData> => {
     await assertAdmin(context);
-    const [groups, segments, billing, terms] = await Promise.all([
+    const [groups, segments, billing, terms, products] = await Promise.all([
       context.supabase.from("product_groups").select("*").order("code"),
       context.supabase.from("segments").select("*").order("code"),
       context.supabase.from("billing_methods").select("*").order("code"),
       context.supabase.from("payment_terms").select("*").order("code"),
+      context.supabase.from("products").select("brand, erp_code"),
     ]);
+
+    const brandsMap = new Map<string, number>();
+    for (const p of products.data ?? []) {
+      if (p.brand) {
+        brandsMap.set(p.brand, (brandsMap.get(p.brand) ?? 0) + 1);
+      }
+    }
+
     return {
       groups: (groups.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
       segments: (segments.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
@@ -839,6 +849,12 @@ export const listRegistries = createServerFn({ method: "GET" })
         label: r.description,
         extra: r.is_standard,
       })),
+      brands: [...brandsMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([brand, count]) => ({
+          code: brand,
+          label: `${brand} (${count} produtos)`,
+        })),
     };
   });
 
@@ -846,7 +862,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     (input: {
-      kind: "groups" | "segments" | "billingMethods" | "paymentTerms";
+      kind: "groups" | "segments" | "billingMethods" | "paymentTerms" | "brands";
       code: string;
       label: string;
       isStandard?: boolean;
@@ -858,15 +874,16 @@ export const updateRegistry = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const map = {
-      groups: { table: "product_groups", field: "name" },
-      segments: { table: "segments", field: "name" },
-      billingMethods: { table: "billing_methods", field: "description" },
-      paymentTerms: { table: "payment_terms", field: "description" },
+      groups: { table: "product_groups", field: "name", key: "code" },
+      segments: { table: "segments", field: "name", key: "code" },
+      billingMethods: { table: "billing_methods", field: "description", key: "code" },
+      paymentTerms: { table: "payment_terms", field: "description", key: "code" },
+      brands: { table: "products", field: "brand", key: "brand" },
     } as const;
     const target = map[data.kind];
     const patch: Record<string, unknown> = { [target.field]: data.label };
     if (data.kind === "paymentTerms" && data.isStandard !== undefined) patch["is_standard"] = data.isStandard;
-    const { error } = await context.supabase.from(target.table).update(patch as never).eq("code", data.code);
+    const { error } = await context.supabase.from(target.table).update(patch as never).eq(target.key as any, data.code);
     if (error) throw new Error(error.message);
     await audit(context, target.table, data.code, "update", { label: data.label });
     return { ok: true };
