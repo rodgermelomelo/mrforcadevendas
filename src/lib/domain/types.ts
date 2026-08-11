@@ -59,6 +59,7 @@ export interface Product {
   erpCode: string;
   name: string;
   group: string;
+  brand?: string;
   unit: string;
   stock: number;
   isLaunch: boolean;
