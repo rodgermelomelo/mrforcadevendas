@@ -55,17 +55,22 @@ function ProductsPage() {
       title="Produtos"
       description="O catálogo comercial nasce dos produtos liberados pelo ERP. Aqui você ajusta visibilidade, lançamentos e o enriquecimento (nunca apagado pela importação)."
     >
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={term}
-          onChange={(e) => {
-            setTerm(e.target.value);
-            setPage(0);
-          }}
-          placeholder="Buscar por código ou nome"
-          className="w-full rounded-2xl border border-border bg-card py-3 pl-10 pr-4 text-sm outline-none focus:border-primary"
-        />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={term}
+            onChange={(e) => {
+              setTerm(e.target.value);
+              setPage(0);
+            }}
+            placeholder="Buscar por código ou nome"
+            className="w-full rounded-2xl border border-border bg-card py-3 pl-10 pr-4 text-sm outline-none focus:border-primary"
+          />
+        </div>
+        <Button asChild variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5">
+          <Link to="/catalogo">Ver no catálogo</Link>
+        </Button>
       </div>
 
       {query.isLoading ? (

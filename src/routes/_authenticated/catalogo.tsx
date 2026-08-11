@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 function Catalogo() {
-  const { customer, table, addItem, itemCount, products, productGroups } = useSales();
+  const { customer, table, addItem, itemCount, products, productGroups, role } = useSales();
   const { openCustomerPicker } = useCustomerPicker();
   const [term, setTerm] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -39,6 +39,7 @@ function Catalogo() {
   const [onlyLaunch, setOnlyLaunch] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState<"relevance" | "code" | "price-asc" | "price-desc">("relevance");
+  const isAdmin = role === "administrador";
   
   // Pagination & Loading state
   const [page, setPage] = useState(1);
@@ -172,6 +173,11 @@ function Catalogo() {
               <ShoppingCart className="mr-1 h-4 w-4" /> {itemCount}
             </Link>
           </Button>
+          {isAdmin && (
+            <Button asChild variant="outline" className="shrink-0 rounded-xl border-primary/20 text-primary">
+              <Link to="/admin/produtos">Admin</Link>
+            </Button>
+          )}
         </div>
       </header>
 
