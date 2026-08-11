@@ -9,14 +9,16 @@ import {
   LogOut,
   ShieldCheck,
   Plus,
+  LayoutGrid,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getIsAdmin } from "@/lib/admin.functions";
 import { useSales } from "@/lib/state/sales-store";
 import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { CustomerPickerProvider, useCustomerPicker } from "@/components/customer-picker";
+import { useIsAdmin } from "@/components/admin/admin-page";
 
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
@@ -56,7 +58,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data: isAdmin } = useQuery({ queryKey: ["is-admin"], queryFn: () => getIsAdmin() });
+  const { data: isAdmin } = useIsAdmin();
 
   const signOut = async () => {
     await queryClient.cancelQueries();
@@ -109,11 +111,25 @@ function AppShellInner({ children }: { children: ReactNode }) {
               )}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive("/admin", false)
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="h-4 w-4 shrink-0" />
+              <span className="truncate">Administração</span>
+            </Link>
+          )}
         </nav>
-        {isAdmin && (
+        {isAdmin && pathname.startsWith("/admin") && (
           <div className="mt-6 border-t border-sidebar-border pt-4">
             <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Administração
+              Menu Admin
             </p>
             {adminNav.map((item) => (
               <Link
@@ -192,26 +208,42 @@ function AppShellInner({ children }: { children: ReactNode }) {
         <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">{children}</main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border/70 bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {nav.map((item) => (
+          {nav.map((item) => {
+            const isCarrinho = item.to === "/carrinho";
+            const active = isActive(item.to, item.exact);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <span className="relative">
+                  <item.icon className="h-5 w-5" />
+                  {isCarrinho && itemCount > 0 && (
+                    <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                      {itemCount}
+                    </span>
+                  )}
+                </span>
+                {item.label}
+              </Link>
+            );
+          })}
+          {isAdmin && (
             <Link
-              key={item.to}
-              to={item.to}
+              to="/admin"
               className={cn(
                 "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
-                isActive(item.to, item.exact) ? "text-primary" : "text-muted-foreground",
+                isActive("/admin", false) ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <span className="relative">
-                <item.icon className="h-5 w-5" />
-                {item.to === "/carrinho" && itemCount > 0 && (
-                  <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                    {itemCount}
-                  </span>
-                )}
-              </span>
-              {item.label}
+              <LayoutGrid className="h-5 w-5" />
+              Admin
             </Link>
-          ))}
+          )}
         </nav>
       </div>
     </div>

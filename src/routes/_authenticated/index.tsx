@@ -26,8 +26,9 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
-  const { orders, hydrated, customer, customers, erpLastUpdate } = useSales();
-  const { openCustomerPicker } = useCustomerPicker();
+  const { orders, hydrated, customer, customers, erpLastUpdate, sellerName } = useSales();
+  const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
+  const recentCustomers = customers.filter(c => orders.some(o => o.customerId === c.erpCode)).slice(0, 3);
 
   const totalSold = orders
     .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
@@ -44,7 +45,7 @@ function Dashboard() {
     <div className="mx-auto w-full max-w-6xl space-y-8">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">Bom dia, Ana</p>
+          <p className="text-sm text-muted-foreground">Bom dia, {sellerName}</p>
           <h1 className="mt-1 text-3xl font-bold sm:text-4xl">
             Seu <span className="text-brand-gradient">painel comercial</span>
           </h1>
@@ -152,13 +153,37 @@ function Dashboard() {
         </div>
       </section>
 
-      {customer && (
-        <p className="text-sm text-muted-foreground">
-          Cliente em atendimento: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
-          <Link to="/catalogo" className="text-primary underline-offset-4 hover:underline">
-            continuar no catálogo
-          </Link>
-        </p>
+      {customer ? (
+        <div className="surface-card flex items-center justify-between border-primary/30 p-4">
+          <p className="text-sm text-muted-foreground">
+            Em atendimento: <strong className="text-foreground">{customer.tradeName}</strong>
+          </p>
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline" className="rounded-xl">
+              <Link to="/catalogo">Ir para o catálogo</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-xl">
+              <Link to="/carrinho">Ver carrinho</Link>
+            </Button>
+          </div>
+        </div>
+      ) : recentCustomers.length > 0 && (
+        <div className="surface-card p-5">
+          <h2 className="text-sm font-semibold text-muted-foreground">Continuar atendimentos recentes</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {recentCustomers.map(c => (
+              <Button 
+                key={c.id} 
+                variant="outline" 
+                className="h-auto flex-col items-start gap-1 rounded-2xl p-4 text-left"
+                onClick={() => startWithCustomer(c.id)}
+              >
+                <span className="truncate text-sm font-bold">{c.tradeName}</span>
+                <span className="text-xs text-muted-foreground">{c.erpCode} · {c.city}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

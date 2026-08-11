@@ -137,7 +137,7 @@ function ImportacoesPage() {
             <AlertTriangle className="h-4 w-4" /> Arquivo rejeitado — nada foi gravado
           </h2>
           <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-            {summary.errors.map((e, i) => (
+            {summary.errors.map((e: any, i: number) => (
               <li key={i}>
                 [linha {e.line} · tipo {e.type}] {e.code}: {e.message}
               </li>
@@ -175,7 +175,7 @@ function ImportacoesPage() {
               Contagem por tipo
             </h3>
             <div className="flex flex-wrap gap-2">
-              {summary.typeCounts.map((t) => (
+              {summary.typeCounts.map((t: any) => (
                 <span key={t.type} className="rounded-full border border-border bg-background/60 px-3 py-1 text-xs">
                   {t.type} · {t.label}: <strong>{nf(t.count)}</strong>
                 </span>
@@ -190,7 +190,7 @@ function ImportacoesPage() {
             <div className="flex flex-wrap gap-2">
               {Object.entries(summary.entityCounts).map(([k, v]) => (
                 <span key={k} className="rounded-full border border-border bg-background/60 px-3 py-1 text-xs">
-                  {k}: <strong>{nf(v)}</strong>
+                  {k}: <strong>{nf(v as number)}</strong>
                 </span>
               ))}
             </div>
@@ -229,9 +229,9 @@ function ImportacoesPage() {
             Dados atualizados em {formatDateTimeBR(publishedAt)}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {Object.entries(publishMutation.data?.counts ?? {}).map(([k, v]) => (
+            {Object.entries((publishMutation.data as any)?.counts ?? {}).map(([k, v]) => (
               <span key={k} className="rounded-full border border-border bg-background/60 px-3 py-1 text-xs">
-                {k}: <strong>{nf(v)}</strong>
+                {k}: <strong>{nf(v as number)}</strong>
               </span>
             ))}
           </div>

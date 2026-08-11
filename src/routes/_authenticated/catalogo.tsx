@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, X, ArrowUpDown, ChevronDown, Building2, Tag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -157,7 +157,7 @@ function Catalogo() {
               onClick={() => openCustomerPicker({ startNewOrder: true })}
               className="rounded-xl bg-brand-gradient shadow-lift"
             >
-              <PlusIcon className="mr-1 h-4 w-4" /> Novo pedido
+              <Plus className="mr-1 h-4 w-4" /> Novo pedido
             </Button>
           ) : (
             <Button
@@ -296,8 +296,8 @@ function Catalogo() {
 
           {/* Brand Filter */}
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
-              Empresa
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
+              <Building2 className="h-3 w-3" /> Empresa
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {brands.map((b) => (
@@ -319,8 +319,8 @@ function Catalogo() {
 
           {/* Category Filter */}
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
-              Categoria
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
+              <Tag className="h-3 w-3" /> Categoria
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {groups.map((g) => (
@@ -347,7 +347,7 @@ function Catalogo() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="surface-card p-12 text-center">
+        <div className="surface-card flex min-h-[40vh] flex-col items-center justify-center p-12 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Search className="h-8 w-8 text-muted-foreground/50" />
           </div>
