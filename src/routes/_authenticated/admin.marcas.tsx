@@ -2,12 +2,14 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Save, Search, Plus, Trash2, Box } from "lucide-react";
+import { Loader2, Save, Search, Plus, Trash2, Box, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPage } from "@/components/admin/admin-page";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { listRegistries, updateRegistry, listProducts, type CodeLabelRow } from "@/lib/admin-data.functions";
 import { ProductDetailDialog } from "@/components/admin/product-detail-dialog";
+import { CategoriesAdminView } from "@/components/admin/categories-admin-view";
 
 export const Route = createFileRoute("/_authenticated/admin/marcas")({
   component: BrandsAdminPage,
@@ -28,6 +30,7 @@ function BrandsAdminPage() {
   const save = useServerFn(updateRegistry);
   const [term, setTerm] = useState("");
   const [viewingBrandProducts, setViewingBrandProducts] = useState<string | null>(null);
+  const [viewingBrandCategories, setViewingBrandCategories] = useState<string | null>(null);
   const [openProductCode, setOpenProductCode] = useState<string | null>(null);
 
 
@@ -132,12 +135,25 @@ function BrandsAdminPage() {
               </div>
               
               <div className="flex items-center justify-between border-t border-border/50 pt-3">
-                <span className={`text-[11px] font-bold uppercase tracking-wider ${brand.active ? "text-emerald-600" : "text-muted-foreground"}`}>
-                  {brand.active ? "Ativa" : "Inativa"}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  ERP: {brand.code}
-                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewingBrandCategories(brand.code);
+                  }}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-primary hover:underline"
+                >
+                  <Tag className="h-3.5 w-3.5" />
+                  Categorias
+                </button>
+                <div className="flex items-center gap-3">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${brand.active ? "text-emerald-600" : "text-muted-foreground"}`}>
+                    {brand.active ? "Ativa" : "Inativa"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    ERP: {brand.code}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
@@ -155,6 +171,20 @@ function BrandsAdminPage() {
         onOpenChange={(open) => !open && setViewingBrandProducts(null)} 
         onOpenProduct={setOpenProductCode}
       />
+
+      <Dialog 
+        open={!!viewingBrandCategories} 
+        onOpenChange={(open) => !open && setViewingBrandCategories(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Gestão de Categorias: {viewingBrandCategories}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pr-2 py-4">
+            <CategoriesAdminView filterBrand={viewingBrandCategories ?? undefined} />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ProductDetailDialog
         erpCode={openProductCode}
