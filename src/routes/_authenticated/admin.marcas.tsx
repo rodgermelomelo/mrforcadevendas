@@ -106,7 +106,10 @@ function BrandsAdminPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label 
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <input
                     type="checkbox"
                     checked={brand.metadata?.isCategory}
