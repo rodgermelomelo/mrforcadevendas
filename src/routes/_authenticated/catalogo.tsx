@@ -49,8 +49,12 @@ function Catalogo() {
   const filtered = useMemo(() => {
     const q = term.trim().toLowerCase();
     const result = products.filter((p) => {
-      if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
+      // Se houver marcas selecionadas, o produto deve pertencer a uma delas
       if (selectedBrands.length > 0 && (!p.brand || !selectedBrands.includes(p.brand))) return false;
+      
+      // Se houver grupos selecionados, o produto deve pertencer a um deles
+      if (selectedGroups.length > 0 && !selectedGroups.includes(p.group)) return false;
+
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
       if (!q) return true;
