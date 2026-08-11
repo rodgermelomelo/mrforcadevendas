@@ -14,6 +14,7 @@ export interface WorkspaceData {
   lastUpdate: string | null;
   approvalRules: ApprovalRule[];
   role: string | null;
+  brandMetadata: Record<string, any>;
 }
 
 /** Carrega carteira + catálogo do usuário autenticado (RLS limita a carteira visível). */
