@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
-  const { orders, hydrated, customer, customers, erpLastUpdate } = useSales();
+  const { orders, hydrated, customer, customers, erpLastUpdate, sellerName } = useSales();
   const { openCustomerPicker } = useCustomerPicker();
 
   const totalSold = orders
