@@ -877,6 +877,8 @@ export const listRegistries = createServerFn({ method: "GET" })
       }
     }
 
+    const brandsStatus = new Map((brands.data ?? []).map((b: any) => [b.name, b.active]));
+
     return {
       groups: (groups.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
       segments: (segments.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
@@ -891,6 +893,7 @@ export const listRegistries = createServerFn({ method: "GET" })
         .map(([brand, count]) => ({
           code: brand,
           label: `${brand} (${count} produtos)`,
+          active: brandsStatus.get(brand) ?? true,
         })),
     };
   });
