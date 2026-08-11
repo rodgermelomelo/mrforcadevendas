@@ -246,13 +246,33 @@ function ProductsPage() {
         </p>
       ) : (
         <div className="space-y-2">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+            <Checkbox
+              checked={
+                selectedCodes.length > 0 && selectedCodes.length === (query.data?.rows?.length ?? 0)
+              }
+              onCheckedChange={toggleAll}
+            />
+            <span className="text-sm font-medium text-muted-foreground">Selecionar todos nesta página</span>
+          </div>
+
           {(query.data?.rows ?? []).map((product) => (
-            <button
+            <div
               key={product.erpCode}
-              type="button"
-              onClick={() => setOpenCode(product.erpCode)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
+              className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
             >
+              <div className="flex h-full items-center pr-1">
+                <Checkbox
+                  checked={selectedCodes.includes(product.erpCode)}
+                  onCheckedChange={() => toggleOne(product.erpCode)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpenCode(product.erpCode)}
+                className="flex flex-1 items-center gap-3 text-left"
+              >
+
               <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
