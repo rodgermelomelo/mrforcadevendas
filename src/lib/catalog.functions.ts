@@ -164,5 +164,6 @@ export const getWorkspace = createServerFn({ method: "GET" })
       lastUpdate,
       approvalRules,
       role: roleRes.data?.role || null,
+      brandMetadata: Object.fromEntries((brandsRes.data ?? []).map((b: any) => [b.name, b.metadata || {}])),
     };
   });
