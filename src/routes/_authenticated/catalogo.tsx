@@ -53,8 +53,10 @@ function Catalogo() {
     return result.sort((a, b) => {
       if (sortBy === "code") return a.erpCode.localeCompare(b.erpCode);
       if (sortBy.startsWith("price")) {
-        const pA = resolvePrice(a, table).value || 0;
-        const pB = resolvePrice(b, table).value || 0;
+        const resA = resolvePrice(a, table);
+        const resB = resolvePrice(b, table);
+        const pA = resA.ok ? resA.value : 0;
+        const pB = resB.ok ? resB.value : 0;
         return sortBy === "price-asc" ? pA - pB : pB - pA;
       }
       return 0; // relevance (default sequence)
