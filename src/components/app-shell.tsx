@@ -32,6 +32,8 @@ const adminNav = [
   { to: "/admin/representantes", label: "Representantes" },
   { to: "/admin/clientes", label: "Clientes" },
   { to: "/admin/produtos", label: "Produtos" },
+  { to: "/admin/estoque", label: "Estoque" },
+  { to: "/admin/precos", label: "Preços por produto" },
   { to: "/admin/usuarios", label: "Usuários e papéis" },
   { to: "/admin/cadastros", label: "Cadastros gerais" },
   { to: "/admin/regras", label: "Regras comerciais" },

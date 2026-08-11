@@ -756,3 +756,178 @@ export const listAuditLogs = createServerFn({ method: "POST" })
       })),
     };
   });
+
+/* ================================= ESTOQUE ================================ */
+
+export interface InventoryRow {
+  erpCode: string;
+  name: string | null;
+  quantity: number;
+  capturedAt: string;
+  inCatalog: boolean;
+}
+
+export const listInventory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { page?: number; term?: string; filter?: string }) => input ?? {})
+  .handler(
+    async ({ data, context }): Promise<{ rows: InventoryRow[]; total: number; capturedAt: string | null }> => {
+      await assertAdmin(context);
+      const page = Math.max(0, data.page ?? 0);
+      const size = 40;
+      const term = (data.term ?? "").trim();
+      const filter = data.filter ?? "todos";
+
+      let query = context.supabase
+        .from("inventory_snapshots")
+        .select("*", { count: "exact" })
+        .order("product_erp_code");
+
+      if (term) query = query.ilike("product_erp_code", `%${term}%`);
+      if (filter === "com_estoque") query = query.gt("quantity", 0);
+      if (filter === "sem_estoque") query = query.eq("quantity", 0);
+      if (filter === "negativo") query = query.lt("quantity", 0);
+
+      const { data: rows, count, error } = await query.range(page * size, page * size + size - 1);
+      if (error) throw new Error(error.message);
+
+      const codes = (rows ?? []).map((r: any) => r.product_erp_code);
+      const { data: products } = await context.supabase
+        .from("products")
+        .select("erp_code, name, released, active")
+        .in("erp_code", codes.length > 0 ? codes : ["__none__"]);
+      const byCode = new Map((products ?? []).map((p: any) => [p.erp_code, p]));
+
+      const { data: latest } = await context.supabase
+        .from("inventory_snapshots")
+        .select("captured_at")
+        .order("captured_at", { ascending: false })
+        .limit(1);
+
+      return {
+        total: count ?? 0,
+        capturedAt: latest?.[0]?.captured_at ?? null,
+        rows: (rows ?? []).map((r: any) => {
+          const p = byCode.get(r.product_erp_code);
+          return {
+            erpCode: r.product_erp_code,
+            name: p?.name ?? null,
+            quantity: Number(r.quantity),
+            capturedAt: r.captured_at,
+            inCatalog: Boolean(p?.released && p?.active),
+          };
+        }),
+      };
+    },
+  );
+
+/* ============================ PREÇOS POR PRODUTO ========================== */
+
+export interface ProductPriceRow {
+  erpCode: string;
+  name: string | null;
+  priceTableCode: string;
+  values: number[];
+  mappedLevel: number | null;
+  applicable: number | null;
+}
+
+export const listProductPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { page?: number; term?: string; table?: string }) => input ?? {})
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ rows: ProductPriceRow[]; total: number; tables: { code: string; name: string }[] }> => {
+      await assertAdmin(context);
+      const page = Math.max(0, data.page ?? 0);
+      const size = 40;
+      const term = (data.term ?? "").trim();
+
+      const { data: tables } = await context.supabase
+        .from("price_tables")
+        .select("code, name, mapped_level")
+        .order("code");
+      const levelByTable = new Map((tables ?? []).map((t: any) => [t.code, t.mapped_level]));
+
+      let query = context.supabase
+        .from("product_prices")
+        .select("*", { count: "exact" })
+        .order("product_erp_code");
+      if (data.table && data.table !== "todas") query = query.eq("price_table_code", data.table);
+      if (term) query = query.ilike("product_erp_code", `%${term}%`);
+
+      const { data: rows, count, error } = await query.range(page * size, page * size + size - 1);
+      if (error) throw new Error(error.message);
+
+      const codes = (rows ?? []).map((r: any) => r.product_erp_code);
+      const { data: products } = await context.supabase
+        .from("products")
+        .select("erp_code, name")
+        .in("erp_code", codes.length > 0 ? codes : ["__none__"]);
+      const nameByCode = new Map((products ?? []).map((p: any) => [p.erp_code, p.name]));
+
+      return {
+        total: count ?? 0,
+        tables: (tables ?? []).map((t: any) => ({ code: t.code, name: t.name })),
+        rows: (rows ?? []).map((r: any) => {
+          const values = [r.value_1, r.value_2, r.value_3, r.value_4, r.value_5, r.value_6].map(Number);
+          const level = (levelByTable.get(r.price_table_code) ?? null) as number | null;
+          return {
+            erpCode: r.product_erp_code,
+            name: (nameByCode.get(r.product_erp_code) as string | undefined) ?? null,
+            priceTableCode: r.price_table_code,
+            values,
+            mappedLevel: level,
+            applicable: level ? (values[level - 1] ?? null) : null,
+          };
+        }),
+      };
+    },
+  );
+
+/* ============================== BASES / CONTAGENS ========================= */
+
+export interface BaseCount {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export const listBaseCounts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ counts: BaseCount[]; lastImport: string | null }> => {
+    await assertAdmin(context);
+    const targets: { key: string; label: string }[] = [
+      { key: "customers", label: "Clientes" },
+      { key: "products", label: "Produtos" },
+      { key: "product_prices", label: "Preços por tabela" },
+      { key: "inventory_snapshots", label: "Registros de estoque" },
+      { key: "price_tables", label: "Tabelas de preço" },
+      { key: "product_groups", label: "Grupos de produto" },
+      { key: "segments", label: "Segmentos" },
+      { key: "billing_methods", label: "Formas de cobrança" },
+      { key: "payment_terms", label: "Condições de pagamento" },
+      { key: "erp_sellers", label: "Representantes" },
+      { key: "customer_financial_snapshots", label: "Resumos financeiros" },
+      { key: "receivables", label: "Títulos e parcelas" },
+      { key: "orders", label: "Pedidos" },
+    ];
+
+    const counts = await Promise.all(
+      targets.map(async (t) => {
+        const { count } = await context.supabase.from(t.key as never).select("id", { count: "exact", head: true });
+        return { key: t.key, label: t.label, count: count ?? 0 };
+      }),
+    );
+
+    const { data: run } = await context.supabase
+      .from("erp_import_runs")
+      .select("finished_at, started_at")
+      .eq("status", "published")
+      .order("finished_at", { ascending: false })
+      .limit(1);
+
+    return { counts, lastImport: run?.[0]?.finished_at ?? run?.[0]?.started_at ?? null };
+  });

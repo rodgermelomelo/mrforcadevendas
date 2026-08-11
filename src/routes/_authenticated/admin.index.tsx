@@ -10,8 +10,14 @@ import {
   Scale,
   Stethoscope,
   ScrollText,
+  Boxes,
+  CircleDollarSign,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { AdminPage } from "@/components/admin/admin-page";
+import { listBaseCounts } from "@/lib/admin-data.functions";
+import { formatDateTimeBR } from "@/lib/pricing";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminIndexPage,
@@ -39,6 +45,8 @@ const areas = [
   { to: "/admin/clientes", icon: Building2, title: "Clientes", text: "Tabela, condição, restrição, limite e valor mínimo." },
   { to: "/admin/produtos", icon: Package, title: "Produtos", text: "Liberação no catálogo, lançamentos, grupo e enriquecimento." },
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Papéis e visibilidade configurável de equipe." },
+  { to: "/admin/estoque", icon: Boxes, title: "Estoque", text: "Posição por produto, com filtros de disponibilidade." },
+  { to: "/admin/precos", icon: CircleDollarSign, title: "Preços por produto", text: "Os 6 valores por tabela e o preço aplicável." },
   { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Grupos, segmentos, cobranças e condições." },
   { to: "/admin/regras", icon: Scale, title: "Regras comerciais", text: "Matriz de aprovação por exceção, faixa e autoridade." },
   { to: "/admin/diagnostico", icon: Stethoscope, title: "Diagnóstico do catálogo", text: "Classificação dos códigos vindos do ERP." },
@@ -47,12 +55,36 @@ const areas = [
 ] as const;
 
 function AdminIndexPage() {
+  const load = useServerFn(listBaseCounts);
+  const counts = useQuery({ queryKey: ["admin", "base-counts"], queryFn: () => load() });
+
   return (
     <AdminPage
       backTo={false}
       title="Administração"
       description="Gestão dos dados oficiais recebidos do ERP e das regras que governam os pedidos."
     >
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-semibold">Bases recebidas do ERP</h2>
+          <span className="text-xs text-muted-foreground">
+            {counts.data?.lastImport
+              ? `Última publicação em ${formatDateTimeBR(counts.data.lastImport)}`
+              : "Nenhuma importação publicada ainda"}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {counts.isLoading
+            ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />)
+            : (counts.data?.counts ?? []).map((c) => (
+                <div key={c.key} className="rounded-xl border border-border px-3 py-2.5">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{c.label}</p>
+                  <p className="text-lg font-semibold">{c.count.toLocaleString("pt-BR")}</p>
+                </div>
+              ))}
+        </div>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {areas.map((area) => (
           <Link
