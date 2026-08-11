@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
 import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
@@ -20,6 +21,11 @@ import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authe
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -63,6 +69,7 @@ const AuthenticatedPedidosOrderIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
   '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/auth'
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/auth'
     | '/_authenticated/carrinho'
     | '/_authenticated/carteira'
     | '/_authenticated/catalogo'
@@ -123,6 +135,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -132,6 +145,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -211,6 +231,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
