@@ -44,7 +44,7 @@ function InventoryPage() {
   return (
     <AdminPage
       title="Estoque"
-      description="Posição enviada pelo ERP (registro tipo 27). O estoque é somente leitura: qualquer ajuste vem de uma nova importação."
+      description="Posição enviada pelo ERP (registro tipo 27). Representa a quantidade disponível para venda de cada produto. O estoque é somente leitura: qualquer ajuste vem de uma nova importação."
       actions={
         query.data?.capturedAt ? (
           <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">

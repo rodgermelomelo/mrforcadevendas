@@ -91,8 +91,15 @@ function ProductsPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{product.displayName || product.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {product.erpCode} · {product.unit} · estoque {product.stock.toLocaleString("pt-BR")} ·{" "}
-                    {product.priceTables} tabelas com preço
+                    {product.erpCode} · {product.unit} ·{" "}
+                    <Link
+                      to="/admin/estoque"
+                      search={{ term: product.erpCode }}
+                      className="text-primary hover:underline"
+                    >
+                      estoque {product.stock.toLocaleString("pt-BR")} (qnt. disponível)
+                    </Link>{" "}
+                    · {product.priceTables} tabelas com preço
                   </span>
                 </span>
                 <span className="flex shrink-0 gap-1.5">
