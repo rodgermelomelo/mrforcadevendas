@@ -39,7 +39,7 @@ const areas = [
     text: "Defina qual dos 6 valores é o preço aplicável em cada tabela. Sem esse mapeamento o pedido é bloqueado.",
     critical: true,
   },
-  { to: "/admin/representantes", icon: Users, title: "Representantes", text: "Ative representantes e vincule usuários às carteiras." },
+  { to: "/admin/representantes", icon: Users, title: "Representantes", text: "quero gerenciar os representantes também, ver lista da carteira de cliente, analisar pedidos, e etc..." },
   { to: "/admin/clientes", icon: Building2, title: "Clientes", text: "Tabela, condição, restrição, limite e valor mínimo." },
   { to: "/admin/produtos", icon: Package, title: "Produtos, estoque e preços", text: "Catálogo, quantidade em estoque e os 6 valores por tabela em uma tela só." },
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Papéis e visibilidade configurável de equipe." },
