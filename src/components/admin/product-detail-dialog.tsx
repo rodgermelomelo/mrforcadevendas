@@ -257,6 +257,7 @@ function ProductForm({
     unit: product.unit,
     displayName: product.displayName ?? "",
     imageUrl: product.imageUrl ?? "",
+    brand: product.brand ?? "Outros",
   });
 
   const mutation = useMutation({
@@ -295,6 +296,22 @@ function ProductForm({
             onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
             placeholder="https://..."
           />
+        </label>
+        <label className="space-y-1">
+          <span className={labelCls}>Marca</span>
+          <select
+            className={field}
+            value={form.brand}
+            onChange={(e) => setForm({ ...form, brand: e.target.value })}
+          >
+            <option value="Outros">Outros</option>
+            <option value="DAILUS">DAILUS</option>
+            <option value="ACEMAR">ACEMAR</option>
+            <option value="ÁGUA DE CHEIRO">ÁGUA DE CHEIRO</option>
+            <option value="DIVINA FLORA">DIVINA FLORA</option>
+            <option value="CUCCIO">CUCCIO</option>
+            <option value="VERNISSAGE">VERNISSAGE</option>
+          </select>
         </label>
         <label className="space-y-1">
           <span className={labelCls}>Grupo</span>

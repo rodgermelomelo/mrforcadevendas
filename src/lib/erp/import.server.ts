@@ -87,6 +87,10 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     let brand = "Outros";
     if (desc.includes("DAILUS")) brand = "DAILUS";
     else if (desc.includes("ACEMAR")) brand = "ACEMAR";
+    else if (desc.includes("ÁGUA DE CHEIRO")) brand = "ÁGUA DE CHEIRO";
+    else if (desc.includes("DIVINA FLORA")) brand = "DIVINA FLORA";
+    else if (desc.includes("CUCCIO")) brand = "CUCCIO";
+    else if (desc.includes("VERNISSAGE")) brand = "VERNISSAGE";
     else if (desc.includes("FOX")) brand = "FOX";
     
     // Fallback: se o grupo for conhecido e não achou marca, usa o grupo como marca
