@@ -1,0 +1,1 @@
+UPDATE public.brands SET metadata = '{"isCategory": true, "parentBrand": "DAILUS"}'::jsonb WHERE name = 'LAPIS';
