@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X, ArrowUpDown } from "lucide-react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { Search, Plus, Minus, ShoppingCart, Sparkles, PackageCheck, UserPlus, Plus as PlusIcon, X, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -38,6 +39,11 @@ function Catalogo() {
   const [onlyLaunch, setOnlyLaunch] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState<"relevance" | "code" | "price-asc" | "price-desc">("relevance");
+  
+  // Pagination & Loading state
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const ITEMS_PER_PAGE = 20;
 
   const filtered = useMemo(() => {
     const q = term.trim().toLowerCase();
@@ -59,9 +65,30 @@ function Catalogo() {
         const pB = resB.ok ? resB.value : 0;
         return sortBy === "price-asc" ? pA - pB : pB - pA;
       }
-      return 0; // relevance (default sequence)
+      return 0;
     });
   }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table]);
+
+  const pagedItems = useMemo(() => {
+    return filtered.slice(0, page * ITEMS_PER_PAGE);
+  }, [filtered, page]);
+
+  const hasMore = pagedItems.length < filtered.length;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, sortBy]);
+
+  const loadMore = useCallback(() => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    // Simulate short loading for feedback
+    setTimeout(() => {
+      setPage((prev) => prev + 1);
+      setLoading(false);
+    }, 400);
+  }, [loading, hasMore]);
 
   const brands = useMemo(() => {
     const set = new Set<string>();
@@ -320,24 +347,70 @@ function Catalogo() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="surface-card p-10 text-center text-sm text-muted-foreground">
-          Nenhum produto encontrado com esses filtros.
+        <div className="surface-card p-12 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <Search className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold">Nenhum produto encontrado</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tente ajustar os filtros ou o termo de busca.
+          </p>
+          <Button variant="outline" onClick={clearFilters} className="mt-6 rounded-xl">
+            Limpar todos os filtros
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {filtered.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              hasCustomer={Boolean(customer)}
-              onAdd={(qty) => {
-                addItem(p.id, qty);
-                toast.success(`${qty} un. de ${p.name} no carrinho`);
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {pagedItems.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                hasCustomer={Boolean(customer)}
+                onAdd={(qty) => {
+                  addItem(p.id, qty);
+                  toast.success(`${qty} un. de ${p.name} no carrinho`);
+                }}
+              />
+            ))}
+            
+            {loading && 
+              Array.from({ length: 5 }).map((_, i) => (
+                <ProductSkeleton key={`skeleton-${i}`} />
+              ))
+            }
+          </div>
+
+          {hasMore && !loading && (
+            <div className="flex justify-center pt-8">
+              <Button 
+                variant="outline" 
+                onClick={loadMore}
+                className="rounded-xl px-8 h-11 border-primary/20 text-primary hover:bg-primary/5"
+              >
+                Carregar mais produtos <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
+    </div>
+  );
+}
+
+function ProductSkeleton() {
+  return (
+    <div className="surface-card flex flex-col overflow-hidden opacity-60">
+      <Skeleton className="aspect-square w-full rounded-none" />
+      <div className="space-y-3 p-3">
+        <Skeleton className="h-3 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="mt-4 flex gap-2">
+          <Skeleton className="h-9 w-20 rounded-xl" />
+          <Skeleton className="h-9 flex-1 rounded-xl" />
+        </div>
+      </div>
     </div>
   );
 }
