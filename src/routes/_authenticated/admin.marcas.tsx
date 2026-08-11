@@ -2,10 +2,12 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Save, Search, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, Search, Plus, Trash2, Box } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPage } from "@/components/admin/admin-page";
-import { listRegistries, updateRegistry, type CodeLabelRow } from "@/lib/admin-data.functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { listRegistries, updateRegistry, listProducts, type CodeLabelRow } from "@/lib/admin-data.functions";
+import { ProductDetailDialog } from "@/components/admin/product-detail-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/marcas")({
   component: BrandsAdminPage,
