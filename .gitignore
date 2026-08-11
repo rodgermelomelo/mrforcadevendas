@@ -30,3 +30,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ===== MR Força de Vendas — proteção de dados do ERP =====
+# Segredos locais (service_role, etc.) — NUNCA versionar
+.env.local
+.env.*.local
+# Arquivos brutos do ERP (dados pessoais/comerciais reais) — só locais
+*.dados.txt
+dados.txt
+DADOS.TXT
+/erp-raw/
+/imports-raw/
+.import-staging/
+# Romaneios de exemplo
+GGGGGGGGGGG.html
