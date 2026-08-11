@@ -919,7 +919,7 @@ export const updateRegistry = createServerFn({ method: "POST" })
       segments: { table: "segments", field: "name", key: "code" },
       billingMethods: { table: "billing_methods", field: "description", key: "code" },
       paymentTerms: { table: "payment_terms", field: "description", key: "code" },
-      brands: { table: "products", field: "brand", key: "brand" },
+      brands: { table: "brands", field: "name", key: "name" },
     } as const;
     const target = map[data.kind];
     const patch: Record<string, unknown> = { [target.field]: data.label };
