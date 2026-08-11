@@ -861,12 +861,13 @@ export const listRegistries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<RegistriesData> => {
     await assertAdmin(context);
-    const [groups, segments, billing, terms, products] = await Promise.all([
+    const [groups, segments, billing, terms, products, brands] = await Promise.all([
       context.supabase.from("product_groups").select("*").order("code"),
       context.supabase.from("segments").select("*").order("code"),
       context.supabase.from("billing_methods").select("*").order("code"),
       context.supabase.from("payment_terms").select("*").order("code"),
       context.supabase.from("products").select("brand, erp_code"),
+      context.supabase.from("brands").select("*"),
     ]);
 
     const brandsMap = new Map<string, number>();
