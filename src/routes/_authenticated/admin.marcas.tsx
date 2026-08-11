@@ -90,13 +90,16 @@ function BrandsAdminPage() {
                 </div>
                 <div className="flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full bg-border p-1 transition-colors data-[active=true]:bg-primary"
                      data-active={brand.active}
-                     onClick={() => mutation.mutate({
-                       kind: "brands",
-                       code: brand.code,
-                       label: brand.code,
-                       active: !brand.active,
-                       metadata: brand.metadata
-                     })}
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       mutation.mutate({
+                         kind: "brands",
+                         code: brand.code,
+                         label: brand.code,
+                         active: !brand.active,
+                         metadata: brand.metadata
+                       });
+                     }}
                 >
                   <div className={`h-4 w-4 rounded-full bg-white transition-transform ${brand.active ? "translate-x-4" : "translate-x-0"}`} />
                 </div>
