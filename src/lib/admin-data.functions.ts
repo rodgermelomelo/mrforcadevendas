@@ -818,6 +818,7 @@ export interface RegistriesData {
   segments: CodeLabelRow[];
   billingMethods: CodeLabelRow[];
   paymentTerms: CodeLabelRow[];
+  brands: CodeLabelRow[];
 }
 
 export const listRegistries = createServerFn({ method: "GET" })
