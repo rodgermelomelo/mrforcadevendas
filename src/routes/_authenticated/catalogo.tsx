@@ -157,7 +157,7 @@ function Catalogo() {
               onClick={() => openCustomerPicker({ startNewOrder: true })}
               className="rounded-xl bg-brand-gradient shadow-lift"
             >
-              <PlusIcon className="mr-1 h-4 w-4" /> Novo pedido
+              <Plus className="mr-1 h-4 w-4" /> Novo pedido
             </Button>
           ) : (
             <Button
