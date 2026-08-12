@@ -15,7 +15,7 @@ export const CATALOG_PAGE_SIZE = 20;
 interface UseCatalogFiltersParams {
   products: Product[];
   brandMetadata: Record<string, BrandMetadataEntry>;
-  table: PriceTable | null | undefined;
+  table: PriceTable | undefined;
   pageSize?: number;
 }
 
