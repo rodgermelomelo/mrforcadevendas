@@ -86,7 +86,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     let brand = "OUTROS";
     let category = "DIVERSOS";
 
-    // 1. Identificar MARCA
+    // 1. Identificar MARCA (com normalização de casing)
     if (desc.includes("DAILUS")) brand = "DAILUS";
     else if (desc.includes("ACEMAR")) brand = "ACEMAR";
     else if (desc.includes("ÁGUA DE CHEIRO")) brand = "ÁGUA DE CHEIRO";
@@ -99,21 +99,18 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     if (brand === "OUTROS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
-        const parts = g.label.split(" ");
+        const parts = g.label.trim().split(/\s+/);
         brand = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
       }
     }
 
     // 2. Identificar CATEGORIA (Substituindo o "Grupo" ERP pela categoria semântica)
-    // Ex: "DS 06 PINCEL LABIAL DAILUS" -> Categoria: "PINCEL LABIAL"
-    // Ex: "DAILUS BATOM MATTE" -> Categoria: "BATOM"
-    // Ex: "ACEMAR AMACIANTE" -> Categoria: "AMACIANTE"
-    
     const categories = [
       "AMACIANTE", "AMOLECEDOR", "BASE", "BATOM", "BLUSH", "ESMALTE", 
       "PINCEL", "PÓ COMPACTO", "CORRETIVO", "ILUMINADOR", "MÁSCARA", 
-      "DELINEADOR", "Sombra", "REMOVEDOR", "HIDRATANTE", "SABONETE",
-      "PERFUME", "COLÔNIA", "BODY SPLASH", "ÓLEO", "SHAMPOO", "CONDICIONADOR"
+      "DELINEADOR", "SOMBRA", "REMOVEDOR", "HIDRATANTE", "SABONETE",
+      "PERFUME", "COLÔNIA", "BODY SPLASH", "ÓLEO", "SHAMPOO", "CONDICIONADOR",
+      "LAPIS", "LENÇO", "MANTEIGA", "TOALHA", "LAPISEIRA"
     ];
 
     for (const cat of categories) {
@@ -127,7 +124,6 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     if (category === "DIVERSOS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
-        // Limpa o nome do grupo (remove a marca se ela estiver no início)
         let groupName = g.label.toUpperCase();
         if (groupName.startsWith(brand)) {
           groupName = groupName.replace(brand, "").trim();
@@ -140,8 +136,8 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       erp_code: p.erpCode,
       name: p.officialDescription || `Produto ${p.erpCode}`,
       group_code: p.erpGroupCode || null,
-      brand,
-      category, // Adicionamos categoria lógica
+      brand: brand.toUpperCase(),
+      category: category.toUpperCase(),
       unit: p.unit || "UN",
       is_launch: false,
       released: true,
