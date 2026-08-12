@@ -91,7 +91,7 @@ export function useCatalogFilters({
       if (a.isLaunch !== b.isLaunch) return a.isLaunch ? -1 : 1;
       return a.erpCode.localeCompare(b.erpCode);
     });
-  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
+  }, [term, selectedGroups, selectedBrands, selectedSegments, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
 
   const pagedItems = useMemo(() => filtered.slice(0, page * pageSize), [filtered, page, pageSize]);
   const hasMore = pagedItems.length < filtered.length;
