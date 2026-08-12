@@ -323,8 +323,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around overflow-x-auto border-t border-border/70 bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {nav.map((item) => {
-            const isCarrinho = item.to === "/carrinho";
+          {nav.filter(item => item.to !== "/carrinho").map((item) => {
             const active = isActive(item.to, item.exact);
             return (
               <Link
@@ -335,14 +334,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <span className="relative">
-                  <item.icon className="h-5 w-5" />
-                  {isCarrinho && itemCount > 0 && (
-                    <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                      {itemCount}
-                    </span>
-                  )}
-                </span>
+                <item.icon className="h-5 w-5" />
                 {item.label}
               </Link>
             );
