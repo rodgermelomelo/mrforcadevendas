@@ -1377,6 +1377,47 @@ export type Database = {
           },
         ]
       }
+      segment_import_audit: {
+        Row: {
+          created_at: string
+          customer_erp_code: string
+          id: string
+          new_segment_code: string | null
+          previous_segment_code: string | null
+          reason: string
+          run_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          customer_erp_code: string
+          id?: string
+          new_segment_code?: string | null
+          previous_segment_code?: string | null
+          reason?: string
+          run_id?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          customer_erp_code?: string
+          id?: string
+          new_segment_code?: string | null
+          previous_segment_code?: string | null
+          reason?: string
+          run_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "segment_import_audit_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "erp_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segments: {
         Row: {
           code: string

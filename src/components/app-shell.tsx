@@ -65,6 +65,7 @@ const adminNav = [
   { to: "/admin/comissoes", label: "Comissões" },
   { to: "/admin/diagnostico", label: "Diagnóstico do catálogo" },
   { to: "/admin/importacoes", label: "Importações" },
+  { to: "/admin/auditoria-segmentos", label: "Auditoria de segmentos" },
   { to: "/admin/auditoria", label: "Auditoria" },
 ] as const;
 

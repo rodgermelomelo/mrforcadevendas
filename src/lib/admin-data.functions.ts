@@ -1549,3 +1549,131 @@ export const listBaseCounts = createServerFn({ method: "GET" })
 
     return { counts, lastImport: run?.[0]?.finished_at ?? run?.[0]?.started_at ?? null };
   });
+
+/* ==================== AUDITORIA DO IMPORTADOR DE SEGMENTOS ================ */
+
+export interface SegmentAuditRow {
+  id: string;
+  runId: string | null;
+  customerErpCode: string;
+  previousSegmentCode: string | null;
+  newSegmentCode: string | null;
+  status: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface SegmentAuditRunOption {
+  id: string;
+  startedAt: string;
+  finishedAt: string | null;
+  status: string;
+  entries: number;
+}
+
+export interface SegmentAuditPayload {
+  runs: SegmentAuditRunOption[];
+  selectedRunId: string | null;
+  totals: Record<string, number>;
+  segmentNames: { code: string; name: string }[];
+  rows: SegmentAuditRow[];
+  totalRows: number;
+  page: number;
+  pageSize: number;
+}
+
+const SEGMENT_AUDIT_PAGE = 50;
+
+export const listSegmentImportAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { runId?: string | null; status?: string | null; search?: string | null; page?: number } | undefined) => ({
+      runId: input?.runId ?? null,
+      status: input?.status ?? null,
+      search: (input?.search ?? "").trim(),
+      page: Math.max(1, Number(input?.page ?? 1)),
+    }),
+  )
+  .handler(async ({ data, context }): Promise<SegmentAuditPayload> => {
+    await assertAdmin(context);
+    const { supabase } = context;
+
+    const { data: runRows } = await supabase
+      .from("erp_import_runs")
+      .select("id, started_at, finished_at, status")
+      .order("started_at", { ascending: false })
+      .limit(20);
+
+    const runs: SegmentAuditRunOption[] = [];
+    for (const run of runRows ?? []) {
+      const { count } = await supabase
+        .from("segment_import_audit")
+        .select("id", { count: "exact", head: true })
+        .eq("run_id", run.id);
+      if ((count ?? 0) === 0) continue;
+      runs.push({
+        id: run.id,
+        startedAt: run.started_at,
+        finishedAt: run.finished_at,
+        status: run.status,
+        entries: count ?? 0,
+      });
+    }
+
+    const selectedRunId = data.runId ?? runs[0]?.id ?? null;
+
+    const applyScope = (query: any) => {
+      let q = query;
+      if (selectedRunId) q = q.eq("run_id", selectedRunId);
+      return q;
+    };
+
+    const statuses = ["updated", "unchanged", "skipped", "failed"];
+    const totals: Record<string, number> = {};
+    await Promise.all(
+      statuses.map(async (status) => {
+        const { count } = await applyScope(
+          supabase.from("segment_import_audit").select("id", { count: "exact", head: true }),
+        ).eq("status", status);
+        totals[status] = count ?? 0;
+      }),
+    );
+
+    let listQuery = applyScope(
+      supabase
+        .from("segment_import_audit")
+        .select("id, run_id, customer_erp_code, previous_segment_code, new_segment_code, status, reason, created_at", {
+          count: "exact",
+        }),
+    );
+    if (data.status) listQuery = listQuery.eq("status", data.status);
+    if (data.search) listQuery = listQuery.ilike("customer_erp_code", `%${data.search.replace(/[%_]/g, "")}%`);
+
+    const from = (data.page - 1) * SEGMENT_AUDIT_PAGE;
+    const { data: rows, count, error } = await listQuery
+      .order("created_at", { ascending: false })
+      .range(from, from + SEGMENT_AUDIT_PAGE - 1);
+    if (error) throw new Error(error.message);
+
+    const { data: segments } = await supabase.from("segments").select("code, name").order("code");
+
+    return {
+      runs,
+      selectedRunId,
+      totals,
+      segmentNames: (segments ?? []).map((s: any) => ({ code: s.code, name: s.name })),
+      rows: (rows ?? []).map((r: any) => ({
+        id: r.id,
+        runId: r.run_id,
+        customerErpCode: r.customer_erp_code,
+        previousSegmentCode: r.previous_segment_code,
+        newSegmentCode: r.new_segment_code,
+        status: r.status,
+        reason: r.reason,
+        createdAt: r.created_at,
+      })),
+      totalRows: count ?? 0,
+      page: data.page,
+      pageSize: SEGMENT_AUDIT_PAGE,
+    };
+  });
