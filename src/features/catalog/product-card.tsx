@@ -1,0 +1,138 @@
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { QuantityStepper } from "@/components/shared/quantity-stepper";
+import { formatBRL, resolvePrice } from "@/lib/pricing";
+import { productImage } from "@/lib/product-images";
+import { useSales } from "@/lib/state/sales-store";
+import { cn } from "@/lib/utils";
+import type { Product } from "@/lib/domain/types";
+
+/** Atalhos de quantidade usados no card do catálogo. */
+export const QUANTITY_SHORTCUTS = [6, 12, 30] as const;
+
+export interface ProductCardProps {
+  product: Product;
+  hasCustomer: boolean;
+  onAdd: (qty: number) => void;
+  onOpenDetail: () => void;
+}
+
+export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: ProductCardProps) {
+  const { table } = useSales();
+  const [qty, setQty] = useState(1);
+  const price = resolvePrice(product, table);
+  const outOfStock = product.stock <= 0;
+
+  // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
+  const blocked = hasCustomer && (outOfStock || !price.ok);
+  const dimmed = hasCustomer ? blocked : outOfStock;
+  const category = product.category || product.group;
+
+  return (
+    <article
+      className={cn(
+        "surface-card group relative flex flex-col overflow-hidden transition-shadow",
+        dimmed ? "opacity-70 grayscale" : "hover:shadow-lift",
+      )}
+    >
+      {/* Marca e categoria aparecem no hover */}
+      <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <Badge
+          variant="secondary"
+          className="h-4 border-primary/20 bg-background/80 px-1 text-[9px] text-primary backdrop-blur-sm"
+        >
+          {product.brand}
+        </Badge>
+        <Badge variant="outline" className="h-4 bg-background/80 px-1 text-[9px] backdrop-blur-sm">
+          {category}
+        </Badge>
+      </div>
+
+      <div className="relative aspect-square cursor-pointer bg-muted" onClick={onOpenDetail}>
+        {productImage(product.imageUrl) ? (
+          <img
+            src={productImage(product.imageUrl) ?? ""}
+            alt={product.name}
+            loading="lazy"
+            width={800}
+            height={800}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="grid h-full place-items-center bg-brand-gradient p-4 text-center text-xs font-semibold text-primary-foreground">
+            {product.name}
+          </div>
+        )}
+        {product.isLaunch && !dimmed && (
+          <span className="absolute left-3 top-3 rounded-full bg-brand-gradient px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">
+            Lançamento
+          </span>
+        )}
+        {outOfStock && (
+          <span className="absolute left-3 top-3 rounded-full bg-foreground/85 px-2.5 py-1 text-[11px] font-semibold text-background">
+            Indisponível
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-3">
+        <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+          {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
+          {category} · {product.erpCode}
+        </p>
+        <h3
+          className="mt-1 line-clamp-2 cursor-pointer text-sm font-semibold transition-colors hover:text-primary"
+          onClick={onOpenDetail}
+        >
+          {product.name}
+        </h3>
+
+        <div className="mt-2">
+          {!hasCustomer ? (
+            <p className="text-[11px] text-muted-foreground">
+              Estoque {product.stock} {product.unit} · selecione um cliente para o preço
+            </p>
+          ) : price.ok ? (
+            <>
+              <p className="text-lg font-bold">{formatBRL(price.value)}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {price.levelLabel} · estoque {product.stock} {product.unit}
+              </p>
+            </>
+          ) : (
+            <p className="text-xs font-medium text-warning">{price.message}</p>
+          )}
+        </div>
+
+        {hasCustomer && !blocked && (
+          <>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <QuantityStepper value={qty} onChange={setQty} />
+              {QUANTITY_SHORTCUTS.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setQty(n)}
+                  className="rounded-lg border border-border px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <Button className="mt-3 w-full rounded-xl" onClick={() => onAdd(qty)}>
+              Adicionar
+            </Button>
+          </>
+        )}
+
+        {hasCustomer && blocked && (
+          <p className="mt-3 rounded-xl bg-muted p-2.5 text-xs text-muted-foreground">
+            {outOfStock
+              ? "Sem estoque — indisponível para o pedido."
+              : "Sem preço válido para a tabela do cliente."}
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
