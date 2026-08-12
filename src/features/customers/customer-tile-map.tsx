@@ -342,13 +342,33 @@ export function CustomerTileMap({
       isFullscreen && "fixed inset-0 z-[60] rounded-none border-0"
     )}>
       <div ref={containerRef} className="absolute inset-0" />
-      <button
-        onClick={() => setIsFullscreen(!isFullscreen)}
-        className="absolute right-4 top-4 z-[500] rounded-xl bg-white/90 p-1.5 shadow-sm backdrop-blur hover:bg-white flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight"
-      >
-        <MapIcon className="h-3.5 w-3.5 text-primary" />
-        {isFullscreen ? "Sair" : "Ampliar"}
-      </button>
+      <div className="absolute right-4 top-4 z-[500] flex items-center gap-2">
+        <button
+          onClick={() => setClusteringEnabled((current) => !current)}
+          title={
+            clusteringEnabled
+              ? "Desativar agrupamento de pins"
+              : "Ativar agrupamento de pins"
+          }
+          className={cn(
+            "flex items-center gap-2 rounded-xl p-1.5 text-[10px] font-bold uppercase tracking-tight shadow-sm backdrop-blur",
+            clusteringEnabled
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "bg-white/90 hover:bg-white",
+          )}
+        >
+          <Group className={cn("h-3.5 w-3.5", !clusteringEnabled && "text-primary")} />
+          {clusteringEnabled ? "Agrupado" : "Individual"}
+        </button>
+        <button
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="flex items-center gap-2 rounded-xl bg-white/90 p-1.5 text-[10px] font-bold uppercase tracking-tight shadow-sm backdrop-blur hover:bg-white"
+        >
+          <MapIcon className="h-3.5 w-3.5 text-primary" />
+          {isFullscreen ? "Sair" : "Ampliar"}
+        </button>
+      </div>
+
       {(!ready || loading) && (
         <div className="absolute inset-0 z-[500] grid place-items-center bg-background/70 backdrop-blur-sm">
           <div className="rounded-2xl border border-border bg-card px-5 py-4 text-center shadow-lift">
