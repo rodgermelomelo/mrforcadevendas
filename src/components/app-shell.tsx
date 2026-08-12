@@ -16,16 +16,30 @@ import {
   Target,
   Map as MapIcon,
   CalendarCheck2,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getIsAdmin } from "@/lib/admin.functions";
 import { useSales } from "@/lib/state/sales-store";
 import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { CustomerPickerProvider, useCustomerPicker } from "@/components/customer-picker";
 import { useIsAdmin } from "@/components/admin/admin-page";
 import { useIsApprover } from "@/components/use-is-approver";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+
 
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
@@ -56,9 +70,11 @@ const adminNav = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <CustomerPickerProvider>
-      <AppShellInner>{children}</AppShellInner>
-    </CustomerPickerProvider>
+    <SidebarProvider defaultOpen={true}>
+      <CustomerPickerProvider>
+        <AppShellInner>{children}</AppShellInner>
+      </CustomerPickerProvider>
+    </SidebarProvider>
   );
 }
 
