@@ -125,16 +125,16 @@ export function CatalogFilterBar({
 
         {/* Chips ativos */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 px-1">
+          <div className="flex flex-wrap items-center gap-2 px-1">
             {selectedBrands.map((b) => (
               <Badge
                 key={b}
                 variant="secondary"
-                className="flex items-center gap-1 rounded-lg border-primary/20 bg-primary/10 px-2 py-1 text-[11px] text-primary"
+                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
               >
                 {b}
-                <button onClick={() => onToggleBrand(b)} className="hover:text-primary/70">
-                  <X className="h-3 w-3" />
+                <button onClick={() => onToggleBrand(b)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </Badge>
             ))}
@@ -142,11 +142,11 @@ export function CatalogFilterBar({
               <Badge
                 key={g}
                 variant="secondary"
-                className="flex items-center gap-1 rounded-lg border-primary/20 bg-primary/10 px-2 py-1 text-[11px] text-primary"
+                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
               >
                 {g}
-                <button onClick={() => onToggleGroup(g)} className="hover:text-primary/70">
-                  <X className="h-3 w-3" />
+                <button onClick={() => onToggleGroup(g)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </Badge>
             ))}
@@ -154,39 +154,39 @@ export function CatalogFilterBar({
               <Badge
                 key={s}
                 variant="secondary"
-                className="flex items-center gap-1 rounded-lg border-primary/20 bg-primary/10 px-2 py-1 text-[11px] text-primary"
+                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
               >
                 {s}
-                <button onClick={() => onToggleSegment(s)} className="hover:text-primary/70">
-                  <X className="h-3 w-3" />
+                <button onClick={() => onToggleSegment(s)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </Badge>
             ))}
             {onlyInStock && (
               <Badge
                 variant="secondary"
-                className="flex items-center gap-1 rounded-lg border-success/20 bg-success/10 px-2 py-1 text-[11px] text-success"
+                className="flex items-center gap-1.5 rounded-full border-success/10 bg-success/5 px-2.5 py-1 text-[10px] font-bold text-success shadow-sm"
               >
-                Com estoque
-                <button onClick={onToggleInStock} className="hover:text-success/70">
-                  <X className="h-3 w-3" />
+                Estoque
+                <button onClick={onToggleInStock} className="rounded-full p-0.5 hover:bg-success/20 transition-colors">
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </Badge>
             )}
             {onlyLaunch && (
               <Badge
                 variant="secondary"
-                className="flex items-center gap-1 rounded-lg border-transparent bg-brand-gradient px-2 py-1 text-[11px] text-white"
+                className="flex items-center gap-1.5 rounded-full border-transparent bg-brand-gradient px-2.5 py-1 text-[10px] font-bold text-white shadow-md shadow-primary/20"
               >
                 Lançamento
-                <button onClick={onToggleLaunch} className="hover:text-white/70">
-                  <X className="h-3 w-3" />
+                <button onClick={onToggleLaunch} className="rounded-full p-0.5 hover:bg-white/20 transition-colors">
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </Badge>
             )}
             <button
               onClick={onClearFilters}
-              className="ml-1 text-[11px] font-medium text-muted-foreground underline underline-offset-2 hover:text-primary"
+              className="ml-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 hover:text-primary transition-colors"
             >
               Limpar tudo
             </button>

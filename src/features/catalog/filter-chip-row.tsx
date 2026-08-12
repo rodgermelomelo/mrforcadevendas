@@ -27,9 +27,9 @@ export function FilterChipRow<T extends string = string>({
             key={option}
             onClick={() => onToggle(option)}
             className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
+              "shrink-0 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95 shadow-soft",
               selected.includes(option)
-                ? "border-transparent bg-primary text-primary-foreground shadow-sm"
+                ? "border-transparent bg-primary text-primary-foreground shadow-md shadow-primary/20"
                 : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
             )}
           >
