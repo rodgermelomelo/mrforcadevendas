@@ -153,6 +153,11 @@ export function parseDadosV4(bytes: Uint8Array): ParseResult {
     logicalIndex += 1;
     const type = line.slice(0, 2);
 
+    if (type === "du") {
+      // Ignora registros 'dummy' silenciosamente ou trata como comentário
+      continue;
+    }
+
     if (!isKnownType(type)) {
       pushError(logicalIndex, type, "UNKNOWN_TYPE", `Tipo de registro desconhecido (${safeSnippet(line)})`);
       continue;
