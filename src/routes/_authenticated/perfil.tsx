@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { User, Mail, Shield, TrendingUp, Target, Loader2, LogOut, Package } from "lucide-react";
+import { User, Shield, TrendingUp, Target, LogOut, Package, BadgePercent } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { SellerGoalsHistory } from "@/components/admin/seller-goals-history";
 import { getGoalPermissions } from "@/lib/admin-data.functions";
+import { getMyCommissionSummary } from "@/lib/commissions.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -21,17 +22,23 @@ export const Route = createFileRoute("/_authenticated/perfil")({
 });
 
 function ProfilePage() {
-  const { sellerName, role, orders, hydrated, sellers } = useSales();
+  const { sellerName, role, orders, sellers } = useSales();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Encontra o seller vinculado ao usuário atual se houver
   const seller = sellers.find(s => s.name === sellerName);
   
   const fetchPerms = useServerFn(getGoalPermissions);
+  const fetchCommissions = useServerFn(getMyCommissionSummary);
   const permsQuery = useQuery({
     queryKey: ["goal-permissions"],
     queryFn: () => fetchPerms(),
+  });
+  const commissionQuery = useQuery({
+    queryKey: ["my-commissions", currentMonth],
+    queryFn: () => fetchCommissions({ data: { month: currentMonth } }),
   });
   const canManageGoals = permsQuery.data?.canManage ?? false;
 
@@ -150,6 +157,69 @@ function ProfilePage() {
           </section>
 
           <section className="surface-card p-6">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <BadgePercent className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-bold">Comissões do Mês</h3>
+              </div>
+              <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium uppercase tracking-wider text-primary">
+                {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+              </span>
+            </div>
+
+            {commissionQuery.isLoading ? (
+              <div className="grid h-32 place-items-center rounded-xl bg-muted text-sm text-muted-foreground">
+                Carregando comissões...
+              </div>
+            ) : commissionQuery.data?.sellerCodes.length === 0 ? (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Sua conta ainda não tem representante vinculado para apurar comissão.
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Comissão</p>
+                    <p className="text-2xl font-bold">{formatBRL(commissionQuery.data?.totals.commission ?? 0)}</p>
+                  </div>
+                  <div className="sm:text-right">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Vendas comissionadas</p>
+                    <p className="text-2xl font-bold">{formatBRL(commissionQuery.data?.totals.sold ?? 0)}</p>
+                  </div>
+                </div>
+                <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                  <InfoStat label="Pedidos" value={(commissionQuery.data?.totals.orders ?? 0).toLocaleString("pt-BR")} />
+                  <InfoStat label="Itens" value={(commissionQuery.data?.totals.items ?? 0).toLocaleString("pt-BR")} />
+                  <InfoStat
+                    label="Taxa média"
+                    value={`${(commissionQuery.data?.totals.averageRate ?? 0).toLocaleString("pt-BR", {
+                      maximumFractionDigits: 2,
+                    })}%`}
+                  />
+                </dl>
+                {(commissionQuery.data?.totals.pendingCommission ?? 0) > 0 && (
+                  <p className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+                    {formatBRL(commissionQuery.data?.totals.pendingCommission ?? 0)} em pedidos aguardando aprovação.
+                  </p>
+                )}
+                {(commissionQuery.data?.recentOrders ?? []).length > 0 && (
+                  <ul className="divide-y divide-border border-t border-border text-sm">
+                    {(commissionQuery.data?.recentOrders ?? []).slice(0, 4).map((order) => (
+                      <li key={order.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 py-3">
+                        <Link to="/pedidos/$orderId" params={{ orderId: order.id }} className="min-w-0">
+                          <span className="block truncate font-medium">{order.customerName}</span>
+                          <span className="block text-xs text-muted-foreground">{order.number}</span>
+                        </Link>
+                        <span className="text-sm font-semibold">{formatBRL(order.commissionTotal)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="surface-card p-6">
             <div className="flex items-center gap-2 mb-6">
               <TrendingUp className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-bold">Histórico de Metas</h3>
@@ -167,6 +237,15 @@ function ProfilePage() {
           </section>
         </main>
       </div>
+    </div>
+  );
+}
+
+function InfoStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border px-3 py-2">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="font-semibold">{value}</dd>
     </div>
   );
 }

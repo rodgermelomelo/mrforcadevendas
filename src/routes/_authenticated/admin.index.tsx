@@ -11,6 +11,7 @@ import {
   Scale,
   Stethoscope,
   ScrollText,
+  BadgePercent,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -46,6 +47,7 @@ const areas = [
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Gerencie permissões e vínculos comerciais." },
   { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Configurações auxiliares do sistema." },
   { to: "/admin/regras", icon: Scale, title: "Regras comerciais", text: "Matriz de aprovação por exceção, faixa e autoridade." },
+  { to: "/admin/comissoes", icon: BadgePercent, title: "Comissões", text: "Percentuais por marca, categoria, produto e representantes." },
   { to: "/admin/diagnostico", icon: Stethoscope, title: "Diagnóstico do catálogo", text: "Classificação dos códigos vindos do ERP." },
   { to: "/admin/importacoes", icon: Upload, title: "Central de Importações", text: "Upload e publicação atômica do dados.txt." },
   { to: "/admin/auditoria", icon: ScrollText, title: "Auditoria", text: "Registro sanitizado das alterações administrativas." },

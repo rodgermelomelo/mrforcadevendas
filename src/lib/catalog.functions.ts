@@ -227,7 +227,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       custCountBySeller.set(code, (custCountBySeller.get(code) ?? 0) + 1);
     }
     
-    const goalsBySeller = new Map((goalsRes.data ?? []).map((g: any) => [g.seller_erp_code, Number(g.goal_amount)]));
+    const goalsBySeller = new Map((goalsRes.data ?? []).map((g: any) => [g.seller_erp_code, Number(g.target_value)]));
 
     const sellers = (sellersRes.data ?? [])
       .map((s: any) => ({

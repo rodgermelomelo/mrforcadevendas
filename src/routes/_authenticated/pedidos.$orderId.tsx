@@ -59,6 +59,7 @@ function DetalhePedido() {
         <Info label="Tabela / nível" value={`${order.priceTableCode} · ${order.priceLevelLabel}`} />
         <Info label="Condição" value={order.paymentTerm} />
         <Info label="Integração" value={integrationLabel[order.integrationStatus]} />
+        <Info label="Comissão" value={formatBRL(order.commissionTotal)} />
         <Info label="Bonificação" value={order.isBonus ? "Sim" : "Não"} />
         <Info label="Hash do conteúdo" value={order.contentHash} />
       </section>
@@ -74,6 +75,13 @@ function DetalhePedido() {
                   {i.erpCode} · {i.quantity} un. × {formatBRL(i.unitPrice)}
                   {i.discountPercent > 0 ? ` · -${i.discountPercent}%` : ""}
                 </span>
+                {(i.commissionValue ?? 0) > 0 && (
+                  <span className="mt-1 block text-xs text-primary">
+                    Comissão {i.commissionPercent?.toLocaleString("pt-BR")}% ·{" "}
+                    {formatBRL(i.commissionValue ?? 0)}
+                    {i.commissionRuleName ? ` · ${i.commissionRuleName}` : ""}
+                  </span>
+                )}
               </span>
               <span className="shrink-0 text-sm font-semibold">{formatBRL(i.total)}</span>
             </li>
@@ -91,6 +99,10 @@ function DetalhePedido() {
           <div className="flex justify-between text-base font-bold">
             <dt>Total</dt>
             <dd>{formatBRL(order.total)}</dd>
+          </div>
+          <div className="flex justify-between text-sm font-semibold text-primary">
+            <dt>Comissão calculada</dt>
+            <dd>{formatBRL(order.commissionTotal)}</dd>
           </div>
         </dl>
       </section>

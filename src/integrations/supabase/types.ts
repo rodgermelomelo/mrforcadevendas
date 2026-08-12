@@ -580,6 +580,12 @@ export type Database = {
       }
       order_items: {
         Row: {
+          commission_base: number
+          commission_percent: number
+          commission_rule_id: string | null
+          commission_rule_name: string | null
+          commission_scope: string
+          commission_value: number
           discount_percent: number
           id: string
           order_id: string
@@ -590,6 +596,12 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          commission_base?: number
+          commission_percent?: number
+          commission_rule_id?: string | null
+          commission_rule_name?: string | null
+          commission_scope?: string
+          commission_value?: number
           discount_percent?: number
           id?: string
           order_id: string
@@ -600,6 +612,12 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          commission_base?: number
+          commission_percent?: number
+          commission_rule_id?: string | null
+          commission_rule_name?: string | null
+          commission_scope?: string
+          commission_value?: number
           discount_percent?: number
           id?: string
           order_id?: string
@@ -656,6 +674,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          commission_calculated_at: string | null
+          commission_total: number
           confirmed_at: string | null
           content_hash: string
           created_at: string
@@ -681,6 +701,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          commission_calculated_at?: string | null
+          commission_total?: number
           confirmed_at?: string | null
           content_hash?: string
           created_at?: string
@@ -706,6 +728,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          commission_calculated_at?: string | null
+          commission_total?: number
           confirmed_at?: string | null
           content_hash?: string
           created_at?: string

@@ -67,7 +67,14 @@ function Pedidos() {
                     </span>
                   </div>
                 </div>
-                <span className="shrink-0 text-sm font-bold">{formatBRL(o.total)}</span>
+                <span className="shrink-0 text-right text-sm">
+                  <span className="block font-bold">{formatBRL(o.total)}</span>
+                  {(o.commissionTotal ?? 0) > 0 && (
+                    <span className="block text-xs font-semibold text-primary">
+                      Comissão {formatBRL(o.commissionTotal)}
+                    </span>
+                  )}
+                </span>
               </Link>
             </li>
           ))}

@@ -8,6 +8,7 @@ import type {
   Order,
   OrderItemSnapshot,
 } from "@/lib/domain/types";
+import { calculateOrderCommissionsFromDb } from "@/lib/commissions.functions";
 
 export interface CreateOrderInput {
   customerErpCode: string;
@@ -48,6 +49,8 @@ type OrderRow = {
   subtotal: string | number;
   discount_total: string | number;
   total: string | number;
+  commission_total?: string | number;
+  commission_calculated_at?: string | null;
   order_discount_percent: string | number;
   is_bonus: boolean;
   notes: string;
@@ -62,6 +65,12 @@ type OrderRow = {
     unit_price: string | number;
     discount_percent: string | number;
     total: string | number;
+    commission_percent?: string | number;
+    commission_base?: string | number;
+    commission_value?: string | number;
+    commission_rule_id?: string | null;
+    commission_rule_name?: string | null;
+    commission_scope?: string | null;
   }[];
   commercial_exceptions?: {
     exception_type: string;
@@ -91,10 +100,18 @@ function toOrder(row: OrderRow): Order {
       unitPrice: Number(i.unit_price),
       discountPercent: Number(i.discount_percent),
       total: Number(i.total),
+      commissionPercent: Number(i.commission_percent ?? 0),
+      commissionBase: Number(i.commission_base ?? 0),
+      commissionValue: Number(i.commission_value ?? 0),
+      commissionRuleId: i.commission_rule_id ?? null,
+      commissionRuleName: i.commission_rule_name ?? null,
+      commissionScope: i.commission_scope ?? "sem_regra",
     })),
     subtotal: Number(row.subtotal),
     discountTotal: Number(row.discount_total),
     total: Number(row.total),
+    commissionTotal: Number(row.commission_total ?? 0),
+    commissionCalculatedAt: row.commission_calculated_at ?? null,
     orderDiscountPercent: Number(row.order_discount_percent),
     isBonus: row.is_bonus,
     notes: row.notes,
@@ -192,6 +209,13 @@ export const createOrder = createServerFn({ method: "POST" })
     const integrationStatus: IntegrationStatus = hasExceptions
       ? "not_ready"
       : "awaiting_erp_integration";
+    const commission = await calculateOrderCommissionsFromDb(supabase, {
+      sellerErpCode: data.sellerErpCode,
+      items: data.items,
+      orderDiscountPercent: data.orderDiscountPercent,
+      isBonus: data.isBonus,
+    });
+    const commissionByCode = new Map(commission.lines.map((line) => [line.productErpCode, line]));
 
     const contentHash = await sha256(
       JSON.stringify({
@@ -203,6 +227,7 @@ export const createOrder = createServerFn({ method: "POST" })
         orderDiscountPercent: data.orderDiscountPercent,
         isBonus: data.isBonus,
         total: data.total,
+        commissionTotal: commission.total,
       }),
     );
 
@@ -222,6 +247,8 @@ export const createOrder = createServerFn({ method: "POST" })
         subtotal: data.subtotal,
         discount_total: data.discountTotal,
         total: data.total,
+        commission_total: commission.total,
+        commission_calculated_at: new Date().toISOString(),
         notes: data.notes,
         status,
         integration_status: integrationStatus,
@@ -243,6 +270,12 @@ export const createOrder = createServerFn({ method: "POST" })
         unit_price: i.unitPrice,
         discount_percent: i.discountPercent,
         total: i.total,
+        commission_percent: commissionByCode.get(i.erpCode)?.commissionPercent ?? 0,
+        commission_base: commissionByCode.get(i.erpCode)?.commissionBase ?? 0,
+        commission_value: commissionByCode.get(i.erpCode)?.commissionValue ?? 0,
+        commission_rule_id: commissionByCode.get(i.erpCode)?.commissionRuleId ?? null,
+        commission_rule_name: commissionByCode.get(i.erpCode)?.commissionRuleName ?? null,
+        commission_scope: commissionByCode.get(i.erpCode)?.commissionScope ?? "sem_regra",
       })),
     );
     if (itemsError) throw new Error(itemsError.message);
@@ -276,6 +309,10 @@ export const createOrder = createServerFn({ method: "POST" })
           priceLevel: data.priceLevelLabel,
           paymentTerm: data.paymentTerm,
           items: data.items,
+          commissions: {
+            total: commission.total,
+            lines: commission.lines,
+          },
           exceptions: data.exceptions,
           financialAgreement: data.financialAgreement ?? null,
           subtotal: data.subtotal,

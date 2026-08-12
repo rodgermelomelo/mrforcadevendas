@@ -117,6 +117,12 @@ export interface OrderItemSnapshot {
   unitPrice: number;
   discountPercent: number;
   total: number;
+  commissionPercent?: number;
+  commissionBase?: number;
+  commissionValue?: number;
+  commissionRuleId?: string | null;
+  commissionRuleName?: string | null;
+  commissionScope?: string;
 }
 
 export interface Order {
@@ -133,6 +139,8 @@ export interface Order {
   subtotal: number;
   discountTotal: number;
   total: number;
+  commissionTotal: number;
+  commissionCalculatedAt: string | null;
   orderDiscountPercent: number;
   isBonus: boolean;
   notes: string;

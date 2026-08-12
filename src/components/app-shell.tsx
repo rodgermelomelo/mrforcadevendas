@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   User,
   UsersRound,
+  BadgePercent,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,7 @@ const adminNav = [
   { to: "/admin/usuarios", label: "Usuários, papéis e provisionamento" },
   { to: "/admin/cadastros", label: "Cadastros gerais" },
   { to: "/admin/regras", label: "Regras comerciais" },
+  { to: "/admin/comissoes", label: "Comissões" },
   { to: "/admin/diagnostico", label: "Diagnóstico do catálogo" },
   { to: "/admin/importacoes", label: "Importações" },
   { to: "/admin/auditoria", label: "Auditoria" },
@@ -160,7 +162,11 @@ function AppShellInner({ children }: { children: ReactNode }) {
                     : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
                 )}
               >
-                <ShieldCheck className="h-4 w-4 shrink-0" />
+                {item.to === "/admin/comissoes" ? (
+                  <BadgePercent className="h-4 w-4 shrink-0" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                )}
                 <span className="truncate">{item.label}</span>
               </Link>
             ))}
