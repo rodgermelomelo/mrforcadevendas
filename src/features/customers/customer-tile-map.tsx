@@ -13,7 +13,7 @@ import type {
 } from "leaflet";
 import type { CustomerCityCluster, CustomerMapPoint } from "@/lib/customer-map";
 import { cn } from "@/lib/utils";
-import { Map as MapIcon } from "lucide-react";
+import { Group, Map as MapIcon } from "lucide-react";
 
 export const CUSTOMER_TILE_PROVIDERS = [
   {
@@ -49,6 +49,7 @@ interface CustomerTileMapProps {
 }
 
 const BRAZIL_CENTER: LatLngExpression = [-14.235, -51.9253];
+const CLUSTERING_PREF_KEY = "mr-fdv:map-clustering";
 export const SELLER_COLORS = [
   "#e92b8d", // Magenta (Primary)
   "#0ea5e9", // Sky Blue
@@ -125,9 +126,32 @@ export function CustomerTileMap({
   const mapRef = useRef<LeafletMap | null>(null);
   const tileLayerRef = useRef<TileLayer | null>(null);
   const dataLayerRef = useRef<any>(null);
+  const plainLayerRef = useRef<any>(null);
+  const clusterLayerRef = useRef<any>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [ready, setReady] = useState(false);
   const [tileFailures, setTileFailures] = useState(0);
+  const [clusteringEnabled, setClusteringEnabled] = useState(true);
+  const [prefLoaded, setPrefLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CLUSTERING_PREF_KEY);
+      if (stored !== null) setClusteringEnabled(stored === "true");
+    } catch {
+      // ignora storage indisponível
+    }
+    setPrefLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!prefLoaded) return;
+    try {
+      window.localStorage.setItem(CLUSTERING_PREF_KEY, String(clusteringEnabled));
+    } catch {
+      // ignora storage indisponível
+    }
+  }, [clusteringEnabled, prefLoaded]);
 
   const selectedCluster = useMemo(
     () => clusters.find((cluster) => cluster.key === selectedCityKey) ?? null,
@@ -156,7 +180,7 @@ export function CustomerTileMap({
       L.control.zoom({ position: "bottomright" }).addTo(map);
       mapRef.current = map;
       
-      // Criar o grupo de clusters
+      // Camada agrupada (clusters)
       const clusterGroup = (L as any).markerClusterGroup({
         showCoverageOnHover: false,
         maxClusterRadius: 50,
@@ -170,9 +194,12 @@ export function CustomerTileMap({
           });
         }
       });
-      
-      clusterGroup.addTo(map);
-      dataLayerRef.current = clusterGroup;
+
+      // Camada simples (pins individuais)
+      const plainGroup = L.featureGroup();
+
+      clusterLayerRef.current = clusterGroup;
+      plainLayerRef.current = plainGroup;
       setReady(true);
     }
 
@@ -184,10 +211,25 @@ export function CustomerTileMap({
       mapRef.current = null;
       tileLayerRef.current = null;
       dataLayerRef.current = null;
+      clusterLayerRef.current = null;
+      plainLayerRef.current = null;
       leafletRef.current = null;
       setReady(false);
     };
   }, []);
+
+  // Alterna a camada ativa conforme a preferência de clustering
+  useEffect(() => {
+    if (!ready || !mapRef.current || !clusterLayerRef.current || !plainLayerRef.current) return;
+    const map = mapRef.current;
+    const active = clusteringEnabled ? clusterLayerRef.current : plainLayerRef.current;
+    const inactive = clusteringEnabled ? plainLayerRef.current : clusterLayerRef.current;
+
+    if (map.hasLayer(inactive)) map.removeLayer(inactive);
+    if (!map.hasLayer(active)) map.addLayer(active);
+    dataLayerRef.current = active;
+  }, [clusteringEnabled, ready]);
+
 
   useEffect(() => {
     if (!ready || !leafletRef.current || !mapRef.current) return;
@@ -257,8 +299,12 @@ export function CustomerTileMap({
       markers.push(marker);
     }
 
-    layer.addLayers(markers);
-  }, [clusters, onSelectCity, points, ready, selectedCityKey]);
+    if (typeof layer.addLayers === "function") {
+      layer.addLayers(markers);
+    } else {
+      markers.forEach((marker) => layer.addLayer(marker));
+    }
+  }, [clusteringEnabled, clusters, onSelectCity, points, ready, selectedCityKey]);
 
   useEffect(() => {
     if (!ready || !mapRef.current) return;
@@ -296,13 +342,33 @@ export function CustomerTileMap({
       isFullscreen && "fixed inset-0 z-[60] rounded-none border-0"
     )}>
       <div ref={containerRef} className="absolute inset-0" />
-      <button
-        onClick={() => setIsFullscreen(!isFullscreen)}
-        className="absolute right-4 top-4 z-[500] rounded-xl bg-white/90 p-1.5 shadow-sm backdrop-blur hover:bg-white flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight"
-      >
-        <MapIcon className="h-3.5 w-3.5 text-primary" />
-        {isFullscreen ? "Sair" : "Ampliar"}
-      </button>
+      <div className="absolute right-4 top-4 z-[500] flex items-center gap-2">
+        <button
+          onClick={() => setClusteringEnabled((current) => !current)}
+          title={
+            clusteringEnabled
+              ? "Desativar agrupamento de pins"
+              : "Ativar agrupamento de pins"
+          }
+          className={cn(
+            "flex items-center gap-2 rounded-xl p-1.5 text-[10px] font-bold uppercase tracking-tight shadow-sm backdrop-blur",
+            clusteringEnabled
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "bg-white/90 hover:bg-white",
+          )}
+        >
+          <Group className={cn("h-3.5 w-3.5", !clusteringEnabled && "text-primary")} />
+          {clusteringEnabled ? "Agrupado" : "Individual"}
+        </button>
+        <button
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="flex items-center gap-2 rounded-xl bg-white/90 p-1.5 text-[10px] font-bold uppercase tracking-tight shadow-sm backdrop-blur hover:bg-white"
+        >
+          <MapIcon className="h-3.5 w-3.5 text-primary" />
+          {isFullscreen ? "Sair" : "Ampliar"}
+        </button>
+      </div>
+
       {(!ready || loading) && (
         <div className="absolute inset-0 z-[500] grid place-items-center bg-background/70 backdrop-blur-sm">
           <div className="rounded-2xl border border-border bg-card px-5 py-4 text-center shadow-lift">
