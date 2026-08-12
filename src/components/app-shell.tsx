@@ -11,6 +11,7 @@ import {
   Plus,
   LayoutGrid,
   User,
+  UsersRound,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { CustomerPickerProvider, useCustomerPicker } from "@/components/customer-picker";
 import { useIsAdmin } from "@/components/admin/admin-page";
+import { useIsApprover } from "@/components/use-is-approver";
 
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
