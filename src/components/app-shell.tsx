@@ -39,6 +39,13 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 
 const nav = [
@@ -338,5 +345,94 @@ function AppShellInner({ children }: { children: ReactNode }) {
         />
       </div>
     </div>
+  );
+}
+
+const primaryTabs = [
+  { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
+  { to: "/carteira", label: "Carteira", icon: Users, exact: false },
+  { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
+  { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
+] as const;
+
+function MobileTabBar({
+  isActive,
+  isAdmin,
+  isApprover,
+}: {
+  isActive: (to: string, exact: boolean) => boolean;
+  isAdmin: boolean;
+  isApprover: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const moreItems = [
+    { to: "/visitas", label: "Visitas", icon: CalendarCheck2, show: true },
+    { to: "/metas", label: "Metas", icon: Target, show: true },
+    { to: "/perfil", label: "Perfil", icon: User, show: true },
+    { to: "/mapa-clientes", label: "Mapa", icon: MapIcon, show: isApprover },
+    { to: "/equipe", label: "Equipe", icon: UsersRound, show: isApprover },
+    { to: "/admin", label: "Administração", icon: LayoutGrid, show: isAdmin },
+  ].filter((item) => item.show);
+
+  const moreActive = moreItems.some((item) => isActive(item.to, false));
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+      {primaryTabs.map((item) => {
+        const active = isActive(item.to, item.exact);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={cn(
+              "flex min-h-12 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors",
+              active ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            <item.icon className={cn("h-5.5 w-5.5", active && "drop-shadow-sm")} />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        );
+      })}
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "flex min-h-12 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors",
+              moreActive ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            <Menu className="h-5.5 w-5.5" />
+            <span>Mais</span>
+          </button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="rounded-t-3xl border-none pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="text-base">Mais opções</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {moreItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-center text-[11px] font-medium transition-colors",
+                  isActive(item.to, false)
+                    ? "border-primary/30 bg-primary/5 text-primary"
+                    : "text-muted-foreground hover:bg-muted",
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="leading-tight">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </nav>
   );
 }
