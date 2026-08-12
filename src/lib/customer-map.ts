@@ -75,7 +75,7 @@ const STATE_COORDS: Record<string, Coordinate> = {
   RS: { lat: -30.03, lng: -51.23 },
   SC: { lat: -27.59, lng: -48.55 },
   SE: { lat: -10.91, lng: -37.07 },
-  SP: { lat: -22.2, lng: -48.8 },
+  SP: { lat: -23.55, lng: -46.63 }, // Centralizado na capital para evitar spread para o oceano
   TO: { lat: -10.18, lng: -48.33 },
 };
 
