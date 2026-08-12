@@ -103,7 +103,7 @@ function UsersPage() {
         <TabsContent value="gestao" className="space-y-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas.
+              Vendedores enxergam apenas a própria carteira. Supervisores e gerentes só veem as carteiras escolhidas. Gerencie aqui os perfis de acesso e a visibilidade de equipe.
             </p>
             <Button 
               onClick={() => setCreateOpen(true)}
