@@ -160,15 +160,32 @@ export interface SellerGoal {
   targetValue: number;
 }
 
+/** Metas podem ser geridas por administradores, gerentes comerciais e supervisores. */
+async function canManageGoals(context: { supabase: any; userId: string }) {
+  const { data } = await context.supabase.rpc("is_approver", { _user_id: context.userId });
+  return data === true;
+}
+
+async function assertGoalManager(context: { supabase: any; userId: string }) {
+  if (!(await canManageGoals(context))) {
+    throw new Error("Seu perfil não permite editar metas.");
+  }
+}
+
+export const getGoalPermissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ canManage: boolean }> => ({
+    canManage: await canManageGoals(context),
+  }));
+
 export const listSellerGoals = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { month: string }) => input)
+  .inputValidator((input: { month?: string; sellerErpCode?: string }) => input ?? {})
   .handler(async ({ data, context }): Promise<SellerGoal[]> => {
-    await assertAdmin(context);
-    const { data: rows, error } = await context.supabase
-      .from("seller_goals" as any)
-      .select("*")
-      .eq("month", data.month);
+    let query = context.supabase.from("seller_goals" as any).select("*");
+    if (data.month) query = query.eq("month", data.month);
+    if (data.sellerErpCode) query = query.eq("seller_erp_code", data.sellerErpCode);
+    const { data: rows, error } = await query.order("month", { ascending: false });
     if (error) throw new Error(error.message);
     return (rows ?? []).map((r: any) => ({
       id: r.id,
@@ -180,9 +197,14 @@ export const listSellerGoals = createServerFn({ method: "POST" })
 
 export const updateSellerGoal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { sellerErpCode: string; month: string; targetValue: number }) => input)
+  .inputValidator((input: { sellerErpCode: string; month: string; targetValue: number }) => {
+    if (!input?.sellerErpCode) throw new Error("Representante inválido.");
+    if (!/^\d{4}-\d{2}-01$/.test(input?.month ?? "")) throw new Error("Mês inválido.");
+    if (!Number.isFinite(input.targetValue) || input.targetValue < 0) throw new Error("Valor de meta inválido.");
+    return input;
+  })
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertGoalManager(context);
     const { error } = await context.supabase.from("seller_goals" as any).upsert(
       {
         seller_erp_code: data.sellerErpCode,
@@ -198,6 +220,21 @@ export const updateSellerGoal = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+export const deleteSellerGoal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => {
+    if (!input?.id) throw new Error("Meta inválida.");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    await assertGoalManager(context);
+    const { error } = await context.supabase.from("seller_goals" as any).delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, "seller_goals", data.id, "delete_goal", {});
+    return { ok: true };
+  });
+
 
 export const updateSeller = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
