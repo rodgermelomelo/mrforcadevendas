@@ -23,35 +23,33 @@ export const getWorkspace = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<WorkspaceData> => {
     const { supabase, userId } = context;
 
-    // Use a single batch for some and individual for others to balance speed and TS depth
-    const customersRes = await supabase.from("customers").select("*").eq("active", true).order("trade_name");
-    const productsRes = await supabase.from("products").select("*").eq("active", true).order("erp_code");
-    const pricesRes = await supabase.from("product_prices").select("*");
-    const tablesRes = await supabase.from("price_tables").select("*");
-    const groupsRes = await supabase.from("product_groups").select("*");
-    
-    // Group remaining queries that are less likely to trigger depth issues
-    const [
-      inventoryRes,
-      enrichRes,
-      linksRes,
-      profileRes,
-      rulesRes,
-      roleRes,
-      sellersRes,
-      brandsRes,
-      goalsRes
-    ] = await Promise.all([
-      supabase.from("inventory_snapshots" as any).select("*"),
-      supabase.from("product_enrichments" as any).select("*"),
-      supabase.from("user_erp_seller_links" as any).select("seller_erp_code").eq("user_id", userId),
-      supabase.from("profiles" as any).select("full_name, email").eq("id", userId).maybeSingle(),
-      supabase.from("approval_rules" as any).select("*").eq("active", true),
-      supabase.from("user_roles" as any).select("role").eq("user_id", userId).maybeSingle(),
-      supabase.from("erp_sellers" as any).select("erp_code, name").order("erp_code"),
-      supabase.from("brands" as any).select("name, active, metadata").eq("active", true),
-      supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01"),
-    ]);
+    // Use absolute raw queries to bypass type instantiation limits for large complex schemas
+    const fetch = async (table: string, options: any = {}) => {
+      let query = supabase.from(table as any).select(options.select || "*");
+      if (options.eq) {
+        for (const [k, v] of Object.entries(options.eq)) {
+          query = query.eq(k as any, v as any);
+        }
+      }
+      if (options.order) query = query.order(options.order);
+      if (options.maybeSingle) return query.maybeSingle();
+      return query;
+    };
+
+    const customersRes = await fetch("customers", { eq: { active: true }, order: "trade_name" });
+    const productsRes = await fetch("products", { eq: { active: true }, order: "erp_code" });
+    const pricesRes = await fetch("product_prices");
+    const tablesRes = await fetch("price_tables");
+    const groupsRes = await fetch("product_groups");
+    const inventoryRes = await fetch("inventory_snapshots");
+    const enrichRes = await fetch("product_enrichments");
+    const linksRes = await fetch("user_erp_seller_links", { eq: { user_id: userId }, select: "seller_erp_code" });
+    const profileRes = await fetch("profiles", { eq: { id: userId }, select: "full_name, email", maybeSingle: true });
+    const rulesRes = await fetch("approval_rules", { eq: { active: true } });
+    const roleRes = await fetch("user_roles", { eq: { user_id: userId }, select: "role", maybeSingle: true });
+    const sellersRes = await fetch("erp_sellers", { order: "erp_code", select: "erp_code, name" });
+    const brandsRes = await fetch("brands", { eq: { active: true }, select: "name, active, metadata" });
+    const goalsRes = await fetch("seller_goals", { eq: { month: new Date().toISOString().slice(0, 7) + "-01" } });
 
     const today = new Date().toISOString().slice(0, 10);
     const approvalRules: ApprovalRule[] = (rulesRes.data as any[] ?? [])
