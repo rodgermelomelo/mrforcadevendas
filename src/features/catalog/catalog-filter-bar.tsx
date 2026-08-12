@@ -23,13 +23,10 @@ export interface CatalogFilterBarProps {
   onToggleLaunch: () => void;
   brands: string[];
   groups: string[];
-  segments: string[];
   selectedBrands: string[];
   selectedGroups: string[];
-  selectedSegments: string[];
   onToggleBrand: (brand: string) => void;
   onToggleGroup: (group: string) => void;
-  onToggleSegment: (segment: string) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   resultCount: number;
