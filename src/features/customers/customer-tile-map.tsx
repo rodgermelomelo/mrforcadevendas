@@ -180,7 +180,7 @@ export function CustomerTileMap({
       L.control.zoom({ position: "bottomright" }).addTo(map);
       mapRef.current = map;
       
-      // Criar o grupo de clusters
+      // Camada agrupada (clusters)
       const clusterGroup = (L as any).markerClusterGroup({
         showCoverageOnHover: false,
         maxClusterRadius: 50,
@@ -194,9 +194,12 @@ export function CustomerTileMap({
           });
         }
       });
-      
-      clusterGroup.addTo(map);
-      dataLayerRef.current = clusterGroup;
+
+      // Camada simples (pins individuais)
+      const plainGroup = L.featureGroup();
+
+      clusterLayerRef.current = clusterGroup;
+      plainLayerRef.current = plainGroup;
       setReady(true);
     }
 
@@ -208,10 +211,25 @@ export function CustomerTileMap({
       mapRef.current = null;
       tileLayerRef.current = null;
       dataLayerRef.current = null;
+      clusterLayerRef.current = null;
+      plainLayerRef.current = null;
       leafletRef.current = null;
       setReady(false);
     };
   }, []);
+
+  // Alterna a camada ativa conforme a preferência de clustering
+  useEffect(() => {
+    if (!ready || !mapRef.current || !clusterLayerRef.current || !plainLayerRef.current) return;
+    const map = mapRef.current;
+    const active = clusteringEnabled ? clusterLayerRef.current : plainLayerRef.current;
+    const inactive = clusteringEnabled ? plainLayerRef.current : clusterLayerRef.current;
+
+    if (map.hasLayer(inactive)) map.removeLayer(inactive);
+    if (!map.hasLayer(active)) map.addLayer(active);
+    dataLayerRef.current = active;
+  }, [clusteringEnabled, ready]);
+
 
   useEffect(() => {
     if (!ready || !leafletRef.current || !mapRef.current) return;
