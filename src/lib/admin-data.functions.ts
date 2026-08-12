@@ -487,7 +487,7 @@ export const listCustomers = createServerFn({ method: "POST" })
         const q = normalizeAdminSearch((data.term ?? "").trim());
         if (!q) return true;
         return normalizeAdminSearch(
-          [row.erpCode, row.legalName, row.tradeName, row.city, row.uf, row.sellerErpCode].join(" "),
+          [row.erpCode, row.legalName, row.tradeName, row.city, row.uf, row.sellerErpCode, row.segmentCode ?? ""].join(" "),
         ).includes(q);
       })
       .sort(

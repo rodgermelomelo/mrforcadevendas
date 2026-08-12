@@ -174,10 +174,21 @@ function CustomersPage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{customer.tradeName}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {customer.erpCode} · {customer.city}/{customer.uf} · Tabela {customer.priceTableCode} · Rep.{" "}
-                      {customer.sellerErpCode}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                      <span>{customer.erpCode}</span>
+                      <span>•</span>
+                      <span>{customer.city}/{customer.uf}</span>
+                      <span>•</span>
+                      <span>Tabela {customer.priceTableCode}</span>
+                      <span>•</span>
+                      <span>Rep. {customer.sellerErpCode}</span>
+                      {customer.segmentCode && (
+                        <>
+                          <span>•</span>
+                          <span className="font-medium text-primary/80">{customer.segmentCode}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="flex shrink-0 gap-1.5">
                     {customer.restricted && (
