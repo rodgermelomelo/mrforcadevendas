@@ -62,6 +62,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: isAdmin } = useIsAdmin();
+  const { data: isApprover } = useIsApprover();
 
   const signOut = async () => {
     await queryClient.cancelQueries();
