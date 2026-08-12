@@ -59,31 +59,41 @@ export function CatalogFilterBar({
   resultCount,
 }: CatalogFilterBarProps) {
   return (
-    <div className="sticky top-0 z-10 space-y-4 bg-background/80 pb-4 backdrop-blur-md sm:pb-6">
-      <div className="flex items-center gap-3">
+    <div className="sticky top-0 z-10 space-y-3 bg-background/80 pb-4 backdrop-blur-md sm:pb-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={term}
             onChange={(e) => onTermChange(e.target.value)}
             placeholder="Buscar por nome, código, grupo ou empresa"
-            className="h-12 rounded-xl bg-card pl-11 text-base"
+            className="h-11 rounded-2xl border-none bg-card px-11 text-sm shadow-soft ring-primary/5 transition-all focus-visible:ring-2"
           />
+          {term && (
+            <button 
+              onClick={() => onTermChange("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
-        <Select value={sortBy} onValueChange={(v) => onSortChange(v as CatalogSort)}>
-          <SelectTrigger className="h-12 w-[160px] rounded-xl border-none bg-card shadow-none">
-            <div className="flex items-center gap-2">
-              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="Ordenar" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="relevance">Relevância</SelectItem>
-            <SelectItem value="code">Código</SelectItem>
-            <SelectItem value="price-asc">Menor Preço</SelectItem>
-            <SelectItem value="price-desc">Maior Preço</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={sortBy} onValueChange={(v) => onSortChange(v as CatalogSort)}>
+            <SelectTrigger className="h-11 w-full rounded-2xl border-none bg-card px-4 text-sm shadow-soft sm:w-[160px]">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue placeholder="Ordenar" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-none shadow-xl">
+              <SelectItem value="relevance">Relevância</SelectItem>
+              <SelectItem value="code">Código</SelectItem>
+              <SelectItem value="price-asc">Menor Preço</SelectItem>
+              <SelectItem value="price-desc">Maior Preço</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
