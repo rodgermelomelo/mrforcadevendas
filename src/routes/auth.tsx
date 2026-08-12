@@ -270,7 +270,7 @@ function AuthPage() {
               </div>
 
               <div className="pt-2 border-t border-border/30 mt-4 text-[10px] opacity-50 italic">
-                melhorar a pagina de gerenciar usuários, perfis e permissões do sistema.
+                Adicione uma galeria de imagens no modal do produto para eu navegar entre várias fotos do item.
               </div>
             </div>
           </div>
