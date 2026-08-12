@@ -68,7 +68,11 @@ export interface CatalogImportImpact {
 export function buildEntities(records: ParsedRecords): ImportEntities {
   const groupLabel = productGroupLabelMap(records.productGroups);
   const product_groups = records.productGroups.map((g) => ({ code: g.erpCode, name: g.label || g.erpCode }));
-  const segments = records.segments.map((s) => ({ code: s.erpCode, name: s.label || s.erpCode }));
+  const segments = records.segments.map((s) => ({
+    code: s.erpCode,
+    name: s.label || s.erpCode,
+    active: true
+  }));
   const billing_methods = records.billingMethods.map((b) => ({ code: b.erpCode, description: b.label || b.erpCode }));
   const price_tables = records.priceTables.map((t) => ({
     code: t.erpCode,

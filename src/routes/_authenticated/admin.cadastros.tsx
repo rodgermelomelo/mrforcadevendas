@@ -155,7 +155,7 @@ function RegistryRow({
           Padrão
         </label>
       )}
-      {kind === "brands" && (
+      {(kind === "brands" || kind === "segments") && (
         <label className="flex shrink-0 items-center gap-2 text-xs">
           <input
             type="checkbox"
@@ -163,14 +163,14 @@ function RegistryRow({
             onChange={(e) => setActive(e.target.checked)}
             className="h-4 w-4 accent-[hsl(var(--primary))]"
           />
-          Ativa
+          Ativo
         </label>
       )}
       <div className="flex gap-2">
         <button
           type="button"
           disabled={!dirty || saving}
-          onClick={() => onSave(label, kind === "paymentTerms" ? isStandard : undefined, kind === "brands" ? active : undefined)}
+          onClick={() => onSave(label, kind === "paymentTerms" ? isStandard : undefined, (kind === "brands" || kind === "segments") ? active : undefined)}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-40"
         >
           {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Salvar

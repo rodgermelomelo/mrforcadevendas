@@ -101,12 +101,16 @@ export function inferProductTaxonomy(product: ProductRecord, groupLabel: string 
     categoryFromGroupLabel(groupLabel, brand) ??
     "DIVERSOS";
 
-  // Inferência de segmento (mercado, farmácia, etc.)
+  // Inferência de segmento baseada na descrição e histórico do ERP
   let segment = "GERAL";
   const descNorm = normalizeTaxonomyText(description);
-  if (descNorm.includes("FARMACIA") || descNorm.includes("MEDICAM")) segment = "FARMÁCIA";
-  if (descNorm.includes("MERCADO") || descNorm.includes("ALIMENT")) segment = "MERCADO";
-  if (descNorm.includes("COSMETICO") || descNorm.includes("BELEZA")) segment = "COSMÉTICOS";
+  const groupNorm = groupLabel ? normalizeTaxonomyText(groupLabel) : "";
+  const combined = `${descNorm} ${groupNorm}`;
+
+  if (combined.includes("FARMACIA") || combined.includes("MEDICAM") || combined.includes("DROGARIA")) segment = "FARMÁCIA";
+  else if (combined.includes("MERCADO") || combined.includes("ALIMENT") || combined.includes("SUPERMERCADO") || combined.includes("MERCEARIA")) segment = "MERCADO";
+  else if (combined.includes("COSMETICO") || combined.includes("BELEZA") || combined.includes("PERFUMARIA")) segment = "COSMÉTICOS";
+  else if (combined.includes("SALÃO") || combined.includes("CABELEIREIRO")) segment = "PROFISSIONAL";
 
   return {
     brand,
