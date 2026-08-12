@@ -28,24 +28,11 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
-  const { orders, hydrated, customer, customers, erpLastUpdate, sellerName, sellers } = useSales();
+  const { orders, hydrated, customer, erpLastUpdate, sellerName } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
-  
-  const seller = sellers.find(s => s.name === sellerName);
-  const goal = seller?.monthlyGoal ?? 0;
-  
-  const recentCustomers = customers.filter(c => orders.some(o => o.customerId === c.erpCode)).slice(0, 3);
+  const { goal, goalProgress, totalSold, counts, attention, recentCustomers } =
+    useDashboardMetrics();
 
-  const totalSold = orders
-    .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
-    .reduce((acc, o) => acc + o.total, 0);
-  const counts = {
-    analise: orders.filter((o) => o.status === "pending_approval").length,
-    aprovados: orders.filter((o) => o.status === "approved" || o.status === "auto_approved").length,
-    correcao: orders.filter((o) => o.status === "changes_requested").length,
-    erp: orders.filter((o) => o.integrationStatus === "awaiting_erp_integration").length,
-  };
-  const attention = customers.filter((c) => c.restricted || c.openBalance / c.creditLimit > 0.8);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8">
@@ -195,27 +182,3 @@ function Dashboard() {
   );
 }
 
-function MetricCard({
-  icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  hint: string;
-}) {
-  return (
-    <div className="surface-card p-5">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </span>
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
-      </div>
-      <p className="mt-3 text-2xl font-bold">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-    </div>
-  );
-}
