@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/page-header";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, Plus, ShoppingCart, Sparkles, UserPlus, ChevronDown } from "lucide-react";
