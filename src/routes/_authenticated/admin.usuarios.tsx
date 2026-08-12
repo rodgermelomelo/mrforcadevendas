@@ -91,13 +91,13 @@ function UsersPage() {
 
   return (
     <AdminPage
-      title="Usuários, Papéis e Provisionamento"
+      title="Usuários, Papéis e Acessos"
       description="Gerencie permissões de acesso e crie usuários para representantes do ERP."
     >
       <Tabs defaultValue="gestao" className="w-full">
         <TabsList className="mb-6 rounded-xl">
           <TabsTrigger value="gestao" className="rounded-lg">Gestão de Usuários</TabsTrigger>
-          <TabsTrigger value="provisionar" className="rounded-lg">Provisionar Representantes</TabsTrigger>
+          <TabsTrigger value="provisionar" className="rounded-lg">Criar Acessos em Lote</TabsTrigger>
         </TabsList>
 
         <TabsContent value="gestao" className="space-y-6">
