@@ -11,6 +11,7 @@ import { ProductCard } from "@/features/catalog/product-card";
 import { ProductCardSkeleton } from "@/features/catalog/product-card-skeleton";
 import { CatalogFilterBar } from "@/features/catalog/catalog-filter-bar";
 import { useCatalogFilters } from "@/features/catalog/use-catalog-filters";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
@@ -32,6 +33,7 @@ function Catalogo() {
   const { customer, table, addItem, itemCount, products, role, brandMetadata } = useSales();
   const { openCustomerPicker } = useCustomerPicker();
   const isAdmin = role === "administrador";
+  const showPriceTableDetails = canViewPriceTableDetails(role);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -49,8 +51,13 @@ function Catalogo() {
             <p className="mt-2 truncate text-sm text-muted-foreground">
               Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
               Rep. {customer.sellerErpCode ?? "—"} ·{" "}
-              {table ? `${table.code} ${table.name}` : "sem tabela"} ·{" "}
-              {table?.levelLabel ?? "nível pendente"} · {customer.paymentTerm}
+              {showPriceTableDetails && (
+                <>
+                  {table ? `${table.code} ${table.name}` : "sem tabela"} ·{" "}
+                  {table?.levelLabel ?? "nível pendente"} ·{" "}
+                </>
+              )}
+              {customer.paymentTerm}
             </p>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
@@ -95,9 +102,10 @@ function Catalogo() {
 
       {tableBlocked && (
         <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
-          Configuração de preço pendente: a tabela {customer?.priceTableCode} não tem nível de preço
-          mapeado. Nenhum preço é exibido e o pedido fica bloqueado até a configuração
-          administrativa.
+          {showPriceTableDetails
+            ? `Configuração de preço pendente: a tabela ${customer?.priceTableCode} não tem nível de preço mapeado.`
+            : "Configuração de preço pendente para este cliente."}{" "}
+          Nenhum preço é exibido e o pedido fica bloqueado até a configuração administrativa.
         </div>
       )}
 

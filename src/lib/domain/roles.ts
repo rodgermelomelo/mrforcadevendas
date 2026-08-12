@@ -30,3 +30,14 @@ export const SUPERVISORY_ROLES = ["supervisor", "gerente_comercial"] as const;
 export function isSupervisoryRole(role: string): boolean {
   return (SUPERVISORY_ROLES as readonly string[]).includes(role);
 }
+
+/** Representantes veem preços finais, mas não detalhes de tabela/nível. */
+export const REPRESENTATIVE_ROLES = ["vendedor_externo", "vendedor_interno"] as const;
+
+export function isRepresentativeRole(role: string | null | undefined): boolean {
+  return role === "vendedor_externo" || role === "vendedor_interno";
+}
+
+export function canViewPriceTableDetails(role: string | null | undefined): boolean {
+  return Boolean(role && !isRepresentativeRole(role));
+}

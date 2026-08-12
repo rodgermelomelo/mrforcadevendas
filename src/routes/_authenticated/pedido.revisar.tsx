@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 export const Route = createFileRoute("/_authenticated/pedido/revisar")({
   head: () => ({
@@ -33,12 +34,33 @@ function contentHash(input: string): string {
   return `sha-demo-${(h >>> 0).toString(16).padStart(8, "0")}`;
 }
 
+function displayCommercialIssue<T extends { code?: string; label: string; detail: string }>(
+  issue: T,
+  showPriceTableDetails: boolean,
+) {
+  if (showPriceTableDetails) return issue;
+  if (issue.code === "table_unmapped") {
+    return {
+      ...issue,
+      label: "Preço pendente",
+      detail: "Configuração de preço pendente para este cliente.",
+    };
+  }
+  return {
+    ...issue,
+    detail: issue.detail
+      .replace(/na tabela \S+\./i, "para este cliente.")
+      .replace(/para a tabela do cliente/gi, "para este cliente")
+      .replace(/a tabela do cliente/gi, "o cadastro comercial do cliente"),
+  };
+}
+
 function RevisarPedido() {
   const sales = useSales();
   const {
     customer, table, lines, subtotal, discountValue, total, orderDiscountPercent,
     isBonus, notes, paymentTerm, setItemDiscount, setOrderDiscount, setBonus, setNotes,
-    sellerName, submitting,
+    sellerName, submitting, role,
   } = sales;
   const navigate = useNavigate();
   const submitLockRef = useRef(false);
@@ -90,6 +112,7 @@ function RevisarPedido() {
 
   const hasExceptions = validation.exceptions.length > 0;
   const hasErrors = validation.errors.length > 0;
+  const showPriceTableDetails = canViewPriceTableDetails(role);
 
   const submit = async () => {
     if (submitLockRef.current || submitting) return;
@@ -143,7 +166,11 @@ function RevisarPedido() {
         <p className="mt-2 text-sm text-muted-foreground">
           Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
           Rep. {customer.sellerErpCode ?? "—"} ·{" "}
-          Tabela {table?.code ?? "—"} · {table?.levelLabel ?? "nível pendente"} ·{" "}
+          {showPriceTableDetails && (
+            <>
+              Tabela {table?.code ?? "—"} · {table?.levelLabel ?? "nível pendente"} ·{" "}
+            </>
+          )}
           {paymentTerm ?? customer.paymentTerm} · Vendedor {sellerName}
         </p>
       </header>
@@ -154,11 +181,14 @@ function RevisarPedido() {
             <AlertTriangle className="h-4 w-4" /> Erros obrigatórios — pedido fica em rascunho
           </h2>
           <ul className="mt-2 space-y-1 text-xs text-destructive">
-            {validation.errors.map((e, i) => (
-              <li key={i}>
-                <strong>{e.label}:</strong> {e.detail}
-              </li>
-            ))}
+            {validation.errors.map((e, i) => {
+              const issue = displayCommercialIssue(e, showPriceTableDetails);
+              return (
+                <li key={i}>
+                  <strong>{issue.label}:</strong> {issue.detail}
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
@@ -297,11 +327,14 @@ function RevisarPedido() {
                   <AlertTriangle className="h-3.5 w-3.5" /> Exceções comerciais detectadas
                 </p>
                 <ul className="mt-2 space-y-1.5 text-[11px] text-muted-foreground">
-                  {validation.exceptions.map((e, i) => (
-                    <li key={i}>
-                      <strong className="text-foreground">{e.label}</strong> — {e.detail}
-                    </li>
-                  ))}
+                  {validation.exceptions.map((e, i) => {
+                    const issue = displayCommercialIssue(e, showPriceTableDetails);
+                    return (
+                      <li key={i}>
+                        <strong className="text-foreground">{issue.label}</strong> — {issue.detail}
+                      </li>
+                    );
+                  })}
                 </ul>
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   Encaminhamento direto para:{" "}

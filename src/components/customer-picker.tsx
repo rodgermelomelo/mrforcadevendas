@@ -25,6 +25,7 @@ import {
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { normalizeSearchText } from "@/lib/utils";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 const RECENT_KEY = "mr-fdv:recent-customers";
 
@@ -49,9 +50,10 @@ export function useCustomerPicker(): CustomerPickerContextValue {
 }
 
 export function CustomerPickerProvider({ children }: { children: ReactNode }) {
-  const { customers, priceTables, customer, itemCount, selectCustomer, clearCart } = useSales();
+  const { customers, priceTables, customer, itemCount, selectCustomer, clearCart, role } = useSales();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showPriceTableDetails = canViewPriceTableDetails(role);
 
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -177,7 +179,9 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
             </span>
             <span>CNPJ {maskTaxId(c.taxId)}</span>
             <span>Rep. {c.sellerErpCode ?? "—"}</span>
-            <span>{table ? `${table.code} · ${table.name}` : "Sem tabela"}</span>
+            {showPriceTableDetails && (
+              <span>{table ? `${table.code} · ${table.name}` : "Sem tabela"}</span>
+            )}
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
@@ -251,7 +255,7 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
             <AlertDialogDescription>
               Você tem {itemCount} {itemCount === 1 ? "item" : "itens"} no carrinho
               {customer ? ` de ${customer.tradeName}` : ""}. Iniciar um novo atendimento descarta
-              esses itens, porque os preços mudam conforme a tabela do cliente.
+              esses itens, porque os preços mudam conforme o cadastro comercial do cliente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

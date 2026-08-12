@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSales } from "@/lib/state/sales-store";
 import { createCustomer } from "@/lib/customers.functions";
 import { cn } from "@/lib/utils";
+import { isRepresentativeRole } from "@/lib/domain/roles";
 
 interface FormState {
   tradeName: string;
@@ -51,9 +52,10 @@ export function NewCustomerDialog({
   triggerVariant?: "default" | "outline" | "ghost";
   triggerClassName?: string;
 }) {
-  const { sellers, priceTables } = useSales();
+  const { sellers, priceTables, role } = useSales();
   const qc = useQueryClient();
   const create = useServerFn(createCustomer);
+  const hidePriceTableDetails = role ? isRepresentativeRole(role) : true;
 
   const defaultSeller = sellers.length === 1 ? sellers[0]!.code : "";
   const [open, setOpen] = useState(false);
@@ -94,7 +96,8 @@ export function NewCustomerDialog({
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogTitle>Novo cliente</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            O cliente já entra na carteira do representante e na tabela de preço escolhida.
+            O cliente já entra na carteira do representante e na{" "}
+            {hidePriceTableDetails ? "política comercial selecionada" : "tabela de preço escolhida"}.
           </p>
 
           <div className="mt-4 space-y-3">
@@ -129,13 +132,19 @@ export function NewCustomerDialog({
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Tabela de preço">
+              <Field label={hidePriceTableDetails ? "Política comercial" : "Tabela de preço"}>
                 <Select value={form.priceTableCode} onValueChange={(v) => set({ priceTableCode: v })}>
-                  <SelectTrigger><SelectValue placeholder="Tabela" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={hidePriceTableDetails ? "Política" : "Tabela"} /></SelectTrigger>
                   <SelectContent>
-                    {mappedTables.length === 0 && <SelectItem value="__none" disabled>Nenhuma tabela configurada</SelectItem>}
-                    {mappedTables.map((t) => (
-                      <SelectItem key={t.code} value={t.code}>{t.code} · {t.name}</SelectItem>
+                    {mappedTables.length === 0 && (
+                      <SelectItem value="__none" disabled>
+                        {hidePriceTableDetails ? "Nenhuma política configurada" : "Nenhuma tabela configurada"}
+                      </SelectItem>
+                    )}
+                    {mappedTables.map((t, index) => (
+                      <SelectItem key={t.code} value={t.code}>
+                        {hidePriceTableDetails ? `Política comercial ${index + 1}` : `${t.code} · ${t.name}`}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

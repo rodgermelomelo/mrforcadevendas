@@ -3,6 +3,8 @@ import { Customer } from "@/lib/domain/types";
 import { MapPin, ShieldAlert, CreditCard, ShoppingBag, History, FileText } from "lucide-react";
 import { maskTaxId, formatBRL } from "@/lib/pricing";
 import { Badge } from "@/components/ui/badge";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
+import { useSales } from "@/lib/state/sales-store";
 
 interface CustomerDetailDialogProps {
   customer: Customer | null;
@@ -11,6 +13,9 @@ interface CustomerDetailDialogProps {
 }
 
 export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerDetailDialogProps) {
+  const { role } = useSales();
+  const showPriceTableDetails = canViewPriceTableDetails(role);
+
   if (!customer) return null;
 
   return (
@@ -92,10 +97,12 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
               <ShoppingBag className="h-4 w-4" /> Configuração de Vendas
             </h3>
             <div className="space-y-3 rounded-2xl bg-muted/50 p-4">
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold">Tabela de Preço</p>
-                <p className="text-sm font-medium">{customer.priceTableCode}</p>
-              </div>
+              {showPriceTableDetails && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Tabela de Preço</p>
+                  <p className="text-sm font-medium">{customer.priceTableCode}</p>
+                </div>
+              )}
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase font-bold">Condição de Pagamento</p>
                 <p className="text-sm font-medium">{customer.paymentTerm}</p>

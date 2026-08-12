@@ -7,6 +7,7 @@ import { productImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 /** Atalhos de quantidade usados no card do catálogo. */
 export const QUANTITY_SHORTCUTS = [6, 12, 30] as const;
@@ -19,9 +20,10 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: ProductCardProps) {
-  const { table } = useSales();
+  const { table, role } = useSales();
   const [qty, setQty] = useState(1);
   const price = resolvePrice(product, table);
+  const showPriceTableDetails = canViewPriceTableDetails(role);
   const outOfStock = product.stock <= 0;
   const maxQty = product.stock > 0 ? Math.floor(product.stock) : 1;
   const clampQty = (value: number) => Math.min(maxQty, Math.max(1, value));
@@ -99,12 +101,15 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
             <>
               <p className="text-lg font-bold">{formatBRL(price.value)}</p>
               <p className="text-[11px] text-muted-foreground">
-                {price.levelLabel} · estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
+                {showPriceTableDetails && `${price.levelLabel} · `}
+                estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
               </p>
             </>
           ) : (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-warning">{price.message}</p>
+              <p className="text-xs font-medium text-warning">
+                {showPriceTableDetails ? price.message : "Preço pendente para este cliente."}
+              </p>
               <p className="text-[11px] text-muted-foreground">
                 Estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
               </p>
@@ -137,7 +142,9 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
           <p className="mt-3 rounded-xl bg-muted p-2.5 text-xs text-muted-foreground">
             {outOfStock
               ? "Sem estoque — indisponível para o pedido."
-              : "Sem preço válido para a tabela do cliente."}
+              : showPriceTableDetails
+                ? "Sem preço válido para a tabela do cliente."
+                : "Sem preço válido para o cliente selecionado."}
           </p>
         )}
       </div>

@@ -5,6 +5,7 @@ import { productImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 export const Route = createFileRoute("/_authenticated/carrinho")({
   head: () => ({
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/_authenticated/carrinho")({
 });
 
 function Carrinho() {
-  const { customer, table, lines, subtotal, setQuantity, removeItem, clearCart, hydrated } = useSales();
+  const { customer, table, lines, subtotal, setQuantity, removeItem, clearCart, hydrated, role } = useSales();
+  const showPriceTableDetails = canViewPriceTableDetails(role);
   const updateQuantity = (productId: string, quantity: number) => {
     const result = setQuantity(productId, quantity);
     if (!result.ok) toast.error(result.message);
@@ -59,7 +61,12 @@ function Carrinho() {
         <p className="mt-2 text-sm text-muted-foreground">
           Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
           Rep. {customer.sellerErpCode ?? "—"} ·{" "}
-          {table ? `Tabela ${table.code}` : "sem tabela"} · {table?.levelLabel ?? "nível pendente"} ·{" "}
+          {showPriceTableDetails && (
+            <>
+              {table ? `Tabela ${table.code}` : "sem tabela"} ·{" "}
+              {table?.levelLabel ?? "nível pendente"} ·{" "}
+            </>
+          )}
           {customer.paymentTerm}
         </p>
       </header>

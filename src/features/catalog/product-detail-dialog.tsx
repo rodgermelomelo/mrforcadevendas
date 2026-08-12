@@ -10,6 +10,7 @@ import { useSales } from "@/lib/state/sales-store";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
 import { toast } from "sonner";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 interface ProductDetailDialogProps {
   product: Product | null;
@@ -18,7 +19,7 @@ interface ProductDetailDialogProps {
 }
 
 export function ProductDetailDialog({ product, open, onOpenChange }: ProductDetailDialogProps) {
-  const { customer, table, addItem } = useSales();
+  const { customer, table, addItem, role } = useSales();
   const [qty, setQty] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lastProductId, setLastProductId] = useState<string | null>(null);
@@ -33,6 +34,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
   const price = resolvePrice(product, table);
   const outOfStock = product.stock <= 0;
   const hasCustomer = Boolean(customer);
+  const showPriceTableDetails = canViewPriceTableDetails(role);
   const blocked = hasCustomer && (outOfStock || !price.ok);
   const maxQty = product.stock > 0 ? Math.floor(product.stock) : 1;
   const clamp = (n: number) => Math.min(maxQty, Math.max(1, n));
@@ -147,7 +149,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-muted-foreground">Preço sob consulta</p>
                       <p className="text-xs text-muted-foreground">
-                        Selecione um cliente para visualizar o preço da tabela correspondente.
+                        Selecione um cliente para visualizar o preço aplicável.
                       </p>
                     </div>
                     <div className="sm:text-right">
@@ -165,7 +167,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Valor Unitário</p>
                       <p className="text-3xl font-black tracking-tight text-foreground">{formatBRL(price.value)}</p>
-                      <p className="text-xs font-medium text-primary mt-1">{price.levelLabel}</p>
+                      {showPriceTableDetails && (
+                        <p className="text-xs font-medium text-primary mt-1">{price.levelLabel}</p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Disponibilidade</p>
@@ -179,7 +183,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="flex min-w-0 items-start gap-2 text-warning">
                       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                      <p className="min-w-0 break-words text-sm font-semibold">{price.message}</p>
+                      <p className="min-w-0 break-words text-sm font-semibold">
+                        {showPriceTableDetails ? price.message : "Preço pendente para este cliente."}
+                      </p>
                     </div>
                     <div className="sm:text-right">
                       <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -263,13 +269,15 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                       ? "Este produto está sem saldo em estoque e não pode ser adicionado ao pedido."
                       : price.ok
                         ? ""
-                        : price.message}
+                        : showPriceTableDetails
+                          ? price.message
+                          : "Preço pendente para este cliente."}
                   </p>
                 </div>
               )}
 
               {/* Tabela de Preços por Nível */}
-              {hasCustomer && (
+              {hasCustomer && showPriceTableDetails && (
                 <div className="space-y-3 rounded-2xl border border-border/50 bg-muted/30 p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <LayoutList className="h-4 w-4 text-muted-foreground" />

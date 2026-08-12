@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Customer, PriceTable, Product } from "@/lib/domain/types";
 import type { ApprovalRule } from "@/lib/orders/validation";
+import { isRepresentativeRole } from "@/lib/domain/roles";
 
 export interface WorkspaceData {
   customers: Customer[];
@@ -116,6 +117,8 @@ export const getWorkspace = createServerFn({ method: "GET" })
     }
 
     const today = new Date().toISOString().slice(0, 10);
+    const currentRole = roleRes.data?.role || null;
+    const hidePriceTableDetails = isRepresentativeRole(currentRole);
     const approvalRules: ApprovalRule[] = (rulesRes.data ?? [])
       .filter((r: any) => r.valid_from <= today && (r.valid_to === null || r.valid_to >= today))
       .map((r: any) => ({
@@ -132,27 +135,14 @@ export const getWorkspace = createServerFn({ method: "GET" })
     const image = new Map((enrichRes.data ?? []).map((e: any) => [e.product_erp_code, e.image_url]));
 
     const activeBrands = new Set((brandsRes.data ?? []).map((b: any) => b.name));
-    
-    const pricesByProduct = new Map<string, Record<string, number[]>>();
-    for (const row of pricesRes.data ?? []) {
-      const current = pricesByProduct.get(row.product_erp_code) ?? {};
-      current[row.price_table_code] = [
-        Number(row.value_1),
-        Number(row.value_2),
-        Number(row.value_3),
-        Number(row.value_4),
-        Number(row.value_5),
-        Number(row.value_6),
-      ];
-      pricesByProduct.set(row.product_erp_code, current);
-    }
 
     const priceTables: PriceTable[] = (tablesRes.data ?? []).map((t: any) => ({
       code: t.code,
-      name: t.name,
+      name: hidePriceTableDetails ? "Política comercial" : t.name,
       mappedLevel: t.mapped_level,
-      levelLabel: t.level_label,
+      levelLabel: hidePriceTableDetails && t.mapped_level !== null ? "Preço do cliente" : t.level_label,
     }));
+    const mappedLevelByTable = new Map((tablesRes.data ?? []).map((t: any) => [t.code, t.mapped_level]));
 
     const customerByCode = new Map((customersRes.data ?? []).map((c: any) => [c.erp_code, c]));
     const customerContexts =
@@ -192,6 +182,31 @@ export const getWorkspace = createServerFn({ method: "GET" })
         sellerErpCode: link.seller_erp_code,
       }),
     );
+
+    const visiblePriceTables = new Set(customers.map((c) => c.priceTableCode));
+    const pricesByProduct = new Map<string, Record<string, number[]>>();
+    for (const row of pricesRes.data ?? []) {
+      if (hidePriceTableDetails && !visiblePriceTables.has(row.price_table_code)) continue;
+
+      const values = [
+        Number(row.value_1),
+        Number(row.value_2),
+        Number(row.value_3),
+        Number(row.value_4),
+        Number(row.value_5),
+        Number(row.value_6),
+      ];
+      const current = pricesByProduct.get(row.product_erp_code) ?? {};
+      if (hidePriceTableDetails) {
+        const mappedLevel = mappedLevelByTable.get(row.price_table_code);
+        const maskedValues = [0, 0, 0, 0, 0, 0];
+        if (typeof mappedLevel === "number") maskedValues[mappedLevel] = values[mappedLevel] ?? 0;
+        current[row.price_table_code] = maskedValues;
+      } else {
+        current[row.price_table_code] = values;
+      }
+      pricesByProduct.set(row.product_erp_code, current);
+    }
 
     const products: Product[] = (productsRes.data ?? [])
       .filter((p: any) => {
@@ -249,7 +264,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       sellers,
       lastUpdate,
       approvalRules,
-      role: roleRes.data?.role || null,
+      role: currentRole,
       brandMetadata: Object.fromEntries((brandsRes.data ?? []).map((b: any) => [b.name, b.metadata || {}])),
     };
   });

@@ -4,6 +4,7 @@ import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { integrationLabel, statusLabel, statusTone } from "@/lib/orders/status";
 import { authorityLabel } from "@/lib/orders/validation";
 import { Button } from "@/components/ui/button";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
   head: () => ({
@@ -22,8 +23,9 @@ export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
 
 function DetalhePedido() {
   const { orderId } = Route.useParams();
-  const { orders, hydrated } = useSales();
+  const { orders, hydrated, role } = useSales();
   const order = orders.find((o) => o.id === orderId);
+  const showPriceTableDetails = canViewPriceTableDetails(role);
 
   if (!hydrated) {
     return <div className="mx-auto h-64 w-full max-w-3xl animate-pulse rounded-xl bg-muted" />;
@@ -56,7 +58,9 @@ function DetalhePedido() {
 
       <section className="surface-card grid gap-3 p-5 text-sm sm:grid-cols-2">
         <Info label="Vendedor" value={order.sellerName} />
-        <Info label="Tabela / nível" value={`${order.priceTableCode} · ${order.priceLevelLabel}`} />
+        {showPriceTableDetails && (
+          <Info label="Tabela / nível" value={`${order.priceTableCode} · ${order.priceLevelLabel}`} />
+        )}
         <Info label="Condição" value={order.paymentTerm} />
         <Info label="Integração" value={integrationLabel[order.integrationStatus]} />
         <Info label="Comissão" value={formatBRL(order.commissionTotal)} />

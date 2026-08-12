@@ -11,6 +11,7 @@ import { useCustomerPicker } from "@/components/customer-picker";
 import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { CustomerDetailDialog } from "@/components/admin/customer-detail-dialog";
 import { Customer } from "@/lib/domain/types";
+import { canViewPriceTableDetails } from "@/lib/domain/roles";
 
 export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
@@ -32,8 +33,9 @@ function Carteira() {
   const [term, setTerm] = useState("");
   const [sellerFilter, setSellerFilter] = useState("all");
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
-  const { customer, customers, priceTables, sellers, itemCount, clearCustomer } = useSales();
+  const { customer, customers, priceTables, sellers, itemCount, clearCustomer, role } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
+  const showPriceTableDetails = canViewPriceTableDetails(role);
 
   const results = useMemo(() => {
     const q = normalizeSearchText(term.trim());
@@ -50,8 +52,8 @@ function Carteira() {
         <div className="min-w-0">
           <h1 className="text-3xl font-bold sm:text-4xl">Minha carteira</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Selecionar um cliente é o ponto de partida do pedido — os preços são calculados pela
-            tabela dele.
+            Selecionar um cliente é o ponto de partida do pedido — os preços são calculados pelo
+            cadastro comercial dele.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-start gap-2">
@@ -208,9 +210,11 @@ function Carteira() {
                   className="mt-4 flex flex-wrap gap-2 cursor-pointer"
                   onClick={() => startWithCustomer(c.id)}
                 >
-                  <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
-                    {table ? `${table.code} · ${table.name}` : "Sem tabela"}
-                  </span>
+                  {showPriceTableDetails && (
+                    <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
+                      {table ? `${table.code} · ${table.name}` : "Sem tabela"}
+                    </span>
+                  )}
                   {table?.mappedLevel === null && (
                     <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning">
                       Preço pendente de configuração
