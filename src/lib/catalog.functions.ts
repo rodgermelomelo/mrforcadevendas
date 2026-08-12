@@ -43,6 +43,24 @@ async function fetchAllRows(
   return { data: rows, error: null };
 }
 
+/**
+ * Pequenas diferenças de relógio entre o app e o banco fazem o token ser
+ * recusado com "JWT issued at future". Nesses casos, tentamos de novo.
+ */
+function isClockSkewError(error: any): boolean {
+  const message = String(error?.message ?? "").toLowerCase();
+  return message.includes("issued at future") || message.includes("jwt not yet valid");
+}
+
+async function runQuery<T extends { error: any }>(fn: () => Promise<T>): Promise<T> {
+  let result = await fn();
+  for (let attempt = 0; attempt < 3 && isClockSkewError(result.error); attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    result = await fn();
+  }
+  return result;
+}
+
 /** Carrega carteira + catálogo do usuário autenticado (RLS limita a carteira visível). */
 export const getWorkspace = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
