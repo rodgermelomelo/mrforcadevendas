@@ -104,6 +104,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       unit: p.unit || "UN",
       erp_brand_suggestion: suggestion.brand,
       erp_category_suggestion: suggestion.category,
+      erp_segment_suggestion: suggestion.segment,
       erp_taxonomy_updated_at: new Date().toISOString(),
     };
   });

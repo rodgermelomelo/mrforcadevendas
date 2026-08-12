@@ -62,6 +62,7 @@ export interface Product {
   group: string;
   category?: string | undefined;
   brand?: string | undefined;
+  segment?: string | undefined;
   unit: string;
   stock: number;
   isLaunch: boolean;

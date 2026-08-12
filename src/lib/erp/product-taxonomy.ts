@@ -3,6 +3,7 @@ import type { ProductRecord, CodeLabelRecord } from "./parser/records";
 export interface ProductTaxonomySuggestion {
   brand: string;
   category: string;
+  segment: string;
 }
 
 const BRAND_ALIASES: Record<string, string> = {
@@ -100,9 +101,17 @@ export function inferProductTaxonomy(product: ProductRecord, groupLabel: string 
     categoryFromGroupLabel(groupLabel, brand) ??
     "DIVERSOS";
 
+  // Inferência de segmento (mercado, farmácia, etc.)
+  let segment = "GERAL";
+  const descNorm = normalizeTaxonomyText(description);
+  if (descNorm.includes("FARMACIA") || descNorm.includes("MEDICAM")) segment = "FARMÁCIA";
+  if (descNorm.includes("MERCADO") || descNorm.includes("ALIMENT")) segment = "MERCADO";
+  if (descNorm.includes("COSMETICO") || descNorm.includes("BELEZA")) segment = "COSMÉTICOS";
+
   return {
     brand,
     category: normalizeTaxonomyText(category),
+    segment,
   };
 }
 

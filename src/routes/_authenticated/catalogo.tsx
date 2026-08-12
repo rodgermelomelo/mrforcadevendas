@@ -125,11 +125,14 @@ function Catalogo() {
         groups={filters.groups}
         selectedBrands={filters.selectedBrands}
         selectedGroups={filters.selectedGroups}
+        selectedSegments={filters.selectedSegments}
         onToggleBrand={filters.toggleBrand}
         onToggleGroup={filters.toggleGroup}
+        onToggleSegment={filters.toggleSegment}
         hasActiveFilters={filters.hasActiveFilters}
         onClearFilters={filters.clearFilters}
         resultCount={filters.filtered.length}
+        segments={filters.segments}
       />
 
       {catalogLoading ? (
