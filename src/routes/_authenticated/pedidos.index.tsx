@@ -132,7 +132,10 @@ function Pedidos() {
               key={o.id}
               order={o}
               canDecide={Boolean(isApprover) && o.status === "pending_approval"}
-              canCancel={Boolean(isApprover) && o.status !== "cancelled"}
+              canCancel={
+                Boolean(isApprover) &&
+                !["pending_approval", "rejected", "cancelled"].includes(o.status)
+              }
               canDelete={isAdmin}
               actionDraft={actionDraft?.orderId === o.id ? actionDraft : null}
               isProcessing={
@@ -231,66 +234,80 @@ function OrderRow({
             </Link>
 
             {canDecide && (
-              <div className="flex flex-wrap gap-2 md:justify-end">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={isProcessing}
-                  onClick={onApprove}
-                  className="rounded-xl border-0 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
-                >
-                  {isProcessing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
-                  Aprovar
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={isProcessing}
-                  onClick={() => onOpenAction("reject")}
-                  className="rounded-xl border-0 bg-rose-600 text-white shadow-sm hover:bg-rose-700"
-                >
-                  <XCircle className="mr-1 h-4 w-4" />
-                  Negar
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={isProcessing}
-                  onClick={() => onOpenAction("changes")}
-                  className="rounded-xl border-0 bg-amber-500 text-white shadow-sm hover:bg-amber-600"
-                >
-                  <RotateCcw className="mr-1 h-4 w-4" />
-                  Devolver
-                </Button>
+              <div className="space-y-1 md:text-right">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Decisão de aprovação
+                </p>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={onApprove}
+                    className="rounded-xl border-0 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="mr-1 h-4 w-4" />
+                    )}
+                    Aprovar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => onOpenAction("reject")}
+                    className="rounded-xl border-0 bg-rose-600 text-white shadow-sm hover:bg-rose-700"
+                  >
+                    <XCircle className="mr-1 h-4 w-4" />
+                    Reprovar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => onOpenAction("changes")}
+                    className="rounded-xl border-0 bg-amber-500 text-white shadow-sm hover:bg-amber-600"
+                  >
+                    <RotateCcw className="mr-1 h-4 w-4" />
+                    Devolver
+                  </Button>
+                </div>
               </div>
             )}
 
             {(canCancel || canDelete) && (
-              <div className="flex flex-wrap gap-2 md:justify-end">
-                {canCancel && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isProcessing}
-                    onClick={() => onOpenAction("cancel")}
-                    className="rounded-xl border-0 bg-sky-600 text-white shadow-sm hover:bg-sky-700"
-                  >
-                    <Ban className="mr-1 h-4 w-4" />
-                    Cancelar
-                  </Button>
-                )}
-                {canDelete && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isProcessing}
-                    onClick={() => onOpenAction("delete")}
-                    className="rounded-xl border-0 bg-zinc-900 text-white shadow-sm hover:bg-black"
-                  >
-                    <Trash2 className="mr-1 h-4 w-4" />
-                    Apagar
-                  </Button>
-                )}
+              <div className="space-y-1 md:text-right">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Gestão do pedido
+                </p>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  {canCancel && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isProcessing}
+                      onClick={() => onOpenAction("cancel")}
+                      className="rounded-xl border-0 bg-slate-700 text-white shadow-sm hover:bg-slate-800"
+                    >
+                      <Ban className="mr-1 h-4 w-4" />
+                      Cancelar pedido
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isProcessing}
+                      onClick={() => onOpenAction("delete")}
+                      className="rounded-xl border-0 bg-zinc-950 text-white shadow-sm hover:bg-black"
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      Apagar
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -312,7 +329,7 @@ function OrderRow({
             {needsReason ? (
               <label className="block text-sm font-semibold">
                 {draftKind === "reject"
-                  ? "Motivo para negar o pedido"
+                  ? "Motivo para reprovar a aprovação"
                   : draftKind === "changes"
                     ? "Orientação para devolver ao vendedor"
                     : "Motivo do cancelamento"}
@@ -365,7 +382,7 @@ function OrderRow({
               >
                 {isProcessing && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 {draftKind === "reject"
-                  ? "Confirmar negativa"
+                  ? "Confirmar reprovação"
                   : draftKind === "changes"
                     ? "Confirmar devolução"
                     : draftKind === "cancel"
