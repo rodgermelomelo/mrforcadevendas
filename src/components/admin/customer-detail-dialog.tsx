@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Customer } from "@/lib/domain/types";
-import { MapPin, ShieldAlert, CreditCard, ShoppingBag, History, FileText } from "lucide-react";
+import { MapPin, ShieldAlert, CreditCard, ShoppingBag, History, FileText, Edit2 } from "lucide-react";
 import { maskTaxId, formatBRL } from "@/lib/pricing";
 import { Badge } from "@/components/ui/badge";
 import { canViewPriceTableDetails } from "@/lib/domain/roles";
 import { useSales } from "@/lib/state/sales-store";
+import { Button } from "@/components/ui/button";
+import { EditCustomerDialog } from "./edit-customer-dialog";
 
 interface CustomerDetailDialogProps {
   customer: Customer | null;
@@ -15,6 +18,8 @@ interface CustomerDetailDialogProps {
 export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerDetailDialogProps) {
   const { role } = useSales();
   const showPriceTableDetails = canViewPriceTableDetails(role);
+  const isAdmin = role === "administrador";
+  const [editOpen, setEditOpen] = useState(false);
 
   if (!customer) return null;
 
@@ -32,8 +37,27 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
               </div>
               <p className="text-white/80 text-sm font-medium">{customer.legalName}</p>
             </div>
+            {isAdmin && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-xl bg-white/20 text-white border-none hover:bg-white/30"
+                onClick={() => setEditOpen(true)}
+              >
+                <Edit2 className="mr-2 h-4 w-4" /> Editar Cliente
+              </Button>
+            )}
           </div>
         </div>
+
+        <EditCustomerDialog 
+          customer={customer}
+          open={editOpen}
+          onOpenChange={(v) => {
+            setEditOpen(v);
+            if (!v) onOpenChange(false); // Fecha o detalhe também após editar com sucesso/cancelar
+          }}
+        />
 
         <div className="grid gap-6 p-6 md:grid-cols-2">
           {/* Informações Básicas */}
