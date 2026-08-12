@@ -167,8 +167,8 @@ function CustomerMapPage() {
       </section>
 
       <section className="surface-card p-4">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_18rem_25rem]">
-          <div className="relative">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <div className="relative min-w-[300px]">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={term}
@@ -181,26 +181,6 @@ function CustomerMapPage() {
             />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Select
-              value={sellerFilter}
-              onValueChange={(value) => {
-                setSellerFilter(value);
-                setSelectedCityKey(null);
-              }}
-            >
-              <SelectTrigger className="h-12 w-full rounded-xl bg-card sm:w-[280px]">
-                <Users className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                <SelectValue placeholder="Representante" />
-              </SelectTrigger>
-              <SelectContent className="max-h-80">
-                <SelectItem value={ALL_SELLERS}>Todos os representantes</SelectItem>
-                {sellers.map((seller) => (
-                  <SelectItem key={seller.code} value={seller.code}>
-                    {seller.code} · {seller.name} ({numberFormat.format(seller.customerCount)})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select
               value={sellerFilter}
               onValueChange={(value) => {
@@ -256,7 +236,7 @@ function CustomerMapPage() {
             </Button>
           </div>
           <div className="rounded-xl border border-border bg-card p-1">
-            <div className="grid grid-cols-2 gap-1">
+            <div className="grid grid-cols-2 gap-1 h-full">
               {CUSTOMER_TILE_PROVIDERS.map((provider) => (
                 <button
                   key={provider.id}
