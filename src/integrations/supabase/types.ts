@@ -275,6 +275,68 @@ export type Database = {
           },
         ]
       }
+      commercial_team_sellers: {
+        Row: {
+          created_at: string
+          id: string
+          seller_erp_code: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seller_erp_code: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seller_erp_code?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_team_sellers_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_teams: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          leader_user_id: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          leader_user_id?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          leader_user_id?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       commission_rule_sellers: {
         Row: {
           created_at: string
