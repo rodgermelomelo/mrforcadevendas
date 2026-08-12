@@ -144,7 +144,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
         monthlyGoal: goalsBySeller.get(s.erp_code),
       }))
       .filter((s: any) => s.customerCount > 0)
-      .sort((a, b) => b.customerCount - a.customerCount);
+      .sort((a: any, b: any) => b.customerCount - a.customerCount);
 
     return {
       customers,
