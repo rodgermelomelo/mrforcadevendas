@@ -5,6 +5,8 @@ import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { statusLabel } from "@/lib/orders/status";
 import { Button } from "@/components/ui/button";
 import { useCustomerPicker } from "@/components/customer-picker";
+import { MetricCard } from "@/components/shared/metric-card";
+import { useDashboardMetrics } from "@/features/dashboard/use-dashboard-metrics";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
