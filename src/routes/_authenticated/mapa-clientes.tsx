@@ -235,31 +235,7 @@ function CustomerMapPage() {
               Limpar
             </Button>
           </div>
-          <div className="rounded-xl border border-border bg-card p-1">
-            <div className="grid grid-cols-2 gap-1 h-full">
-              {CUSTOMER_TILE_PROVIDERS.map((provider) => (
-                <button
-                  key={provider.id}
-                  type="button"
-                  onClick={() => {
-                    setTileProvider(provider.id);
-                    setUsedFallback(false);
-                  }}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-left text-xs transition-colors",
-                    tileProvider === provider.id
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  <span className="flex items-center gap-1.5 font-semibold">
-                    <Layers className="h-3.5 w-3.5" /> {provider.name.replace("CARTO ", "")}
-                  </span>
-                  <span className="mt-0.5 block opacity-80">{provider.detail}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Seletor de mapas removido do topo */}
         </div>
       </section>
 
@@ -296,28 +272,57 @@ function CustomerMapPage() {
               onProviderFallback={handleProviderFallback}
             />
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <LegendDot className="bg-[#e92b8d]" label="Cliente (Coordenada Real)" />
-              <LegendDot className="bg-sky-500" label="Cliente (Posição Estimada)" />
-              <LegendDot className="bg-emerald-500" label="Cidade Selecionada" />
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-l border-border/50 pl-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                  Cores dos Pins:
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <div className="flex -space-x-1">
-                    <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#0ea5e9]" />
-                    <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#f59e0b]" />
-                    <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#8b5cf6]" />
+            <div className="mt-4 space-y-4">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <LegendDot className="bg-[#e92b8d]" label="Cliente (Coordenada Real)" />
+                <LegendDot className="bg-sky-500" label="Cliente (Posição Estimada)" />
+                <LegendDot className="bg-emerald-500" label="Cidade Selecionada" />
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-l border-border/50 pl-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                    Cores dos Pins:
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex -space-x-1">
+                      <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#0ea5e9]" />
+                      <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#f59e0b]" />
+                      <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#8b5cf6]" />
+                    </div>
+                    <span className="text-muted-foreground">Por Representante</span>
                   </div>
-                  <span className="text-muted-foreground">Por Representante</span>
+                </div>
+                {usedFallback && (
+                  <span className="rounded-full border border-warning/25 bg-warning/10 px-2 py-1 font-medium text-warning">
+                    Fallback ativado para Esri Street
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mr-2">
+                  Estilo do Mapa:
+                </span>
+                <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-0.5">
+                  {CUSTOMER_TILE_PROVIDERS.map((provider) => (
+                    <button
+                      key={provider.id}
+                      type="button"
+                      onClick={() => {
+                        setTileProvider(provider.id);
+                        setUsedFallback(false);
+                      }}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors",
+                        tileProvider === provider.id
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      <Layers className="h-3 w-3" />
+                      {provider.name.replace("CARTO ", "")}
+                    </button>
+                  ))}
                 </div>
               </div>
-              {usedFallback && (
-                <span className="rounded-full border border-warning/25 bg-warning/10 px-2 py-1 font-medium text-warning">
-                  Fallback ativado para Esri Street
-                </span>
-              )}
             </div>
           </div>
         </section>
