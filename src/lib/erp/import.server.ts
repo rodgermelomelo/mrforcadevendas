@@ -87,6 +87,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     let category = "DIVERSOS";
 
     // 1. Identificar MARCA (com normalização de casing)
+    // Prioridade para marcas conhecidas na descrição
     if (desc.includes("DAILUS")) brand = "DAILUS";
     else if (desc.includes("ACEMAR")) brand = "ACEMAR";
     else if (desc.includes("ÁGUA DE CHEIRO")) brand = "ÁGUA DE CHEIRO";
@@ -95,16 +96,24 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     else if (desc.includes("VERNISSAGE")) brand = "VERNISSAGE";
     else if (desc.includes("FOX")) brand = "FOX";
     
-    // Fallback de marca pelo grupo
+    // Fallback de marca pelo grupo ERP se não encontrou na descrição
     if (brand === "OUTROS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
-        const parts = g.label.trim().split(/\s+/);
-        brand = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
+        // Se o grupo é "ACEMAR - ACESSORIOS", a marca é ACEMAR
+        const parts = g.label.trim().split(/\s*-\s*|\s+/);
+        const groupFirstPart = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
+        
+        // Lista de marcas conhecidas para validar o primeiro nome do grupo
+        const KNOWN_BRANDS = ["DAILUS", "ACEMAR", "ÁGUA DE CHEIRO", "DIVINA FLORA", "CUCCIO", "VERNISSAGE", "FOX"];
+        if (KNOWN_BRANDS.includes(groupFirstPart)) {
+          brand = groupFirstPart;
+        }
       }
     }
 
-    // 2. Identificar CATEGORIA (Substituindo o "Grupo" ERP pela categoria semântica)
+    // 2. Identificar CATEGORIA
+    // Mapeamento de palavras-chave para categorias semânticas
     const categories = [
       "AMACIANTE", "AMOLECEDOR", "BASE", "BATOM", "BLUSH", "ESMALTE", 
       "PINCEL", "PÓ COMPACTO", "CORRETIVO", "ILUMINADOR", "MÁSCARA", 
@@ -120,15 +129,32 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       }
     }
 
-    // Fallback de categoria: Usa o nome do grupo ERP se não encontrou palavra-chave
+    // Heurística específica para ACEMAR: O grupo ERP costuma ser a categoria real
+    if (brand === "ACEMAR" && p.erpGroupCode) {
+      const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
+      if (g?.label) {
+        // Ex: "ACEMAR - ACESSORIOS" -> Categoria "ACESSORIOS"
+        const labelUpper = g.label.toUpperCase();
+        if (labelUpper.includes("ACEMAR")) {
+          const parts = g.label.split(/\s*-\s*/);
+          if (parts.length > 1) {
+            category = parts[1].trim().toUpperCase();
+          } else {
+            // Se for apenas "ACEMAR", tentamos extrair o que vem depois
+            category = labelUpper.replace("ACEMAR", "").trim() || category;
+          }
+        }
+      }
+    }
+
+    // Fallback de categoria se ainda for DIVERSOS
     if (category === "DIVERSOS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
         let groupName = g.label.toUpperCase();
-        if (groupName.startsWith(brand)) {
-          groupName = groupName.replace(brand, "").trim();
-        }
-        category = groupName || "DIVERSOS";
+        // Remove a marca do nome do grupo para tentar pegar a categoria
+        const cleanCategory = groupName.replace(brand, "").replace(/^-/, "").trim();
+        if (cleanCategory) category = cleanCategory;
       }
     }
     
