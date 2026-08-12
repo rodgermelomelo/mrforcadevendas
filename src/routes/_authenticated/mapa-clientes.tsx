@@ -30,6 +30,20 @@ import {
 } from "@/features/customers/customer-tile-map";
 
 export const Route = createFileRoute("/_authenticated/mapa-clientes")({
+  beforeLoad: async ({ context }) => {
+    // Apenas gestores (supervisor, gerente, administrador) podem acessar
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.user.id);
+
+    const allowedRoles = ["supervisor", "gerente_comercial", "administrador"];
+    const hasAccess = roles?.some((r) => allowedRoles.includes(r.role));
+
+    if (!hasAccess) {
+      throw redirect({ to: "/catalogo" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Mapa de clientes · MR Força de Vendas" },
