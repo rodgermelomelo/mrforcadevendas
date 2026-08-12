@@ -349,5 +349,4 @@ function AppShellInner({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
-  );
 }
