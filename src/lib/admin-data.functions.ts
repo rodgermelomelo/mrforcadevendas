@@ -568,6 +568,9 @@ export interface AdminProduct {
   imageUrl: string | null;
   groupCode: string | null;
   brand: string | null;
+  category: string | null;
+  erpBrandSuggestion: string | null;
+  erpCategorySuggestion: string | null;
   unit: string;
   isLaunch: boolean;
   released: boolean;
@@ -730,6 +733,9 @@ export const listProducts = createServerFn({ method: "POST" })
         imageUrl: enrich.get(p.erp_code)?.image_url ?? null,
         groupCode: p.group_code,
         brand: p.brand ?? null,
+        category: p.category ?? null,
+        erpBrandSuggestion: p.erp_brand_suggestion ?? null,
+        erpCategorySuggestion: p.erp_category_suggestion ?? null,
         unit: p.unit,
         isLaunch: p.is_launch,
         released: p.released,
@@ -809,6 +815,9 @@ export const getProductDetail = createServerFn({ method: "POST" })
         imageUrl: e?.image_url ?? null,
         groupCode: p.group_code,
         brand: p.brand ?? null,
+        category: p.category ?? null,
+        erpBrandSuggestion: p.erp_brand_suggestion ?? null,
+        erpCategorySuggestion: p.erp_category_suggestion ?? null,
         unit: p.unit,
         isLaunch: p.is_launch,
         released: p.released,
@@ -841,6 +850,7 @@ export const updateProduct = createServerFn({ method: "POST" })
       displayName?: string | null;
       imageUrl?: string | null;
       brand?: string | null;
+      category?: string | null;
     }) => {
       if (!input?.erpCode) throw new Error("Produto inválido.");
       return input;
@@ -855,6 +865,7 @@ export const updateProduct = createServerFn({ method: "POST" })
     if (data.groupCode !== undefined) patch["group_code"] = data.groupCode || null;
     if (data.unit !== undefined) patch["unit"] = data.unit;
     if (data.brand !== undefined) patch["brand"] = data.brand || null;
+    if (data.category !== undefined) patch["category"] = data.category || null;
     if (Object.keys(patch).length > 0) {
       patch["updated_at"] = new Date().toISOString();
       const { error } = await context.supabase.from("products").update(patch as never).eq("erp_code", data.erpCode);

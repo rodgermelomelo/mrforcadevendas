@@ -102,6 +102,13 @@ export function ProductDetailDialog({
                 <Info label="Descrição oficial do ERP" value={detail.product.name} />
                 <Info label="Grupo" value={detail.product.groupCode ?? "Sem grupo"} />
                 <Info label="Marca" value={detail.product.brand ?? "Não identificada"} />
+                <Info label="Categoria" value={detail.product.category ?? "Não classificada"} />
+                {detail.product.erpBrandSuggestion && (
+                  <Info label="Sugestão ERP de marca" value={detail.product.erpBrandSuggestion} />
+                )}
+                {detail.product.erpCategorySuggestion && (
+                  <Info label="Sugestão ERP de categoria" value={detail.product.erpCategorySuggestion} />
+                )}
                 <Info label="Unidade" value={detail.product.unit} />
                 <Info
                   label="Atualizado em"
@@ -258,6 +265,7 @@ function ProductForm({
     displayName: product.displayName ?? "",
     imageUrl: product.imageUrl ?? "",
     brand: product.brand ?? "Outros",
+    category: product.category ?? "",
   });
 
   const mutation = useMutation({
@@ -312,6 +320,15 @@ function ProductForm({
             <option value="CUCCIO">CUCCIO</option>
             <option value="VERNISSAGE">VERNISSAGE</option>
           </select>
+        </label>
+        <label className="space-y-1">
+          <span className={labelCls}>Categoria</span>
+          <input
+            className={field}
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            placeholder={product.erpCategorySuggestion ?? "Ex.: ESMALTE"}
+          />
         </label>
         <label className="space-y-1">
           <span className={labelCls}>Grupo</span>

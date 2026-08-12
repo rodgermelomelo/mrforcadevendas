@@ -37,6 +37,41 @@ function nf(n: number) {
   return n.toLocaleString("pt-BR");
 }
 
+function CatalogImpactPanel({ impact }: { impact: any }) {
+  if (!impact) return null;
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-primary">
+        Impacto no catálogo protegido
+      </h3>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+        {[
+          ["Produtos novos", impact.newProducts],
+          ["Produtos sumidos", impact.missingProducts],
+          ["Grupos ERP novos", impact.newGroups],
+          ["Curadoria preservada", impact.preservedCuratedProducts],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-xl border border-border/70 bg-background/70 p-3">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className="mt-0.5 text-sm font-semibold">{nf(Number(value ?? 0))}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        O ERP gera {nf(Number(impact.taxonomySuggestions ?? 0))} sugestões de marca/categoria, mas não sobrescreve
+        marca, categoria, liberação, lançamento ou status já curados no catálogo.
+      </p>
+      {(impact.newProductSamples?.length || impact.missingProductSamples?.length || impact.newGroupSamples?.length) && (
+        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+          {impact.newProductSamples?.length > 0 && <p>Novos: {impact.newProductSamples.join(", ")}</p>}
+          {impact.missingProductSamples?.length > 0 && <p>Sumidos: {impact.missingProductSamples.join(", ")}</p>}
+          {impact.newGroupSamples?.length > 0 && <p>Grupos novos: {impact.newGroupSamples.join(", ")}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ImportacoesPage() {
   const queryClient = useQueryClient();
   const analyze = useServerFn(analyzeErpFile);
@@ -196,6 +231,8 @@ function ImportacoesPage() {
             </div>
           </div>
 
+          <CatalogImpactPanel impact={(summary as any).catalogImpact} />
+
           <p className="text-xs text-muted-foreground">
             Diagnóstico do catálogo: no catálogo {nf(summary.diagnosis.inCatalog)} · só-estoque{" "}
             {nf(summary.diagnosis.stockOnly)} · só-preço {nf(summary.diagnosis.priceOnly)} · sem preço{" "}
@@ -234,6 +271,9 @@ function ImportacoesPage() {
                 {k}: <strong>{nf(v as number)}</strong>
               </span>
             ))}
+          </div>
+          <div className="mt-4">
+            <CatalogImpactPanel impact={(publishMutation.data as any)?.catalogImpact} />
           </div>
         </section>
       )}

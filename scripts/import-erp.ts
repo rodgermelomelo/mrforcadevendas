@@ -38,6 +38,7 @@ function loadEnvFiles(): void {
 }
 import { diagnoseCatalog } from "../src/lib/erp/catalog-diagnosis";
 import { extractEanRelations } from "../src/lib/erp/html/ean-extractor";
+import { inferProductTaxonomy, productGroupLabelMap } from "../src/lib/erp/product-taxonomy";
 
 // Configuração admin do nível de preço por tabela (provisória — ver OPEN_QUESTIONS Q1).
 const PRICE_LEVEL_MAP: Record<string, number> = { "002": 1, "012": 1, "033": 1, "053": 2, "055": 2, "061": 1 };
@@ -61,6 +62,35 @@ async function upsertAll(sb: SupabaseClient, table: string, rows: Record<string,
   }
   process.stdout.write("\n");
   return done;
+}
+
+async function fetchAllRows(sb: SupabaseClient, table: string, select = "*"): Promise<any[]> {
+  const rows: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from(table).select(select).range(from, from + 999);
+    if (error) throw new Error(`select ${table}: ${error.message}`);
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return rows;
+}
+
+async function upsertProductsPreservingCatalog(sb: SupabaseClient, rows: Record<string, unknown>[]): Promise<number> {
+  const existingRows = await fetchAllRows(sb, "products", "erp_code, brand, category, released, active, is_launch");
+  const existingByCode = new Map(existingRows.map((row: any) => [String(row.erp_code), row]));
+  const protectedRows = rows.map((row) => {
+    const existing = existingByCode.get(String(row.erp_code));
+    return {
+      ...row,
+      brand: existing?.brand ?? null,
+      category: existing?.category ?? null,
+      released: existing?.released ?? true,
+      active: existing?.active ?? true,
+      is_launch: existing?.is_launch ?? false,
+    };
+  });
+  return upsertAll(sb, "products", protectedRows, "erp_code");
 }
 
 async function main(): Promise<void> {
@@ -87,7 +117,7 @@ async function main(): Promise<void> {
   }
 
   // ---------- Montagem das entidades ----------
-  const groupLabel = new Map(records.productGroups.map((g) => [g.erpCode, g.label]));
+  const groupLabel = productGroupLabelMap(records.productGroups);
 
   const product_groups = records.productGroups.map((g) => ({ code: g.erpCode, name: g.label || g.erpCode }));
   const segments = records.segments.map((s) => ({ code: s.erpCode, name: s.label || s.erpCode }));
@@ -110,15 +140,18 @@ async function main(): Promise<void> {
   }
   const erp_sellers = [...sellers.values()];
 
-  const products = records.products.map((p) => ({
-    erp_code: p.erpCode,
-    name: p.officialDescription || `Produto ${p.erpCode}`,
-    group_code: p.erpGroupCode || null,
-    unit: p.unit || "UN",
-    is_launch: false,
-    released: true,
-    active: true,
-  }));
+  const products = records.products.map((p) => {
+    const suggestion = inferProductTaxonomy(p, groupLabel.get(p.erpGroupCode));
+    return {
+      erp_code: p.erpCode,
+      name: p.officialDescription || `Produto ${p.erpCode}`,
+      group_code: p.erpGroupCode || null,
+      unit: p.unit || "UN",
+      erp_brand_suggestion: suggestion.brand,
+      erp_category_suggestion: suggestion.category,
+      erp_taxonomy_updated_at: new Date().toISOString(),
+    };
+  });
 
   const product_prices: Record<string, unknown>[] = records.prices.map((pr) => ({
     product_erp_code: pr.erpProductCode,
@@ -241,7 +274,7 @@ async function main(): Promise<void> {
     await upsertAll(sb, "billing_methods", billing_methods, "code");
     await upsertAll(sb, "price_tables", price_tables, "code");
     await upsertAll(sb, "erp_sellers", erp_sellers, "erp_code");
-    await upsertAll(sb, "products", products, "erp_code");
+    await upsertProductsPreservingCatalog(sb, products);
     await upsertAll(sb, "product_prices", product_prices, "product_erp_code,price_table_code");
     await upsertAll(sb, "inventory_snapshots", inventory_snapshots, "product_erp_code");
     await upsertAll(sb, "catalog_review", catalog_review, "erp_code");

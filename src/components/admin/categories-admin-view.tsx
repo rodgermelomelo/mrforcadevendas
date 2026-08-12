@@ -39,6 +39,7 @@ export function CategoriesAdminView({ filterBrand: initialFilterBrand }: { filte
     "PINCEL", "PÓ COMPACTO", "CORRETIVO", "ILUMINADOR", "MÁSCARA", 
     "DELINEADOR", "SOMBRA", "REMOVEDOR", "HIDRATANTE", "SABONETE",
     "PERFUME", "COLÔNIA", "BODY SPLASH", "ÓLEO", "SHAMPOO", "CONDICIONADOR",
+    "LAPIS", "LENÇO", "MANTEIGA", "TOALHA", "LAPISEIRA",
     "DIVERSOS"
   ].sort();
 
@@ -49,7 +50,7 @@ export function CategoriesAdminView({ filterBrand: initialFilterBrand }: { filte
 
   const mutation = useMutation({
     mutationFn: (data: { erpCode: string; category: string }) => 
-      updateFn({ data: { erpCode: data.erpCode, category: data.category } as any }),
+      updateFn({ data: { erpCode: data.erpCode, category: data.category } }),
     onSuccess: () => {
       toast.success("Categoria atualizada com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
@@ -135,14 +136,19 @@ export function CategoriesAdminView({ filterBrand: initialFilterBrand }: { filte
                 <div className="mt-2 flex items-center gap-1.5">
                   <Tag className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">
-                    Categoria atual: <span className="font-bold text-foreground">{(p as any).category || "DIVERSOS"}</span>
+                    Categoria atual: <span className="font-bold text-foreground">{p.category || "DIVERSOS"}</span>
                   </span>
                 </div>
+                {p.erpCategorySuggestion && p.erpCategorySuggestion !== p.category && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Sugestão ERP: <span className="font-semibold">{p.erpCategorySuggestion}</span>
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
                 <Select 
-                  defaultValue={(p as any).category || "DIVERSOS"}
+                  defaultValue={p.category || "DIVERSOS"}
                   onValueChange={(val) => mutation.mutate({ erpCode: p.erpCode, category: val })}
                 >
                   <SelectTrigger className="w-[200px] rounded-xl bg-muted/50 border-none">

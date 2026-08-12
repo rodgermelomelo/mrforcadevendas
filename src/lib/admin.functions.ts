@@ -1,7 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { parseUpload, buildEntities, summarize, publishEntities, sha256Hex } from "./erp/import.server";
+import {
+  analyzeCatalogImpact,
+  parseUpload,
+  buildEntities,
+  summarize,
+  publishEntities,
+  sha256Hex,
+} from "./erp/import.server";
 
 /**
  * Funções de servidor para gerenciar as Tabelas de Preço, Representantes,
@@ -64,7 +71,9 @@ export const analyzeErpFile = createServerFn({ method: "POST" })
       .eq("status", "published")
       .maybeSingle();
 
-    return summarize(result, entities, hash, !!existing);
+    const catalogImpact = await analyzeCatalogImpact(context.supabase, entities);
+
+    return summarize(result, entities, hash, !!existing, catalogImpact);
   });
 
 export const publishErpFile = createServerFn({ method: "POST" })
@@ -95,6 +104,7 @@ export const publishErpFile = createServerFn({ method: "POST" })
     if (runError) throw new Error(runError.message);
 
     try {
+      const catalogImpact = await analyzeCatalogImpact(supabase, entities);
       const counts = await publishEntities(supabase, entities);
 
       await supabase
@@ -102,11 +112,11 @@ export const publishErpFile = createServerFn({ method: "POST" })
         .update({
           status: "published",
           finished_at: new Date().toISOString(),
-          totals: counts,
+          totals: JSON.parse(JSON.stringify({ counts, catalogImpact })),
         })
         .eq("id", run.id);
 
-      return { publishedAt: new Date().toISOString(), counts };
+      return { publishedAt: new Date().toISOString(), counts, catalogImpact };
     } catch (e: any) {
       await supabase
         .from("erp_import_runs")
@@ -121,4 +131,3 @@ export const publishErpFile = createServerFn({ method: "POST" })
       throw e;
     }
   });
-

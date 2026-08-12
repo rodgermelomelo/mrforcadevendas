@@ -4,6 +4,7 @@
  */
 import { parseDadosV4, type ParsedRecords, type ParseResult } from "@/lib/erp/parser/dados-v4";
 import { diagnoseCatalog, type CatalogDiagnosis } from "@/lib/erp/catalog-diagnosis";
+import { inferProductTaxonomy, productGroupLabelMap } from "@/lib/erp/product-taxonomy";
 
 /** Configuração administrativa do nível de preço por tabela. */
 export const PRICE_LEVEL_MAP: Record<string, number> = {
@@ -50,8 +51,22 @@ export interface ImportEntities {
   customer_seller_links: Record<string, unknown>[];
 }
 
+export interface CatalogImportImpact {
+  incomingProducts: number;
+  existingProducts: number;
+  newProducts: number;
+  missingProducts: number;
+  newGroups: number;
+  taxonomySuggestions: number;
+  preservedCuratedProducts: number;
+  newProductSamples: string[];
+  missingProductSamples: string[];
+  newGroupSamples: string[];
+}
+
 /** Monta as entidades do banco a partir dos registros do arquivo (mesma lógica do script). */
 export function buildEntities(records: ParsedRecords): ImportEntities {
+  const groupLabel = productGroupLabelMap(records.productGroups);
   const product_groups = records.productGroups.map((g) => ({ code: g.erpCode, name: g.label || g.erpCode }));
   const segments = records.segments.map((s) => ({ code: s.erpCode, name: s.label || s.erpCode }));
   const billing_methods = records.billingMethods.map((b) => ({ code: b.erpCode, description: b.label || b.erpCode }));
@@ -81,88 +96,15 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
   }
 
   const products = records.products.map((p) => {
-    // Tenta extrair a marca e a categoria da descrição oficial
-    const desc = (p.officialDescription || "").toUpperCase();
-    let brand = "OUTROS";
-    let category = "DIVERSOS";
-
-    // 1. Identificar MARCA
-    // Prioridade para marcas conhecidas na descrição
-    if (desc.includes("DAILUS")) brand = "DAILUS";
-    else if (desc.includes("ACEMAR")) brand = "ACEMAR";
-    else if (desc.includes("ÁGUA DE CHEIRO")) brand = "ÁGUA DE CHEIRO";
-    else if (desc.includes("DIVINA FLORA")) brand = "DIVINA FLORA";
-    else if (desc.includes("CUCCIO")) brand = "CUCCIO";
-    else if (desc.includes("VERNISSAGE")) brand = "VERNISSAGE";
-    else if (desc.includes("FOX")) brand = "FOX";
-    
-    // Fallback de marca pelo grupo ERP
-    if (brand === "OUTROS" && p.erpGroupCode) {
-      const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
-      if (g?.label) {
-        const parts = g.label.trim().split(/\s*-\s*|\s+/);
-        const groupFirstPart = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
-        
-        const KNOWN_BRANDS = ["DAILUS", "ACEMAR", "ÁGUA DE CHEIRO", "DIVINA FLORA", "CUCCIO", "VERNISSAGE", "FOX"];
-        if (KNOWN_BRANDS.includes(groupFirstPart)) {
-          brand = groupFirstPart;
-        }
-      }
-    }
-
-    // 2. Identificar CATEGORIA
-    const categories = [
-      "AMACIANTE", "AMOLECEDOR", "BASE", "BATOM", "BLUSH", "ESMALTE", 
-      "PINCEL", "PÓ COMPACTO", "CORRETIVO", "ILUMINADOR", "MÁSCARA", 
-      "DELINEADOR", "SOMBRA", "REMOVEDOR", "HIDRATANTE", "SABONETE",
-      "PERFUME", "COLÔNIA", "BODY SPLASH", "ÓLEO", "SHAMPOO", "CONDICIONADOR",
-      "LAPIS", "LENÇO", "MANTEIGA", "TOALHA", "LAPISEIRA"
-    ];
-
-    for (const cat of categories) {
-      if (desc.includes(cat)) {
-        category = cat;
-        break;
-      }
-    }
-
-    // Heurística específica para ACEMAR: O grupo ERP é a categoria real (ex: ACEMAR - ACESSORIOS)
-    if (brand === "ACEMAR" && p.erpGroupCode) {
-      const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
-      if (g?.label) {
-        const labelUpper = g.label.toUpperCase();
-        if (labelUpper.includes("ACEMAR")) {
-          const parts = g.label.split(/\s*-\s*/);
-          if (parts.length > 1) {
-            category = (parts[1] || "").trim().toUpperCase() || category;
-          } else {
-            const clean = labelUpper.replace("ACEMAR", "").trim();
-            if (clean) category = clean;
-          }
-        }
-      }
-    }
-
-    // Fallback de categoria se ainda for DIVERSOS
-    if (category === "DIVERSOS" && p.erpGroupCode) {
-      const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
-      if (g?.label) {
-        let groupName = g.label.toUpperCase();
-        const cleanCategory = groupName.replace(brand, "").replace(/^-/, "").trim();
-        if (cleanCategory) category = cleanCategory;
-      }
-    }
-    
+    const suggestion = inferProductTaxonomy(p, groupLabel.get(p.erpGroupCode));
     return {
       erp_code: p.erpCode,
       name: p.officialDescription || `Produto ${p.erpCode}`,
       group_code: p.erpGroupCode || null,
-      brand: brand.toUpperCase(),
-      category: category.toUpperCase(),
       unit: p.unit || "UN",
-      is_launch: false,
-      released: !p.erpCode.startsWith("Z"),
-      active: !p.erpCode.startsWith("Z"),
+      erp_brand_suggestion: suggestion.brand,
+      erp_category_suggestion: suggestion.category,
+      erp_taxonomy_updated_at: new Date().toISOString(),
     };
   });
 
@@ -273,6 +215,7 @@ export interface StagingSummary {
   entityCounts: Record<string, number>;
   fileHash: string;
   alreadyPublished: boolean;
+  catalogImpact?: CatalogImportImpact | undefined;
 }
 
 export function summarize(
@@ -280,6 +223,7 @@ export function summarize(
   entities: ImportEntities,
   fileHash: string,
   alreadyPublished: boolean,
+  catalogImpact?: CatalogImportImpact,
 ): StagingSummary {
   const { report, records, errors } = result;
   return {
@@ -302,10 +246,75 @@ export function summarize(
     ),
     fileHash,
     alreadyPublished,
+    catalogImpact,
   };
 }
 
 type AdminClient = any;
+
+async function fetchAllRows(
+  db: AdminClient,
+  table: string,
+  select = "*",
+  apply?: (query: any) => any,
+): Promise<any[]> {
+  const rows: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    let query = db.from(table).select(select);
+    if (apply) query = apply(query);
+    const { data, error } = await query.range(from, from + 999);
+    if (error) throw new Error(`select ${table}: ${error.message}`);
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return rows;
+}
+
+export async function analyzeCatalogImpact(sb: AdminClient, e: ImportEntities): Promise<CatalogImportImpact> {
+  const [existingProducts, existingGroups] = await Promise.all([
+    fetchAllRows(sb, "products", "erp_code, brand, category, released, active, is_launch"),
+    fetchAllRows(sb, "product_groups", "code"),
+  ]);
+  const incomingProductCodes = new Set(e.products.map((p) => String(p["erp_code"])));
+  const existingProductCodes = new Set(existingProducts.map((p: any) => String(p.erp_code)));
+  const incomingGroupCodes = new Set(e.product_groups.map((g) => String(g["code"])));
+  const existingGroupCodes = new Set(existingGroups.map((g: any) => String(g.code)));
+
+  const newProductSamples = [...incomingProductCodes]
+    .filter((code) => !existingProductCodes.has(code))
+    .sort()
+    .slice(0, 8);
+  const missingProductSamples = [...existingProductCodes]
+    .filter((code) => !incomingProductCodes.has(code))
+    .sort()
+    .slice(0, 8);
+  const newGroupSamples = [...incomingGroupCodes]
+    .filter((code) => !existingGroupCodes.has(code))
+    .sort()
+    .slice(0, 8);
+  const newProductCodes = [...incomingProductCodes].filter((code) => !existingProductCodes.has(code));
+  const missingProductCodes = [...existingProductCodes].filter((code) => !incomingProductCodes.has(code));
+  const newGroupCodes = [...incomingGroupCodes].filter((code) => !existingGroupCodes.has(code));
+
+  const preservedCuratedProducts = existingProducts.filter((product: any) => {
+    if (!incomingProductCodes.has(String(product.erp_code))) return false;
+    return Boolean(product.brand || product.category || product.released === false || product.active === false || product.is_launch);
+  }).length;
+
+  return {
+    incomingProducts: incomingProductCodes.size,
+    existingProducts: existingProductCodes.size,
+    newProducts: newProductCodes.length,
+    missingProducts: missingProductCodes.length,
+    newGroups: newGroupCodes.length,
+    taxonomySuggestions: e.products.filter((p) => p["erp_brand_suggestion"] || p["erp_category_suggestion"]).length,
+    preservedCuratedProducts,
+    newProductSamples,
+    missingProductSamples,
+    newGroupSamples,
+  };
+}
 
 /** Upsert idempotente em lotes (deduplicando pela chave de conflito). */
 export async function upsertAll(
@@ -327,6 +336,22 @@ export async function upsertAll(
   return unique.length;
 }
 
+async function upsertProductsPreservingCatalog(sb: AdminClient, rows: Record<string, unknown>[]): Promise<number> {
+  const existingRows = await fetchAllRows(sb, "products", "erp_code, brand, category, released, active, is_launch");
+  const existingByCode = new Map(existingRows.map((row: any) => [String(row.erp_code), row]));
+  const protectedRows = rows.map((row) => {
+    const existing = existingByCode.get(String(row["erp_code"]));
+    return {
+      ...row,
+      brand: existing?.brand ?? null,
+      category: existing?.category ?? null,
+      released: existing?.released ?? true,
+      active: existing?.active ?? true,
+      is_launch: existing?.is_launch ?? false,
+    };
+  });
+  return upsertAll(sb, "products", protectedRows, "erp_code");
+}
 
 /** Publica todas as entidades (ordem de dependência). */
 export async function publishEntities(sb: AdminClient, e: ImportEntities): Promise<Record<string, number>> {
@@ -336,39 +361,7 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["billing_methods"] = await upsertAll(sb, "billing_methods", e.billing_methods, "code");
   done["price_tables"] = await upsertAll(sb, "price_tables", e.price_tables, "code");
   done["erp_sellers"] = await upsertAll(sb, "erp_sellers", e.erp_sellers, "erp_code");
-  done["products"] = await upsertAll(sb, "products", e.products, "erp_code");
-  
-  const distinctBrands = [...new Set(e.products.map(p => p['brand'] as string))].filter(Boolean);
-  if (distinctBrands.length > 0) {
-    const brandRows = distinctBrands.map(name => ({ name, active: true }));
-    await sb.from("brands").upsert(brandRows, { onConflict: "name", ignoreDuplicates: true });
-  }
-
-  const allProducts = await sb.from("products").select("erp_code, brand, category").eq("active", true);
-  if (allProducts.data) {
-    const brandsWithHierarchy = new Map<string, Set<string>>();
-    for (const p of allProducts.data) {
-      if (p.brand && p.category && p.brand !== "OUTROS" && p.category !== "DIVERSOS") {
-        const categories = brandsWithHierarchy.get(p.brand) || new Set();
-        categories.add(p.category);
-        brandsWithHierarchy.set(p.brand, categories);
-      }
-    }
-
-    for (const [brandName, brandCategories] of brandsWithHierarchy.entries()) {
-      const categoryRows = Array.from(brandCategories).map(cat => ({
-        name: cat,
-        active: true,
-        metadata: { isCategory: true, parentBrand: brandName }
-      }));
-      await sb.from("brands").upsert(categoryRows, { onConflict: "name", ignoreDuplicates: true });
-      
-      const { data: brandRow } = await sb.from("brands").select("metadata").eq("name", brandName).single();
-      const currentMeta = brandRow?.metadata || {};
-      const updatedMeta = { ...currentMeta, categories: Array.from(brandCategories) };
-      await sb.from("brands").update({ metadata: updatedMeta }).eq("name", brandName);
-    }
-  }
+  done["products"] = await upsertProductsPreservingCatalog(sb, e.products);
 
   done["product_prices"] = await upsertAll(sb, "product_prices", e.product_prices, "product_erp_code,price_table_code");
   done["inventory_snapshots"] = await upsertAll(sb, "inventory_snapshots", e.inventory_snapshots, "product_erp_code");
