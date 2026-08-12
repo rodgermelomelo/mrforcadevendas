@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { X, Minus, Plus, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle } from "lucide-react";
+import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle } from "lucide-react";
+import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
