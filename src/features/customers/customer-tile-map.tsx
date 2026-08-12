@@ -184,10 +184,7 @@ export function CustomerTileMap({
     const tileLayer = L.tileLayer(provider.url, {
       attribution: provider.attribution,
       maxZoom: 19,
-      subdomains:
-        "subdomains" in provider && provider.subdomains
-          ? provider.subdomains
-          : "abc",
+        subdomains: (provider as any).subdomains ?? "abc",
       detectRetina: true,
     }).addTo(mapRef.current);
 
@@ -278,9 +275,20 @@ export function CustomerTileMap({
     });
   }, [ready, selectedCluster]);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   return (
-    <div className="relative min-h-[34rem] overflow-hidden rounded-2xl border border-border bg-slate-100 shadow-inner">
+    <div className={cn(
+      "relative min-h-[34rem] overflow-hidden rounded-2xl border border-border bg-slate-100 shadow-inner",
+      isFullscreen && "fixed inset-0 z-[60] rounded-none border-0"
+    )}>
       <div ref={containerRef} className="absolute inset-0" />
+      <button
+        onClick={() => setIsFullscreen(!isFullscreen)}
+        className="absolute right-4 top-4 z-[500] rounded-xl bg-white/90 p-2 shadow-sm backdrop-blur hover:bg-white"
+      >
+        {isFullscreen ? "Sair da tela cheia" : "Ampliar mapa"}
+      </button>
       {(!ready || loading) && (
         <div className="absolute inset-0 z-[500] grid place-items-center bg-background/70 backdrop-blur-sm">
           <div className="rounded-2xl border border-border bg-card px-5 py-4 text-center shadow-lift">
@@ -306,7 +314,6 @@ export function CustomerTileMap({
           </p>
           <p className="truncate text-sm font-semibold">
             {providerById(providerId).name} · {points.length.toLocaleString("pt-BR")} pins
-            renderizados
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
