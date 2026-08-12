@@ -3,6 +3,7 @@ import type { ProductRecord, CodeLabelRecord } from "./parser/records";
 export interface ProductTaxonomySuggestion {
   brand: string;
   category: string;
+  segment: string;
 }
 
 const BRAND_ALIASES: Record<string, string> = {
