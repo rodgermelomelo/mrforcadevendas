@@ -558,6 +558,7 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
           imageUrl: image.get(erpCode) ?? null,
           brand,
           category,
+          segment,
           prices: pricesByProduct.get(erpCode) ?? {},
         };
       });
