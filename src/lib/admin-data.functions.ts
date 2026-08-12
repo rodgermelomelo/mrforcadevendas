@@ -931,15 +931,11 @@ export const listRegistries = createServerFn({ method: "GET" })
     ]);
 
     const productCounts = new Map<string, number>();
-    const brandCategories = new Map<string, Set<string>>();
 
     for (const p of products.data ?? []) {
       if (p.brand) {
         const brandKey = p.brand.toUpperCase();
         productCounts.set(brandKey, (productCounts.get(brandKey) ?? 0) + 1);
-        
-        // Se o produto tem uma categoria, e essa categoria está vinculada a essa marca
-        // Isso ajuda a garantir que a marca apareça se tiver produtos
       }
     }
 
