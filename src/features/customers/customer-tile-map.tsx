@@ -31,14 +31,6 @@ export const CUSTOMER_TILE_PROVIDERS = [
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   },
-  {
-    id: "esri-streets",
-    name: "Esri Street",
-    detail: "fallback",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-    attribution:
-      "Tiles &copy; Esri &mdash; Sources: Esri, HERE, Garmin, FAO, NOAA, USGS, OpenStreetMap contributors, and the GIS User Community",
-  },
 ] as const;
 
 export type CustomerTileProviderId = (typeof CUSTOMER_TILE_PROVIDERS)[number]["id"];
@@ -285,9 +277,10 @@ export function CustomerTileMap({
       <div ref={containerRef} className="absolute inset-0" />
       <button
         onClick={() => setIsFullscreen(!isFullscreen)}
-        className="absolute right-4 top-4 z-[500] rounded-xl bg-white/90 p-2 shadow-sm backdrop-blur hover:bg-white"
+        className="absolute right-4 top-4 z-[500] rounded-xl bg-white/90 p-1.5 shadow-sm backdrop-blur hover:bg-white flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight"
       >
-        {isFullscreen ? "Sair da tela cheia" : "Ampliar mapa"}
+        <MapIcon className="h-3.5 w-3.5 text-primary" />
+        {isFullscreen ? "Sair" : "Ampliar"}
       </button>
       {(!ready || loading) && (
         <div className="absolute inset-0 z-[500] grid place-items-center bg-background/70 backdrop-blur-sm">

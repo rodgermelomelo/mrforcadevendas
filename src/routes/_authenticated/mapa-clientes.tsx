@@ -199,7 +199,7 @@ function CustomerMapPage() {
             </Button>
           </div>
           <div className="rounded-xl border border-border bg-card p-1">
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-2 gap-1">
               {CUSTOMER_TILE_PROVIDERS.map((provider) => (
                 <button
                   key={provider.id}
