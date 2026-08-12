@@ -153,26 +153,36 @@ function CustomerMapPage() {
               className="h-12 rounded-xl bg-card pl-11 text-base"
             />
           </div>
-          <Select
-            value={sellerFilter}
-            onValueChange={(value) => {
-              setSellerFilter(value);
-              setSelectedCityKey(null);
-            }}
-          >
-            <SelectTrigger className="h-12 rounded-xl bg-card">
-              <Users className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-              <SelectValue placeholder="Representante" />
-            </SelectTrigger>
-            <SelectContent className="max-h-80">
-              <SelectItem value={ALL_SELLERS}>Todos os representantes</SelectItem>
-              {sellers.map((seller) => (
-                <SelectItem key={seller.code} value={seller.code}>
-                  {seller.code} · {seller.name} ({numberFormat.format(seller.customerCount)})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Select
+              value={sellerFilter}
+              onValueChange={(value) => {
+                setSellerFilter(value);
+                setSelectedCityKey(null);
+              }}
+            >
+              <SelectTrigger className="h-12 w-full rounded-xl bg-card sm:w-[280px]">
+                <Users className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Representante" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                <SelectItem value={ALL_SELLERS}>Todos os representantes</SelectItem>
+                {sellers.map((seller) => (
+                  <SelectItem key={seller.code} value={seller.code}>
+                    {seller.code} · {seller.name} ({numberFormat.format(seller.customerCount)})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl"
+              onClick={() => setSellerFilter(ALL_SELLERS)}
+              disabled={sellerFilter === ALL_SELLERS}
+            >
+              Limpar Filtro
+            </Button>
+          </div>
           <div className="rounded-xl border border-border bg-card p-1">
             <div className="grid grid-cols-3 gap-1">
               {CUSTOMER_TILE_PROVIDERS.map((provider) => (

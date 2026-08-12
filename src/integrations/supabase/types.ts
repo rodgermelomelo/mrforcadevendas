@@ -759,6 +759,47 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          issued_at: string
+          nf_number: string
+          order_id: string
+          source: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_at?: string
+          nf_number: string
+          order_id: string
+          source?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_at?: string
+          nf_number?: string
+          order_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           commission_base: number
@@ -818,6 +859,59 @@ export type Database = {
           },
         ]
       }
+      order_reconciliation: {
+        Row: {
+          diff: Json
+          erp_order_number: string | null
+          has_ruptura: boolean
+          id: string
+          note: string
+          order_id: string
+          original_snapshot: Json
+          original_total: number
+          reconciled_at: string
+          reconciled_by: string | null
+          updated_snapshot: Json
+          updated_total: number
+        }
+        Insert: {
+          diff?: Json
+          erp_order_number?: string | null
+          has_ruptura?: boolean
+          id?: string
+          note?: string
+          order_id: string
+          original_snapshot?: Json
+          original_total?: number
+          reconciled_at?: string
+          reconciled_by?: string | null
+          updated_snapshot?: Json
+          updated_total?: number
+        }
+        Update: {
+          diff?: Json
+          erp_order_number?: string | null
+          has_ruptura?: boolean
+          id?: string
+          note?: string
+          order_id?: string
+          original_snapshot?: Json
+          original_total?: number
+          reconciled_at?: string
+          reconciled_by?: string | null
+          updated_snapshot?: Json
+          updated_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_reconciliation_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_versions: {
         Row: {
           content_hash: string
@@ -864,6 +958,8 @@ export type Database = {
           customer_erp_code: string
           customer_name: string
           discount_total: number
+          erp_order_number: string | null
+          fulfillment_status: Database["public"]["Enums"]["fulfillment_status"]
           id: string
           integration_status: Database["public"]["Enums"]["integration_status"]
           is_bonus: boolean
@@ -891,6 +987,8 @@ export type Database = {
           customer_erp_code: string
           customer_name: string
           discount_total?: number
+          erp_order_number?: string | null
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
           id?: string
           integration_status?: Database["public"]["Enums"]["integration_status"]
           is_bonus?: boolean
@@ -918,6 +1016,8 @@ export type Database = {
           customer_erp_code?: string
           customer_name?: string
           discount_total?: number
+          erp_order_number?: string | null
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
           id?: string
           integration_status?: Database["public"]["Enums"]["integration_status"]
           is_bonus?: boolean
@@ -1378,6 +1478,12 @@ export type Database = {
         | "approved"
         | "confirmed"
         | "cancelled"
+      fulfillment_status:
+        | "pendente"
+        | "em_separacao"
+        | "conciliacao"
+        | "faturado"
+        | "cancelado"
       integration_status:
         | "not_ready"
         | "awaiting_erp_integration"
@@ -1529,6 +1635,13 @@ export const Constants = {
         "approved",
         "confirmed",
         "cancelled",
+      ],
+      fulfillment_status: [
+        "pendente",
+        "em_separacao",
+        "conciliacao",
+        "faturado",
+        "cancelado",
       ],
       integration_status: [
         "not_ready",
