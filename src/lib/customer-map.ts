@@ -75,7 +75,7 @@ const STATE_COORDS: Record<string, Coordinate> = {
   RS: { lat: -30.03, lng: -51.23 },
   SC: { lat: -27.59, lng: -48.55 },
   SE: { lat: -10.91, lng: -37.07 },
-  SP: { lat: -22.2, lng: -48.8 },
+  SP: { lat: -23.55, lng: -46.63 }, // Centralizado na capital para evitar spread para o oceano
   TO: { lat: -10.18, lng: -48.33 },
 };
 
@@ -227,7 +227,9 @@ function getBaseCoordinate(
   const seed = hashString(cityKey);
   const angle = ((seed % 3600) / 3600) * Math.PI * 2;
   const distance = 0.45 + ((seed >>> 8) % 1000) / 1000;
-  const stateSpread = normalizeLocationText(uf) === "SP" ? 3.3 : 5.5;
+  
+  // Ajuste do spread para manter os pontos dentro do território brasileiro (especialmente SP)
+  const stateSpread = normalizeLocationText(uf) === "SP" ? 1.5 : 2.5;
 
   return {
     coordinate: {
@@ -257,7 +259,7 @@ function spreadCustomer(
   const seed = hashString(`${pointSeed}:${index}`);
   const angle = ((seed % 3600) / 3600) * Math.PI * 2;
   const ring = Math.sqrt((index + 1) / total);
-  const distance = Math.min(0.36, 0.05 + Math.log10(total + 1) * 0.12) * ring;
+  const distance = Math.min(0.12, 0.02 + Math.log10(total + 1) * 0.04) * ring;
 
   return {
     lat: clamp(base.lat + Math.sin(angle) * distance, BRAZIL_BOUNDS.minLat, BRAZIL_BOUNDS.maxLat),
