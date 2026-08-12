@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCustomerPicker } from "@/components/customer-picker";
 import type { Product } from "@/lib/domain/types";
 import { ProductDetailDialog } from "@/features/catalog/product-detail-dialog";
-import { ProductCard } from "@/features/catalog/product-card";
+import { VirtualizedProductGrid } from "@/features/catalog/virtualized-product-grid";
 import { ProductCardSkeleton } from "@/features/catalog/product-card-skeleton";
 import { CatalogFilterBar } from "@/features/catalog/catalog-filter-bar";
 import { useCatalogFilters } from "@/features/catalog/use-catalog-filters";
@@ -166,29 +166,21 @@ function Catalogo() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {filters.pagedItems.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                hasCustomer={Boolean(customer)}
-                onAdd={(qty) => {
-                  const result = addItem(p.id, qty);
-                  if (!result.ok) {
-                    toast.error(result.message);
-                    return;
-                  }
-                  toast.success(`${qty} un. de ${p.name} no carrinho`);
-                }}
-                onOpenDetail={() => setSelectedProduct(p)}
-              />
-            ))}
-
-            {filters.loading &&
-              Array.from({ length: 5 }).map((_, i) => (
-                <ProductCardSkeleton key={`skeleton-${i}`} />
-              ))}
-          </div>
+          <VirtualizedProductGrid
+            products={filters.pagedItems}
+            hasCustomer={Boolean(customer)}
+            loadingMore={filters.loading}
+            onEndReached={filters.loadMore}
+            onOpenDetail={(p) => setSelectedProduct(p)}
+            onAdd={(p, qty) => {
+              const result = addItem(p.id, qty);
+              if (!result.ok) {
+                toast.error(result.message);
+                return;
+              }
+              toast.success(`${qty} un. de ${p.name} no carrinho`);
+            }}
+          />
 
           {filters.hasMore && !filters.loading && (
             <div className="flex justify-center pt-8">
@@ -201,6 +193,11 @@ function Catalogo() {
               </Button>
             </div>
           )}
+
+          <p className="pt-2 text-center text-xs text-muted-foreground">
+            Exibindo {filters.pagedItems.length.toLocaleString("pt-BR")} de{" "}
+            {filters.filtered.length.toLocaleString("pt-BR")} produtos
+          </p>
         </>
       )}
 

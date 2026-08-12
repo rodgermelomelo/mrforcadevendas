@@ -10,7 +10,7 @@ export interface BrandMetadataEntry {
   parentBrand?: string | null;
 }
 
-export const CATALOG_PAGE_SIZE = 20;
+export const CATALOG_PAGE_SIZE = 60;
 
 interface UseCatalogFiltersParams {
   products: Product[];
@@ -103,10 +103,11 @@ export function useCatalogFilters({
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return;
     setLoading(true);
-    setTimeout(() => {
+    // Sem atraso artificial: apenas cede um frame para o skeleton aparecer.
+    requestAnimationFrame(() => {
       setPage((prev) => prev + 1);
       setLoading(false);
-    }, 400);
+    });
   }, [loading, hasMore]);
 
   /** Marcas principais disponíveis (categorias sobem para a marca pai). */
