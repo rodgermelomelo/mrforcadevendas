@@ -104,6 +104,7 @@ function UnifiedEstoquePage() {
   const mainBrands = brands.filter(b => !b.metadata?.isCategory);
   const categories = brands.filter(b => b.metadata?.isCategory);
   
+  console.log("UnifiedEstoquePage - Raw Data:", registriesQuery.data);
   console.log("UnifiedEstoquePage - Brands:", brands.length, "Main:", mainBrands.length, "Cats:", categories.length);
 
   const filteredBrands = mainBrands
