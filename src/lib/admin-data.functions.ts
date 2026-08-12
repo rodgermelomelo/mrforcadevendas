@@ -511,7 +511,7 @@ export const listProducts = createServerFn({ method: "POST" })
 
     if (sort === "estoque_desc" || sort === "estoque_asc") {
       // Ordenação por estoque exige o conjunto completo de códigos filtrados.
-      const { data: codesRows } = await applyBase(context.supabase.from("products").select("erp_code")).limit(20000);
+      const { data: codesRows } = await applyBase(context.supabase.from("products").select("erp_code")).limit(40000);
       const codes: string[] = (codesRows ?? []).map((p: any) => p.erp_code as string);
       const stockAll = new Map<string, number>();
       if (codes.length > 0) {
