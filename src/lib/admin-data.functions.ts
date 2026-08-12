@@ -931,7 +931,6 @@ export const listRegistries = createServerFn({ method: "GET" })
     ]);
 
     const productCounts = new Map<string, number>();
-
     for (const p of products.data ?? []) {
       if (p.brand) {
         const brandKey = p.brand.toUpperCase();
