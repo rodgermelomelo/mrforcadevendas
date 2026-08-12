@@ -13,7 +13,7 @@ export interface QueryBuilder {
   in(column: string, values: unknown[]): QueryBuilder;
   order(column: string, options?: { ascending?: boolean }): QueryBuilder;
   range(from: number, to: number): QueryResult<DbRow[]>;
-  limit(count: number): QueryResult<DbRow[]>;
+  limit(count: number): QueryBuilder;
   maybeSingle(): QueryResult<DbRow>;
 }
 
