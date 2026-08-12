@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSales } from "@/lib/state/sales-store";
 import { createCustomer } from "@/lib/customers.functions";
+import { lookupCnpj } from "@/lib/cnpj.functions";
 import { cn } from "@/lib/utils";
 import { isRepresentativeRole } from "@/lib/domain/roles";
 
@@ -55,10 +56,12 @@ export function NewCustomerDialog({
   const { sellers, priceTables, role } = useSales();
   const qc = useQueryClient();
   const create = useServerFn(createCustomer);
+  const fetchCnpj = useServerFn(lookupCnpj);
   const hidePriceTableDetails = role ? isRepresentativeRole(role) : true;
 
   const defaultSeller = sellers.length === 1 ? sellers[0]!.code : "";
   const [open, setOpen] = useState(false);
+  const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [form, setForm] = useState<FormState>(() => emptyForm(defaultSeller));
 
   const mappedTables = useMemo(() => priceTables.filter((t) => t.mappedLevel !== null), [priceTables]);
@@ -75,6 +78,30 @@ export function NewCustomerDialog({
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleLookupCnpj = async () => {
+    const taxId = form.taxId.replace(/\D/g, "");
+    if (taxId.length !== 14) {
+      toast.error("Informe um CNPJ válido com 14 dígitos para consultar.");
+      return;
+    }
+
+    setLoadingCnpj(true);
+    try {
+      const data = await fetchCnpj({ data: { taxId } });
+      set({
+        tradeName: data.tradeName || form.tradeName,
+        legalName: data.legalName || form.legalName,
+        city: data.city || form.city,
+        uf: data.uf || form.uf,
+      });
+      toast.success("Dados do CNPJ importados!");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao consultar CNPJ.");
+    } finally {
+      setLoadingCnpj(false);
+    }
+  };
 
   const canSubmit =
     (form.tradeName.trim() || form.legalName.trim()) && form.sellerErpCode && form.priceTableCode;
@@ -107,10 +134,21 @@ export function NewCustomerDialog({
             <Field label="Razão social">
               <Input value={form.legalName} onChange={(e) => set({ legalName: e.target.value })} placeholder="Razão social (opcional)" />
             </Field>
-            <div className="grid grid-cols-[1fr_auto] gap-3">
+            <div className="grid grid-cols-[1fr_auto_auto] items-end gap-3">
               <Field label="CNPJ / CPF">
                 <Input value={form.taxId} onChange={(e) => set({ taxId: e.target.value })} placeholder="Somente números (opcional)" inputMode="numeric" />
               </Field>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="icon" 
+                className="h-10 w-10 rounded-xl" 
+                onClick={handleLookupCnpj}
+                disabled={loadingCnpj || form.taxId.replace(/\D/g, "").length !== 14}
+                title="Consultar CNPJ"
+              >
+                {loadingCnpj ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
               <Field label="UF">
                 <Input value={form.uf} onChange={(e) => set({ uf: e.target.value.toUpperCase().slice(0, 2) })} placeholder="SP" className="w-16 text-center" />
               </Field>
