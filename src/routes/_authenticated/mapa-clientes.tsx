@@ -143,8 +143,8 @@ function CustomerMapPage() {
         <MapMetric
           icon={Building2}
           label="Clientes no mapa"
-          value={numberFormat.format(filteredCustomers.length)}
-          detail={`${numberFormat.format(customers.length)} clientes na base`}
+          value={loading ? "..." : numberFormat.format(filteredCustomers.length)}
+          detail={loading ? "Carregando..." : `${numberFormat.format(customers.length)} clientes na base`}
         />
         <MapMetric
           icon={MapPin}
