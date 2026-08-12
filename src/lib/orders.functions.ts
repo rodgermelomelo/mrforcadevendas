@@ -223,13 +223,39 @@ export const createOrder = createServerFn({ method: "POST" })
         seller: data.sellerErpCode,
         table: data.priceTableCode,
         level: data.priceLevelLabel,
+        paymentTerm: data.paymentTerm,
         items: data.items,
         orderDiscountPercent: data.orderDiscountPercent,
         isBonus: data.isBonus,
+        notes: data.notes,
+        financialAgreement: data.financialAgreement ?? null,
         total: data.total,
         commissionTotal: commission.total,
       }),
     );
+
+    const duplicateSince = new Date(Date.now() - 2 * 60_000).toISOString();
+    const { data: duplicate, error: duplicateError } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("created_by", userId)
+      .eq("customer_erp_code", customer.erp_code)
+      .eq("seller_erp_code", data.sellerErpCode)
+      .eq("content_hash", contentHash)
+      .gte("created_at", duplicateSince)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (duplicateError) throw new Error(duplicateError.message);
+    const duplicateId = duplicate?.[0]?.id;
+    if (duplicateId) {
+      const { data: existingRow, error: existingError } = await supabase
+        .from("orders")
+        .select(ORDER_SELECT)
+        .eq("id", duplicateId)
+        .single();
+      if (existingError) throw new Error(existingError.message);
+      return toOrder(existingRow as unknown as OrderRow);
+    }
 
     const { data: inserted, error: insertError } = await supabase
       .from("orders")

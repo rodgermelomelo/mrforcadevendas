@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { AlertTriangle, Gift, ShieldCheck } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { AlertTriangle, Gift, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
@@ -41,6 +41,7 @@ function RevisarPedido() {
     sellerName, submitting,
   } = sales;
   const navigate = useNavigate();
+  const submitLockRef = useRef(false);
 
   const [nfPercent, setNfPercent] = useState(0);
   const [boletoPercent, setBoletoPercent] = useState(0);
@@ -91,10 +92,12 @@ function RevisarPedido() {
   const hasErrors = validation.errors.length > 0;
 
   const submit = async () => {
+    if (submitLockRef.current || submitting) return;
     if (hasErrors) {
       toast.error("Corrija os erros obrigatórios — o pedido permanece em rascunho.");
       return;
     }
+    submitLockRef.current = true;
     const items = lines.map((l) => ({
       productId: l.product.id,
       erpCode: l.product.erpCode,
@@ -127,6 +130,8 @@ function RevisarPedido() {
       void navigate({ to: "/pedidos/$orderId", params: { orderId: order.id } });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível gerar o pedido.");
+    } finally {
+      submitLockRef.current = false;
     }
   };
 
@@ -316,11 +321,12 @@ function RevisarPedido() {
           <Button
             size="lg"
             onClick={submit}
-            disabled={hasErrors}
+            disabled={hasErrors || submitting}
             className={cn("w-full rounded-xl shadow-lift", !hasExceptions && "bg-brand-gradient")}
             variant={hasExceptions ? "default" : "default"}
           >
-            {hasExceptions ? "Solicitar aprovação" : "Gerar pedido"}
+            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {submitting ? "Enviando..." : hasExceptions ? "Solicitar aprovação" : "Gerar pedido"}
           </Button>
           {hasExceptions && (
             <p className="text-center text-[11px] text-muted-foreground">
