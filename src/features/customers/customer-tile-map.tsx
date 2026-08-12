@@ -225,28 +225,17 @@ export function CustomerTileMap({
     layer.clearLayers();
 
     const selected = selectedCityKey;
-    for (const cluster of clusters) {
-      const isSelected = cluster.key === selected;
-      const muted = Boolean(selected && !isSelected);
-      const color = isSelected ? "#10b981" : "#e92b8d";
-      L.circle([cluster.coordinate.lat, cluster.coordinate.lng], {
-        radius: Math.min(36000, 6000 + Math.sqrt(cluster.count) * 3000),
-        color,
-        weight: isSelected ? 2 : 1,
-        opacity: muted ? 0.12 : 0.28,
-        fillColor: color,
-        fillOpacity: muted ? 0.03 : isSelected ? 0.16 : 0.08,
-        interactive: false,
-      }).addTo(layer);
-    }
+    
+    // As bolhas de cidade (círculos grandes) continuam em uma camada separada se necessário,
+    // mas aqui vamos focar nos pins individuais dentro do clusterGroup.
+    const markers: any[] = [];
 
-    const renderer = L.canvas({ padding: 0.5 });
     for (const point of points) {
       const isSelected = point.cityKey === selected;
       const muted = Boolean(selected && !isSelected);
       const color = isSelected ? "#10b981" : colorForSeller(point.sellerErpCode);
-      const marker: CircleMarker = L.circleMarker([point.coordinate.lat, point.coordinate.lng], {
-        renderer,
+      
+      const marker = L.circleMarker([point.coordinate.lat, point.coordinate.lng], {
         radius: markerRadius(points.length, isSelected),
         color: "#ffffff",
         fillColor: point.knownCoordinate ? color : "#0ea5e9",
@@ -259,9 +248,16 @@ export function CustomerTileMap({
         closeButton: true,
         maxWidth: 280,
       });
-      marker.on("click", () => onSelectCity(isSelected ? null : point.cityKey));
-      marker.addTo(layer);
+      
+      marker.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        onSelectCity(isSelected ? null : point.cityKey);
+      });
+      
+      markers.push(marker);
     }
+
+    layer.addLayers(markers);
   }, [clusters, onSelectCity, points, ready, selectedCityKey]);
 
   useEffect(() => {
