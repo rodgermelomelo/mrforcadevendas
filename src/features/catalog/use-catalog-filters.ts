@@ -32,7 +32,7 @@ export function useCatalogFilters({
   const [term, setTerm] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+  
   const [onlyLaunch, setOnlyLaunch] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState<CatalogSort>("relevance");
@@ -65,14 +65,11 @@ export function useCatalogFilters({
         if (!isGroupSelected) return false;
       }
 
-      if (selectedSegments.length > 0) {
-        if (!p.segment || !selectedSegments.includes(p.segment)) return false;
-      }
 
       if (onlyLaunch && !p.isLaunch) return false;
       if (onlyInStock && p.stock <= 0) return false;
       if (!q) return true;
-      return `${p.name} ${p.erpCode} ${pCategory} ${p.brand || ""} ${p.segment || ""}`.toLowerCase().includes(q);
+      return `${p.name} ${p.erpCode} ${pCategory} ${p.brand || ""}`.toLowerCase().includes(q);
     });
 
     return result.sort((a, b) => {
@@ -91,14 +88,14 @@ export function useCatalogFilters({
       if (a.isLaunch !== b.isLaunch) return a.isLaunch ? -1 : 1;
       return a.erpCode.localeCompare(b.erpCode);
     });
-  }, [term, selectedGroups, selectedBrands, selectedSegments, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
 
   const pagedItems = useMemo(() => filtered.slice(0, page * pageSize), [filtered, page, pageSize]);
   const hasMore = pagedItems.length < filtered.length;
 
   useEffect(() => {
     setPage(1);
-  }, [term, selectedGroups, selectedBrands, selectedSegments, onlyLaunch, onlyInStock, sortBy]);
+  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, sortBy]);
 
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return;
@@ -155,18 +152,6 @@ export function useCatalogFilters({
     return Array.from(availableGroups).sort();
   }, [products, selectedBrands, brandMetadata]);
 
-  /** Segmentos disponíveis no catálogo (extraídos dos produtos). */
-  const segments = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => {
-      // Usamos o campo segment do produto (se existir)
-      // Como não está no tipo Product do frontend ainda, vamos inferir que o backend pode mandar
-      // ou extrair do catálogo via alguma lógica. O usuário disse que "dados.txt tem essas infos".
-      // Por enquanto vamos deixar o esqueleto para filtrar pelo campo segment se ele existir.
-      if ((p as any).segment) set.add((p as any).segment);
-    });
-    return Array.from(set).sort();
-  }, [products]);
 
   const toggleBrand = useCallback((brand: string) => {
     setSelectedBrands((prev) =>
@@ -180,16 +165,10 @@ export function useCatalogFilters({
     );
   }, []);
 
-  const toggleSegment = useCallback((segment: string) => {
-    setSelectedSegments((prev) =>
-      prev.includes(segment) ? prev.filter((i) => i !== segment) : [...prev, segment],
-    );
-  }, []);
 
   const clearFilters = useCallback(() => {
     setSelectedBrands([]);
     setSelectedGroups([]);
-    setSelectedSegments([]);
     setOnlyLaunch(false);
     setOnlyInStock(false);
     setTerm("");
@@ -198,7 +177,6 @@ export function useCatalogFilters({
   const hasActiveFilters =
     selectedBrands.length > 0 ||
     selectedGroups.length > 0 ||
-    selectedSegments.length > 0 ||
     onlyLaunch ||
     onlyInStock ||
     term !== "";
@@ -211,7 +189,6 @@ export function useCatalogFilters({
     setSortBy,
     selectedBrands,
     selectedGroups,
-    selectedSegments,
     onlyLaunch,
     setOnlyLaunch,
     onlyInStock,
@@ -219,7 +196,6 @@ export function useCatalogFilters({
     // dados derivados
     brands,
     groups,
-    segments,
     filtered,
     pagedItems,
     hasMore,
@@ -228,7 +204,6 @@ export function useCatalogFilters({
     // ações
     toggleBrand,
     toggleGroup,
-    toggleSegment,
     clearFilters,
     loadMore,
   };

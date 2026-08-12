@@ -23,13 +23,10 @@ export interface CatalogFilterBarProps {
   onToggleLaunch: () => void;
   brands: string[];
   groups: string[];
-  segments: string[];
   selectedBrands: string[];
   selectedGroups: string[];
-  selectedSegments: string[];
   onToggleBrand: (brand: string) => void;
   onToggleGroup: (group: string) => void;
-  onToggleSegment: (segment: string) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   resultCount: number;
@@ -47,13 +44,10 @@ export function CatalogFilterBar({
   onToggleLaunch,
   brands,
   groups,
-  segments,
   selectedBrands,
   selectedGroups,
-  selectedSegments,
   onToggleBrand,
   onToggleGroup,
-  onToggleSegment,
   hasActiveFilters,
   onClearFilters,
   resultCount,
@@ -150,18 +144,6 @@ export function CatalogFilterBar({
                 </button>
               </Badge>
             ))}
-            {selectedSegments.map((s) => (
-              <Badge
-                key={s}
-                variant="secondary"
-                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
-              >
-                {s}
-                <button onClick={() => onToggleSegment(s)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </Badge>
-            ))}
             {onlyInStock && (
               <Badge
                 variant="secondary"
@@ -207,14 +189,6 @@ export function CatalogFilterBar({
           options={groups}
           selected={selectedGroups}
           onToggle={onToggleGroup}
-        />
-
-        <FilterChipRow
-          label="Segmento"
-          icon={<Search className="h-3 w-3" />}
-          options={segments}
-          selected={selectedSegments}
-          onToggle={onToggleSegment}
         />
       </div>
 
