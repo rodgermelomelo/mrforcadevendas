@@ -61,6 +61,7 @@ const adminNav = [
   { to: "/admin/clientes", label: "Clientes" },
   { to: "/admin/usuarios", label: "Usuários, papéis e provisionamento" },
   { to: "/admin/cadastros", label: "Cadastros gerais" },
+  { to: "/admin/transportadoras", label: "Transportadoras" },
   { to: "/admin/regras", label: "Regras comerciais" },
   { to: "/admin/comissoes", label: "Comissões" },
   { to: "/admin/diagnostico", label: "Diagnóstico do catálogo" },

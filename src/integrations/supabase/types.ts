@@ -210,6 +210,83 @@ export type Database = {
         }
         Relationships: []
       }
+      carrier_cities: {
+        Row: {
+          carrier_id: string
+          city: string
+          created_at: string
+          freight_type: string
+          id: string
+          lead_time_days: number
+          uf: string
+          updated_at: string
+        }
+        Insert: {
+          carrier_id: string
+          city: string
+          created_at?: string
+          freight_type?: string
+          id?: string
+          lead_time_days?: number
+          uf: string
+          updated_at?: string
+        }
+        Update: {
+          carrier_id?: string
+          city?: string
+          created_at?: string
+          freight_type?: string
+          id?: string
+          lead_time_days?: number
+          uf?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_cities_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carriers: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string
+          phone: string
+          tax_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name: string
+          notes?: string
+          phone?: string
+          tax_id?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string
+          phone?: string
+          tax_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       catalog_review: {
         Row: {
           classification: string
