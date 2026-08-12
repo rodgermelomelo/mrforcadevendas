@@ -161,7 +161,7 @@ export function CatalogFilterBar({
                     icon={<Building2 className="h-3 w-3" />}
                     options={brands}
                     selected={selectedBrands}
-                    onToggle={onToggleBrand}
+                    onToggle={onToggleGroup}
                   />
 
                   <FilterChipRow
