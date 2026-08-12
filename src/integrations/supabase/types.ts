@@ -278,27 +278,23 @@ export type Database = {
       commercial_team_sellers: {
         Row: {
           created_at: string
+          id: string
           seller_erp_code: string
           team_id: string
         }
         Insert: {
           created_at?: string
+          id?: string
           seller_erp_code: string
           team_id: string
         }
         Update: {
           created_at?: string
+          id?: string
           seller_erp_code?: string
           team_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "commercial_team_sellers_seller_erp_code_fkey"
-            columns: ["seller_erp_code"]
-            isOneToOne: false
-            referencedRelation: "erp_sellers"
-            referencedColumns: ["erp_code"]
-          },
           {
             foreignKeyName: "commercial_team_sellers_team_id_fkey"
             columns: ["team_id"]
