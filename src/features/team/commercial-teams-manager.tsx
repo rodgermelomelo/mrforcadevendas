@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Edit3, Loader2, Plus, Trash2, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { CommercialTeamCard } from "@/features/team/commercial-team-card";
 import { TeamFormDialog, type TeamFormState } from "@/features/team/commercial-team-form-dialog";
 import type { CommercialTeamRow, CommercialTeamsPayload } from "@/lib/team.functions";
 
@@ -93,7 +93,7 @@ export function CommercialTeamsManager({
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {teams.map((team) => (
-            <TeamCard
+            <CommercialTeamCard
               key={team.id}
               team={team}
               selected={team.id === selectedTeamId}
@@ -133,88 +133,16 @@ export function CommercialTeamsManager({
               disabled={deleting}
               onClick={() => deleteTarget && onDelete(deleteTarget.id)}
             >
-              {deleting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Trash2 className="mr-1.5 h-4 w-4" />}
+              {deleting ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-1.5 h-4 w-4" />
+              )}
               Apagar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function TeamCard({
-  team,
-  selected,
-  canManage,
-  onEdit,
-  onDelete,
-  onSelect,
-}: {
-  team: CommercialTeamRow;
-  selected: boolean;
-  canManage: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-  onSelect: () => void;
-}) {
-  return (
-    <article className="surface-card space-y-4 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-base font-semibold">{team.name}</h3>
-            {!team.active && <Badge variant="secondary">Inativa</Badge>}
-            {selected && <Badge>Filtrando painel</Badge>}
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Líder: <span className="font-medium text-foreground">{team.leaderName}</span>
-            {team.leaderEmail && ` · ${team.leaderEmail}`}
-          </p>
-          {team.description && <p className="mt-2 text-sm text-muted-foreground">{team.description}</p>}
-        </div>
-        {canManage && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={onEdit}>
-              <Edit3 className="mr-1.5 h-4 w-4" />
-              Editar
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-xl text-destructive" onClick={onDelete}>
-              <Trash2 className="mr-1.5 h-4 w-4" />
-              Apagar
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-        <Metric label="Representantes" value={String(team.sellerCount)} />
-        <Metric label="Clientes ativos" value={team.customerCount.toLocaleString("pt-BR")} />
-        <Metric label="Status" value={team.active ? "Ativa" : "Inativa"} />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {team.sellerNames.slice(0, 8).map((name, index) => (
-          <Badge key={`${team.id}-${name}-${index}`} variant="outline">
-            {name}
-          </Badge>
-        ))}
-        {team.sellerNames.length > 8 && <Badge variant="secondary">+{team.sellerNames.length - 8}</Badge>}
-      </div>
-
-      <Button type="button" variant={selected ? "secondary" : "outline"} className="w-full rounded-xl" onClick={onSelect}>
-        <Users className="mr-1.5 h-4 w-4" />
-        {selected ? "Ver todas as equipes" : "Filtrar painel por equipe"}
-      </Button>
-    </article>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-muted/60 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-semibold">{value}</p>
     </div>
   );
 }

@@ -54,7 +54,9 @@ export function TeamFormDialog({
   const [term, setTerm] = useState("");
   const selected = useMemo(() => new Set(form?.sellerCodes ?? []), [form?.sellerCodes]);
   const filtered = sellers
-    .filter((seller) => `${seller.erpCode} ${seller.name}`.toLowerCase().includes(term.trim().toLowerCase()))
+    .filter((seller) =>
+      `${seller.erpCode} ${seller.name}`.toLowerCase().includes(term.trim().toLowerCase()),
+    )
     .slice(0, 80);
 
   const patch = (next: Partial<TeamFormState>) => form && onChange({ ...form, ...next });
@@ -72,7 +74,7 @@ export function TeamFormDialog({
         <DialogHeader>
           <DialogTitle>{form?.teamId ? "Editar equipe" : "Nova equipe"}</DialogTitle>
           <DialogDescription>
-            O líder selecionado passa a enxergar os representantes desta equipe.
+            O responsável selecionado passa a enxergar os representantes desta equipe.
           </DialogDescription>
         </DialogHeader>
 
@@ -90,10 +92,13 @@ export function TeamFormDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Líder / gerente</Label>
-                <Select value={form.leaderUserId} onValueChange={(value) => patch({ leaderUserId: value })}>
+                <Label>Responsável / gerente</Label>
+                <Select
+                  value={form.leaderUserId}
+                  onValueChange={(value) => patch({ leaderUserId: value })}
+                >
                   <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Selecione o líder" />
+                    <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
                     {users.map((user) => (
@@ -120,7 +125,10 @@ export function TeamFormDialog({
             </div>
 
             <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={form.active} onCheckedChange={(checked) => patch({ active: checked === true })} />
+              <Checkbox
+                checked={form.active}
+                onCheckedChange={(checked) => patch({ active: checked === true })}
+              />
               Equipe ativa
             </label>
 

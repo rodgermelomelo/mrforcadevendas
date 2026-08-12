@@ -58,13 +58,22 @@ export interface CommercialTeamRow {
   leaderUserId: string | null;
   leaderName: string;
   leaderEmail: string | null;
+  leaderRoles: string[];
   active: boolean;
   sellerCodes: string[];
   sellerNames: string[];
+  members: CommercialTeamMemberRow[];
   sellerCount: number;
   customerCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CommercialTeamMemberRow {
+  erpCode: string;
+  name: string;
+  active: boolean;
+  customerCount: number;
 }
 
 export interface TeamUserOption {
@@ -125,7 +134,8 @@ async function getAdminFlag(context: { supabase: any; userId: string }) {
 }
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
-  if (!(await getAdminFlag(context))) throw new Error("Apenas administradores podem gerenciar equipes.");
+  if (!(await getAdminFlag(context)))
+    throw new Error("Apenas administradores podem gerenciar equipes.");
 }
 
 /* --------------------------------- dados --------------------------------- */
@@ -152,14 +162,19 @@ export const getTeamOverview = createServerFn({ method: "POST" })
       getAdminFlag(context),
       supabase.rpc("visible_seller_codes", { _user_id: userId }),
       data.teamId
-        ? supabase.from("commercial_team_sellers").select("seller_erp_code").eq("team_id", data.teamId)
+        ? supabase
+            .from("commercial_team_sellers")
+            .select("seller_erp_code")
+            .eq("team_id", data.teamId)
         : Promise.resolve({ data: null, error: null }),
     ]);
 
     const isAdmin = adminRes === true;
     if (teamMembersRes.error) throw new Error(teamMembersRes.error.message);
     const visibleCodes: string[] = Array.isArray(visibleRes.data)
-      ? visibleRes.data.map((r: any) => (typeof r === "string" ? r : r?.visible_seller_codes)).filter(Boolean)
+      ? visibleRes.data
+          .map((r: any) => (typeof r === "string" ? r : r?.visible_seller_codes))
+          .filter(Boolean)
       : [];
     const teamCodes: string[] | null = data.teamId
       ? ((teamMembersRes.data ?? []) as any[]).map((r) => r.seller_erp_code).filter(Boolean)
@@ -175,14 +190,21 @@ export const getTeamOverview = createServerFn({ method: "POST" })
     const [sellersRes, goalsRes, ordersRes, customersRes, linksRes, profilesRes, canManageRes] =
       await Promise.all([
         sellersQuery,
-        supabase.from("seller_goals" as any).select("*").eq("month", monthStart),
+        supabase
+          .from("seller_goals" as any)
+          .select("*")
+          .eq("month", monthStart),
         supabase
           .from("orders")
-          .select("id, number, seller_erp_code, seller_name, customer_name, total, status, created_at")
+          .select(
+            "id, number, seller_erp_code, seller_name, customer_name, total, status, created_at",
+          )
           .gte("created_at", start.toISOString())
           .lt("created_at", end.toISOString())
           .order("created_at", { ascending: false }),
-        fetchAllRows(supabase, "customer_seller_links", "seller_erp_code, active", (q) => q.eq("active", true)),
+        fetchAllRows(supabase, "customer_seller_links", "seller_erp_code, active", (q) =>
+          q.eq("active", true),
+        ),
         supabase.from("user_erp_seller_links").select("user_id, seller_erp_code"),
         supabase.from("profiles").select("id, full_name, email"),
         supabase.rpc("is_approver", { _user_id: userId }),
@@ -192,7 +214,8 @@ export const getTeamOverview = createServerFn({ method: "POST" })
     const allowed = new Set(sellers.map((s) => s.erp_code));
 
     const goals = new Map<string, number>();
-    for (const g of (goalsRes.data ?? []) as any[]) goals.set(g.seller_erp_code, Number(g.target_value));
+    for (const g of (goalsRes.data ?? []) as any[])
+      goals.set(g.seller_erp_code, Number(g.target_value));
 
     const customerCount = new Map<string, number>();
     for (const c of (customersRes.data ?? []) as any[]) {
@@ -271,7 +294,10 @@ export const getTeamOverview = createServerFn({ method: "POST" })
         activeSellers: rows.filter((r) => r.orderCount > 0).length,
       },
       sellers: rows,
-      pendingOrders: orders.filter((o) => o.status === "pending_approval").slice(0, 20).map(toRow),
+      pendingOrders: orders
+        .filter((o) => o.status === "pending_approval")
+        .slice(0, 20)
+        .map(toRow),
       recentOrders: orders.slice(0, 20).map(toRow),
     };
   });
@@ -283,21 +309,24 @@ export const getCommercialTeams = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const isAdmin = await getAdminFlag(context);
 
-    const [teamsRes, membersRes, sellersRes, customersRes, profilesRes, rolesRes] = await Promise.all([
-      supabase
-        .from("commercial_teams")
-        .select("id, name, description, leader_user_id, active, created_at, updated_at")
-        .order("name"),
-      supabase.from("commercial_team_sellers").select("team_id, seller_erp_code"),
-      supabase.from("erp_sellers").select("erp_code, name, active").order("name"),
-      fetchAllRows(supabase, "customer_seller_links", "seller_erp_code, active", (q) => q.eq("active", true)),
-      isAdmin
-        ? supabase.from("profiles").select("id, full_name, email").order("full_name")
-        : supabase.from("profiles").select("id, full_name, email").eq("id", userId),
-      isAdmin
-        ? supabase.from("user_roles").select("user_id, role")
-        : supabase.from("user_roles").select("user_id, role").eq("user_id", userId),
-    ]);
+    const [teamsRes, membersRes, sellersRes, customersRes, profilesRes, rolesRes] =
+      await Promise.all([
+        supabase
+          .from("commercial_teams")
+          .select("id, name, description, leader_user_id, active, created_at, updated_at")
+          .order("name"),
+        supabase.from("commercial_team_sellers").select("team_id, seller_erp_code"),
+        supabase.from("erp_sellers").select("erp_code, name, active").order("name"),
+        fetchAllRows(supabase, "customer_seller_links", "seller_erp_code, active", (q) =>
+          q.eq("active", true),
+        ),
+        isAdmin
+          ? supabase.from("profiles").select("id, full_name, email").order("full_name")
+          : supabase.from("profiles").select("id, full_name, email").eq("id", userId),
+        isAdmin
+          ? supabase.from("user_roles").select("user_id, role")
+          : supabase.from("user_roles").select("user_id, role").eq("user_id", userId),
+      ]);
 
     for (const res of [teamsRes, membersRes, sellersRes, profilesRes, rolesRes]) {
       if (res.error) throw new Error(res.error.message);
@@ -306,6 +335,7 @@ export const getCommercialTeams = createServerFn({ method: "GET" })
 
     const sellers = (sellersRes.data ?? []) as any[];
     const sellerName = new Map(sellers.map((s) => [s.erp_code, s.name]));
+    const sellerByCode = new Map(sellers.map((s) => [s.erp_code, s]));
     const membersByTeam = new Map<string, string[]>();
     for (const member of (membersRes.data ?? []) as any[]) {
       const list = membersByTeam.get(member.team_id) ?? [];
@@ -337,6 +367,15 @@ export const getCommercialTeams = createServerFn({ method: "GET" })
     const teams = ((teamsRes.data ?? []) as any[]).map((team) => {
       const sellerCodes = (membersByTeam.get(team.id) ?? []).sort();
       const leader = team.leader_user_id ? userById.get(team.leader_user_id) : null;
+      const members = sellerCodes.map((code) => {
+        const seller = sellerByCode.get(code);
+        return {
+          erpCode: code,
+          name: seller?.name ?? code,
+          active: seller?.active ?? true,
+          customerCount: customerCount.get(code) ?? 0,
+        } satisfies CommercialTeamMemberRow;
+      });
       return {
         id: team.id,
         name: team.name,
@@ -344,9 +383,11 @@ export const getCommercialTeams = createServerFn({ method: "GET" })
         leaderUserId: team.leader_user_id,
         leaderName: leader?.name ?? "Sem líder",
         leaderEmail: leader?.email ?? null,
+        leaderRoles: leader?.roles ?? [],
         active: team.active,
         sellerCodes,
         sellerNames: sellerCodes.map((code) => sellerName.get(code) ?? code),
+        members,
         sellerCount: sellerCodes.length,
         customerCount: sellerCodes.reduce((acc, code) => acc + (customerCount.get(code) ?? 0), 0),
         createdAt: team.created_at,
@@ -417,7 +458,10 @@ export const saveCommercialTeam = createServerFn({ method: "POST" })
     if (teamRes.error) throw new Error(teamRes.error.message);
 
     const teamId = teamRes.data.id as string;
-    const deleteRes = await context.supabase.from("commercial_team_sellers").delete().eq("team_id", teamId);
+    const deleteRes = await context.supabase
+      .from("commercial_team_sellers")
+      .delete()
+      .eq("team_id", teamId);
     if (deleteRes.error) throw new Error(deleteRes.error.message);
 
     const insertRes = await context.supabase
@@ -430,7 +474,11 @@ export const saveCommercialTeam = createServerFn({ method: "POST" })
       entity: "commercial_teams",
       entity_id: teamId,
       action: data.teamId ? "update" : "create",
-      detail: { name: data.name, leaderUserId: data.leaderUserId, sellerCount: data.sellerCodes.length },
+      detail: {
+        name: data.name,
+        leaderUserId: data.leaderUserId,
+        sellerCount: data.sellerCodes.length,
+      },
     });
 
     return { ok: true, teamId };
@@ -444,7 +492,10 @@ export const deleteCommercialTeam = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase.from("commercial_teams").delete().eq("id", data.teamId);
+    const { error } = await context.supabase
+      .from("commercial_teams")
+      .delete()
+      .eq("id", data.teamId);
     if (error) throw new Error(error.message);
     await context.supabase.from("audit_logs" as any).insert({
       actor_id: context.userId,

@@ -3,53 +3,56 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import {
-  AlertTriangle,
-  ClipboardList,
-  Loader2,
-  ShieldAlert,
-  Target,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { AlertTriangle, Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { SellerGoalsHistory } from "@/components/admin/seller-goals-history";
 import { useIsApprover } from "@/components/use-is-approver";
-import { MetricCard } from "@/components/shared/metric-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CommercialTeamsManager } from "@/features/team/commercial-teams-manager";
 import type { TeamFormState } from "@/features/team/commercial-team-form-dialog";
+import { TeamAccessPanel } from "@/features/team/team-access-panel";
+import { TeamOverviewMetrics } from "@/features/team/team-overview-metrics";
 import { TeamSellerCard } from "@/features/team/team-seller-card";
 import { TeamOrderList } from "@/features/team/team-order-list";
-import { deleteCommercialTeam, getCommercialTeams, getTeamOverview, saveCommercialTeam } from "@/lib/team.functions";
-import { formatBRL } from "@/lib/pricing";
+import {
+  deleteCommercialTeam,
+  getCommercialTeams,
+  getTeamOverview,
+  saveCommercialTeam,
+} from "@/lib/team.functions";
 
 export const Route = createFileRoute("/_authenticated/equipe")({
   head: () => ({
     meta: [
       { title: "Equipe comercial — MR Força de Vendas" },
-      { name: "description", content: "Acompanhe metas, pedidos e progresso de cada representante da sua equipe por período." },
+      {
+        name: "description",
+        content:
+          "Acompanhe metas, pedidos e progresso de cada representante da sua equipe por período.",
+      },
       { property: "og:title", content: "Equipe comercial — MR Força de Vendas" },
-      { property: "og:description", content: "Painel de gestão da equipe comercial da MR Cosméticos: metas, pedidos e progresso." },
+      {
+        property: "og:description",
+        content:
+          "Painel de gestão da equipe comercial da MR Cosméticos: metas, pedidos e progresso.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: TeamPage,
 });
-
-function monthLabel(month: string) {
-  const label = new Date(`${month}-01T12:00:00`).toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
 
 function TeamPage() {
   const { data: isApprover, isLoading: checkingRole } = useIsApprover();
@@ -65,7 +68,8 @@ function TeamPage() {
   const overviewQuery = useQuery({
     queryKey: ["team-overview", month, selectedTeamId],
     enabled: isApprover === true,
-    queryFn: () => fetchOverview({ data: selectedTeamId ? { month, teamId: selectedTeamId } : { month } }),
+    queryFn: () =>
+      fetchOverview({ data: selectedTeamId ? { month, teamId: selectedTeamId } : { month } }),
   });
 
   const teamsQuery = useQuery({
@@ -128,7 +132,8 @@ function TeamPage() {
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Equipe</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Acompanhe metas, pedidos e progresso dos representantes sob sua gestão.
-            {data?.scope === "visible" && " A visibilidade segue as carteiras liberadas para o seu perfil."}
+            {data?.scope === "visible" &&
+              " A visibilidade segue as carteiras liberadas para o seu perfil."}
             {data?.scope === "team" && selectedTeam && ` Filtrado por ${selectedTeam.name}.`}
           </p>
           {selectedTeam && (
@@ -166,43 +171,11 @@ function TeamPage() {
       ) : overviewQuery.isError ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
           <AlertTriangle className="mx-auto h-6 w-6 text-destructive" />
-          <p className="mt-2 text-sm text-destructive">
-            {(overviewQuery.error as Error).message}
-          </p>
+          <p className="mt-2 text-sm text-destructive">{(overviewQuery.error as Error).message}</p>
         </div>
       ) : data ? (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              variant="compact"
-              icon={<TrendingUp className="h-4 w-4" />}
-              label="Total vendido"
-              value={formatBRL(data.totals.sold)}
-              hint={`${data.totals.orderCount.toLocaleString("pt-BR")} pedidos em ${monthLabel(data.month)}`}
-            />
-            <MetricCard
-              variant="compact"
-              icon={<Target className="h-4 w-4" />}
-              label="Meta da equipe"
-              value={formatBRL(data.totals.goal)}
-              hint={data.totals.goal > 0 ? `${data.totals.progress}% atingido` : "Sem metas definidas"}
-              progress={data.totals.goal > 0 ? Math.min(100, data.totals.progress) : undefined}
-            />
-            <MetricCard
-              variant="compact"
-              icon={<ClipboardList className="h-4 w-4" />}
-              label="Em análise"
-              value={String(data.totals.pendingCount)}
-              hint={formatBRL(data.totals.pendingValue)}
-            />
-            <MetricCard
-              variant="compact"
-              icon={<Users className="h-4 w-4" />}
-              label="Representantes"
-              value={`${data.totals.activeSellers}/${data.totals.sellers}`}
-              hint="Com pedidos no período"
-            />
-          </section>
+          <TeamOverviewMetrics data={data} />
 
           <Tabs defaultValue="representantes" className="space-y-4">
             <TabsList className="flex h-auto flex-wrap justify-start rounded-xl">
@@ -217,6 +190,9 @@ function TeamPage() {
               </TabsTrigger>
               <TabsTrigger value="pedidos" className="rounded-lg">
                 Pedidos do período
+              </TabsTrigger>
+              <TabsTrigger value="acessos" className="rounded-lg">
+                Acessos
               </TabsTrigger>
             </TabsList>
 
@@ -267,6 +243,10 @@ function TeamPage() {
                 emptyDescription="A equipe ainda não registrou pedidos no mês selecionado."
               />
             </TabsContent>
+
+            <TabsContent value="acessos">
+              <TeamAccessPanel canManageTeams={teamsQuery.data?.canManageTeams ?? false} />
+            </TabsContent>
           </Tabs>
         </>
       ) : null}
@@ -280,7 +260,10 @@ function TeamPage() {
             </DialogDescription>
           </DialogHeader>
           {goalSeller && (
-            <SellerGoalsHistory erpCode={goalSeller.code} canManage={data?.canManageGoals ?? false} />
+            <SellerGoalsHistory
+              erpCode={goalSeller.code}
+              canManage={data?.canManageGoals ?? false}
+            />
           )}
         </DialogContent>
       </Dialog>

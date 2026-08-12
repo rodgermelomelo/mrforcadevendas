@@ -21,7 +21,8 @@ export function PermissionMatrix() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
   const roles = useMemo(
-    () => (roleFilter === "all" ? ROLE_OPTIONS : ROLE_OPTIONS.filter((r) => r.value === roleFilter)),
+    () =>
+      roleFilter === "all" ? ROLE_OPTIONS : ROLE_OPTIONS.filter((r) => r.value === roleFilter),
     [roleFilter],
   );
 
@@ -75,7 +76,9 @@ export function PermissionMatrix() {
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/40">
-              <th className="sticky left-0 z-10 bg-muted/40 px-4 py-3 text-left font-semibold">Módulo</th>
+              <th className="sticky left-0 z-10 bg-muted/40 px-4 py-3 text-left font-semibold">
+                Módulo
+              </th>
               {roles.map((r) => (
                 <th key={r.value} className="px-3 py-3 text-center text-xs font-semibold">
                   {r.label}
@@ -134,17 +137,19 @@ export function PermissionMatrix() {
       <div className="flex gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Para <strong className="text-foreground">ajustar</strong> o que uma pessoa enxerga, altere o perfil dela na aba
-          “Gestão de Usuários”. Para supervisores e gerentes, o alcance de “Equipe” é definido pela visibilidade de
-          representantes — só aparecem as carteiras liberadas, nunca todas automaticamente.
+          Para <strong className="text-foreground">ajustar</strong> o que uma pessoa enxerga, altere
+          o perfil em Usuários e Papéis. Para supervisores e gerentes, o alcance de “Equipe” é
+          definido pela visibilidade de representantes — só aparecem as carteiras liberadas, nunca
+          todas automaticamente.
         </p>
       </div>
 
       <div className="flex gap-3 rounded-2xl border border-dashed border-border p-4 text-xs text-muted-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
-          Esta matriz reflete as regras de segurança aplicadas no banco de dados. Menus escondidos são apenas a camada
-          visual: mesmo em acesso direto, os dados fora do alcance do perfil continuam bloqueados.
+          Esta matriz reflete as regras de segurança aplicadas no banco de dados. Menus escondidos
+          são apenas a camada visual: mesmo em acesso direto, os dados fora do alcance do perfil
+          continuam bloqueados.
         </p>
       </div>
     </div>
