@@ -31,8 +31,6 @@ export interface CatalogWorkspaceData {
   groups: string[];
 }
 
-const PAGE_SIZE = 2000;
-
 import {
   dbClient,
   errorMessage,
@@ -81,13 +79,13 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
           db,
           "customers",
           "id, erp_code, legal_name, trade_name, tax_id, city, uf, segment_code, price_table_code, payment_term, restricted, restriction_reason, credit_limit, open_balance, min_order_value, last_order_at, seller_erp_code",
-          (query) => query.eq("active", true).order("trade_name").limit(10000),
+          (query) => query.eq("active", true).order("trade_name"),
         ),
       ),
       runQuery(() => fetchAllRows(db, "price_tables", "*", (query) => query.order("code"))),
       runQuery(() =>
         fetchAllRows(db, "customer_seller_links", "*", (query) =>
-          query.eq("active", true).order("seller_erp_code").order("customer_erp_code").limit(10000),
+          query.eq("active", true).order("seller_erp_code").order("customer_erp_code"),
         ),
       ),
       runQuery(() =>
@@ -230,10 +228,9 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
       ? await runQuery(() =>
           fetchAllRows(db, "product_prices", "*", (query) => {
             const ordered = query.order("product_erp_code").order("price_table_code");
-            return (shouldFetchAllPrices
+            return shouldFetchAllPrices
               ? ordered
-              : ordered.in("price_table_code", Array.from(visiblePriceTables))
-            ).limit(10000);
+              : ordered.in("price_table_code", Array.from(visiblePriceTables));
           }),
         )
       : { data: [], error: null };
