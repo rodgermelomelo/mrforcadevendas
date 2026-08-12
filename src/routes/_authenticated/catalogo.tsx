@@ -150,7 +150,11 @@ function Catalogo() {
                 product={p}
                 hasCustomer={Boolean(customer)}
                 onAdd={(qty) => {
-                  addItem(p.id, qty);
+                  const result = addItem(p.id, qty);
+                  if (!result.ok) {
+                    toast.error(result.message);
+                    return;
+                  }
                   toast.success(`${qty} un. de ${p.name} no carrinho`);
                 }}
                 onOpenDetail={() => setSelectedProduct(p)}

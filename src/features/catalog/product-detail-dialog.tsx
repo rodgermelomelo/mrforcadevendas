@@ -39,7 +39,11 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
   const subtotal = price.ok ? price.value * qty : 0;
 
   const handleAdd = () => {
-    addItem(product.id, qty);
+    const result = addItem(product.id, qty);
+    if (!result.ok) {
+      toast.error(result.message);
+      return;
+    }
     toast.success(`${qty} un. de ${product.name} no carrinho`);
     onOpenChange(false);
   };

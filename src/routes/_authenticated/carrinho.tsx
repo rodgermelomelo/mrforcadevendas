@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trash2, Minus, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { productImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
@@ -22,6 +23,10 @@ export const Route = createFileRoute("/_authenticated/carrinho")({
 
 function Carrinho() {
   const { customer, table, lines, subtotal, setQuantity, removeItem, clearCart, hydrated } = useSales();
+  const updateQuantity = (productId: string, quantity: number) => {
+    const result = setQuantity(productId, quantity);
+    if (!result.ok) toast.error(result.message);
+  };
 
   if (!hydrated) {
     return (
@@ -91,7 +96,7 @@ function Carrinho() {
                   </p>
                   {line.quantity > line.product.stock && (
                     <p className="mt-1 text-xs text-warning">
-                      Estoque insuficiente ({line.product.stock} disponíveis) — exceção comercial.
+                      Estoque insuficiente: ajuste para até {Math.floor(line.product.stock)} un.
                     </p>
                   )}
                 </div>
@@ -99,7 +104,7 @@ function Carrinho() {
                   <div className="flex items-center rounded-xl border border-border">
                     <button
                       className="grid h-9 w-9 place-items-center text-muted-foreground"
-                      onClick={() => setQuantity(line.product.id, line.quantity - 1)}
+                      onClick={() => updateQuantity(line.product.id, line.quantity - 1)}
                       aria-label="Diminuir"
                     >
                       <Minus className="h-3.5 w-3.5" />
@@ -107,7 +112,7 @@ function Carrinho() {
                     <span className="w-8 text-center text-sm font-semibold">{line.quantity}</span>
                     <button
                       className="grid h-9 w-9 place-items-center text-muted-foreground"
-                      onClick={() => setQuantity(line.product.id, line.quantity + 1)}
+                      onClick={() => updateQuantity(line.product.id, line.quantity + 1)}
                       aria-label="Aumentar"
                     >
                       <Plus className="h-3.5 w-3.5" />

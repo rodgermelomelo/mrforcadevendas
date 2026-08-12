@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import type { CartItem, Customer, Order, PriceTable, Product } from "@/lib/domain/types";
@@ -36,6 +45,10 @@ export interface CartLine {
   lineTotal: number;
 }
 
+export type CartMutationResult =
+  | { ok: true; quantity: number }
+  | { ok: false; message: string; available: number; requested: number; current: number };
+
 interface SalesContextValue extends DraftState {
   hydrated: boolean;
   loading: boolean;
@@ -58,8 +71,8 @@ interface SalesContextValue extends DraftState {
   role: string | null;
   selectCustomer: (id: string) => void;
   clearCustomer: () => void;
-  addItem: (productId: string, quantity: number) => void;
-  setQuantity: (productId: string, quantity: number) => void;
+  addItem: (productId: string, quantity: number) => CartMutationResult;
+  setQuantity: (productId: string, quantity: number) => CartMutationResult;
   setItemDiscount: (productId: string, percent: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
@@ -73,8 +86,29 @@ interface SalesContextValue extends DraftState {
 
 const SalesContext = createContext<SalesContextValue | null>(null);
 
+function stockLimit(product: Product) {
+  return Math.max(0, Math.floor(product.stock));
+}
+
+function formatStock(value: number, unit: string) {
+  return `${value.toLocaleString("pt-BR")} ${unit}`;
+}
+
+function stockExceededResult(product: Product, requested: number, current: number): CartMutationResult {
+  const available = stockLimit(product);
+  const already = current > 0 ? ` Você já tem ${current.toLocaleString("pt-BR")} no carrinho.` : "";
+  return {
+    ok: false,
+    available,
+    requested,
+    current,
+    message: `Estoque insuficiente para ${product.name}. Disponível: ${formatStock(available, product.unit)}; solicitado: ${requested.toLocaleString("pt-BR")} ${product.unit}.${already}`,
+  };
+}
+
 export function SalesProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DraftState>(emptyDraft);
+  const stateRef = useRef<DraftState>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
   const queryClient = useQueryClient();
 
@@ -99,12 +133,20 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState({ ...emptyDraft, ...(JSON.parse(raw) as DraftState) });
+      if (raw) {
+        const nextState = { ...emptyDraft, ...(JSON.parse(raw) as DraftState) };
+        stateRef.current = nextState;
+        setState(nextState);
+      }
     } catch {
       /* rascunho corrompido: começa limpo */
     }
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -153,9 +195,15 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   const total = state.isBonus ? 0 : subtotal - discountValue;
   const itemCount = state.cart.reduce((acc, i) => acc + i.quantity, 0);
 
-  const update = useCallback((patch: Partial<DraftState>) => {
-    setState((prev) => ({ ...prev, ...patch }));
+  const commitState = useCallback((updater: (prev: DraftState) => DraftState) => {
+    const nextState = updater(stateRef.current);
+    stateRef.current = nextState;
+    setState(nextState);
   }, []);
+
+  const update = useCallback((patch: Partial<DraftState>) => {
+    commitState((prev) => ({ ...prev, ...patch }));
+  }, [commitState]);
 
   const value: SalesContextValue = {
     ...state,
@@ -179,7 +227,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     role: (workspaceQuery.data as any)?.role ?? null,
     brandMetadata: workspaceQuery.data?.brandMetadata ?? {},
     selectCustomer: (id) =>
-      setState((prev) => ({
+      commitState((prev) => ({
         ...prev,
         customerId: id,
         // Trocar de cliente recalcula preços e zera negociações do pedido.
@@ -189,28 +237,50 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         paymentTerm: customers.find((c) => c.id === id)?.paymentTerm ?? null,
       })),
     clearCustomer: () => update({ customerId: null, cart: [], paymentTerm: null }),
-    addItem: (productId, quantity) =>
-      setState((prev) => {
+    addItem: (productId, quantity) => {
+      const product = products.find((p) => p.id === productId);
+      const current = stateRef.current.cart.find((i) => i.productId === productId)?.quantity ?? 0;
+      const addQuantity = Math.max(1, Math.floor(quantity));
+      const requested = current + addQuantity;
+      if (!product) {
+        return { ok: false, message: "Produto não encontrado no catálogo atual.", available: 0, requested, current };
+      }
+      if (requested > stockLimit(product)) return stockExceededResult(product, requested, current);
+
+      commitState((prev) => {
         const existing = prev.cart.find((i) => i.productId === productId);
         return {
           ...prev,
           cart: existing
             ? prev.cart.map((i) =>
-                i.productId === productId ? { ...i, quantity: i.quantity + quantity } : i,
+                i.productId === productId ? { ...i, quantity: i.quantity + addQuantity } : i,
               )
-            : [...prev.cart, { productId, quantity, discountPercent: 0 }],
+            : [...prev.cart, { productId, quantity: addQuantity, discountPercent: 0 }],
         };
-      }),
-    setQuantity: (productId, quantity) =>
-      setState((prev) => ({
+      });
+      return { ok: true, quantity: requested };
+    },
+    setQuantity: (productId, quantity) => {
+      const product = products.find((p) => p.id === productId);
+      const requested = Math.floor(quantity);
+      const current = stateRef.current.cart.find((i) => i.productId === productId)?.quantity ?? 0;
+      if (requested <= 0) {
+        commitState((prev) => ({ ...prev, cart: prev.cart.filter((i) => i.productId !== productId) }));
+        return { ok: true, quantity: 0 };
+      }
+      if (!product) {
+        return { ok: false, message: "Produto não encontrado no catálogo atual.", available: 0, requested, current };
+      }
+      if (requested > stockLimit(product)) return stockExceededResult(product, requested, current);
+
+      commitState((prev) => ({
         ...prev,
-        cart:
-          quantity <= 0
-            ? prev.cart.filter((i) => i.productId !== productId)
-            : prev.cart.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
-      })),
+        cart: prev.cart.map((i) => (i.productId === productId ? { ...i, quantity: requested } : i)),
+      }));
+      return { ok: true, quantity: requested };
+    },
     setItemDiscount: (productId, percent) =>
-      setState((prev) => ({
+      commitState((prev) => ({
         ...prev,
         cart: prev.cart.map((i) =>
           i.productId === productId
@@ -219,7 +289,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         ),
       })),
     removeItem: (productId) =>
-      setState((prev) => ({ ...prev, cart: prev.cart.filter((i) => i.productId !== productId) })),
+      commitState((prev) => ({ ...prev, cart: prev.cart.filter((i) => i.productId !== productId) })),
     clearCart: () => update({ cart: [], orderDiscountPercent: 0, isBonus: false, notes: "" }),
     setOrderDiscount: (percent) =>
       update({ orderDiscountPercent: Math.min(100, Math.max(0, percent)) }),
@@ -229,7 +299,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     submitting: createMutation.isPending,
     submitOrder: async (input) => {
       const order = await createMutation.mutateAsync(input);
-      setState((prev) => ({
+      commitState((prev) => ({
         ...prev,
         cart: [],
         orderDiscountPercent: 0,
