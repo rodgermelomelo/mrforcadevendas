@@ -100,11 +100,13 @@ function UnifiedEstoquePage() {
   });
 
   const groups = (registriesQuery.data?.groups ?? []).map((g) => ({ code: g.code, label: `${g.code} · ${g.label}` }));
-  const brands: CodeLabelRow[] = registriesQuery.data?.brands ?? [];
+  const brands = registriesQuery.data?.brands ?? [];
   const mainBrands = brands.filter(b => !b.metadata?.isCategory);
   const categories = brands.filter(b => b.metadata?.isCategory);
+
   const filteredBrands = mainBrands
     .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
+    .sort((a, b) => a.code.localeCompare(b.code))
     .slice(0, 100);
 
   return (
