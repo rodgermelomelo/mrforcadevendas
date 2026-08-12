@@ -116,7 +116,8 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
           .from("inventory_snapshots")
           .select("captured_at")
           .order("captured_at", { ascending: false })
-          .limit(1),
+          .limit(1)
+          .range(0, 0),
       ),
     ]);
 
@@ -156,7 +157,7 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
         .map((link) => text(link, "seller_erp_code"))
         .filter(Boolean),
       sellers: mapSellerSummary(customers, rows(sellersRes), rows(goalsRes)),
-      lastUpdate: nullableText(rows(lastInventoryRes)[0], "captured_at"),
+      lastUpdate: nullableText(rows(lastInventoryRes as any)[0], "captured_at"),
       approvalRules: mapApprovalRules(rows(rulesRes)),
       role,
       brandMetadata: mapBrandMetadata(rows(brandsRes)),
@@ -229,9 +230,10 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
       ? await runQuery(() =>
           fetchAllRows(db, "product_prices", "*", (query) => {
             const ordered = query.order("product_erp_code").order("price_table_code");
-            return shouldFetchAllPrices
+            return (shouldFetchAllPrices
               ? ordered
-              : ordered.in("price_table_code", Array.from(visiblePriceTables));
+              : ordered.in("price_table_code", Array.from(visiblePriceTables))
+            ).limit(10000);
           }),
         )
       : { data: [], error: null };
