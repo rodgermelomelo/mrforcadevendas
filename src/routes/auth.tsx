@@ -51,10 +51,8 @@ function AuthPage() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // Invalida o router para forçar a re-execução do beforeLoad na rota raiz
-        void navigate({ to: "/", replace: true }).then(() => {
-          window.location.reload();
-        });
+        // Navega diretamente para o catálogo para garantir que o redirecionamento ocorra
+        void navigate({ to: "/catalogo", replace: true });
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email,
