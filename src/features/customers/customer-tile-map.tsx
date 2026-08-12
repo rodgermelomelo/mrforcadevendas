@@ -124,7 +124,7 @@ export function CustomerTileMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const tileLayerRef = useRef<TileLayer | null>(null);
-  const dataLayerRef = useRef<LayerGroup | null>(null);
+  const dataLayerRef = useRef<any>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [ready, setReady] = useState(false);
   const [tileFailures, setTileFailures] = useState(0);
