@@ -59,6 +59,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       groupsRes,
       inventoryRes,
       enrichRes,
+      customerLinksRes,
       linksRes,
       profileRes,
       rulesRes,
@@ -74,6 +75,9 @@ export const getWorkspace = createServerFn({ method: "GET" })
       fetchAllRows(db, "product_groups", "*", (q) => q.order("code")),
       fetchAllRows(db, "inventory_snapshots", "*", (q) => q.order("product_erp_code")),
       fetchAllRows(db, "product_enrichments", "*", (q) => q.order("product_erp_code")),
+      fetchAllRows(db, "customer_seller_links", "*", (q) =>
+        q.eq("active", true).order("seller_erp_code").order("customer_erp_code"),
+      ),
       db.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId),
       db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
       db.from("approval_rules").select("*").eq("active", true),
@@ -83,6 +87,12 @@ export const getWorkspace = createServerFn({ method: "GET" })
       db.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
     ]);
 
+    const customerLinksMissing =
+      Boolean(customerLinksRes.error) &&
+      String(customerLinksRes.error.message ?? "")
+        .toLowerCase()
+        .includes("customer_seller_links");
+
     const failed = [
       ["customers", customersRes],
       ["products", productsRes],
@@ -91,6 +101,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       ["product_groups", groupsRes],
       ["inventory_snapshots", inventoryRes],
       ["product_enrichments", enrichRes],
+      ...(customerLinksMissing ? [] : [["customer_seller_links", customerLinksRes]]),
       ["user_erp_seller_links", linksRes],
       ["profiles", profileRes],
       ["approval_rules", rulesRes],
@@ -143,25 +154,44 @@ export const getWorkspace = createServerFn({ method: "GET" })
       levelLabel: t.level_label,
     }));
 
-    const customers: Customer[] = (customersRes.data ?? []).map((c: any) => ({
-      id: c.id,
-      erpCode: c.erp_code,
-      legalName: c.legal_name,
-      tradeName: c.trade_name,
-      taxId: c.tax_id,
-      city: c.city,
-      uf: c.uf,
-      segment: c.segment_code ?? "",
-      priceTableCode: c.price_table_code,
-      paymentTerm: c.payment_term,
-      restricted: c.restricted,
-      restrictionReason: c.restriction_reason ?? undefined,
-      creditLimit: Number(c.credit_limit),
-      openBalance: Number(c.open_balance),
-      minOrderValue: Number(c.min_order_value),
-      lastOrderAt: c.last_order_at,
-      sellerErpCode: c.seller_erp_code,
+    const customerByCode = new Map((customersRes.data ?? []).map((c: any) => [c.erp_code, c]));
+    const customerContexts =
+      (customerLinksRes.data ?? [])
+        .map((link: any) => ({ link, customer: customerByCode.get(link.customer_erp_code) }))
+        .filter((ctx: any) => Boolean(ctx.customer));
+
+    // Compatibilidade temporária para bancos ainda sem vínculos migrados.
+    const legacyCustomerContexts = (customersRes.data ?? []).map((customer: any) => ({
+      customer,
+      link: {
+        seller_erp_code: customer.seller_erp_code,
+        price_table_code: customer.price_table_code,
+        payment_term: customer.payment_term,
+        segment_code: customer.segment_code,
+      },
     }));
+
+    const customers: Customer[] = (customerContexts.length > 0 ? customerContexts : legacyCustomerContexts).map(
+      ({ customer: c, link }: any) => ({
+        id: `${c.id}:${link.seller_erp_code}`,
+        erpCode: c.erp_code,
+        legalName: c.legal_name,
+        tradeName: c.trade_name,
+        taxId: c.tax_id,
+        city: c.city,
+        uf: c.uf,
+        segment: link.segment_code ?? c.segment_code ?? "",
+        priceTableCode: link.price_table_code || c.price_table_code,
+        paymentTerm: link.payment_term || c.payment_term,
+        restricted: c.restricted,
+        restrictionReason: c.restriction_reason ?? undefined,
+        creditLimit: Number(c.credit_limit),
+        openBalance: Number(c.open_balance),
+        minOrderValue: Number(c.min_order_value),
+        lastOrderAt: c.last_order_at,
+        sellerErpCode: link.seller_erp_code,
+      }),
+    );
 
     const products: Product[] = (productsRes.data ?? [])
       .filter((p: any) => {

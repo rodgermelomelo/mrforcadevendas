@@ -139,6 +139,7 @@ async function main(): Promise<void> {
   // Dedup por erp_code: o ERP traz ~16 códigos de cliente repetidos; sem isso o
   // upsert em lote falha com "ON CONFLICT ... cannot affect row a second time".
   const customersByCode = new Map<string, Record<string, unknown>>();
+  const customerSellerLinksByKey = new Map<string, Record<string, unknown>>();
   for (const c of records.customers) {
     customersByCode.set(c.erpCode, {
       erp_code: c.erpCode,
@@ -153,8 +154,18 @@ async function main(): Promise<void> {
       restricted: false,
       active: true,
     });
+    customerSellerLinksByKey.set(`${c.erpCode}\u0001${c.erpSellerCode}`, {
+      customer_erp_code: c.erpCode,
+      seller_erp_code: c.erpSellerCode,
+      price_table_code: c.priceTableCode || "000",
+      payment_term: "",
+      segment_code: null,
+      active: true,
+      source: "erp",
+    });
   }
   const customers = [...customersByCode.values()];
+  const customer_seller_links = [...customerSellerLinksByKey.values()];
 
   // Diagnóstico do catálogo → catalog_review
   const catalogCodes = new Set(records.products.map((p) => p.erpCode));
@@ -187,6 +198,7 @@ async function main(): Promise<void> {
   console.log(`    preços ............. ${fmt(product_prices.length)}`);
   console.log(`    estoque ............ ${fmt(inventory_snapshots.length)}`);
   console.log(`    catalog_review ..... ${fmt(catalog_review.length)}`);
+  console.log(`    vínculos carteira .. ${fmt(customer_seller_links.length)}`);
   if (product_eans.length) console.log(`    EANs (HTML) ........ ${fmt(product_eans.length)}`);
   console.log(`    diagnóstico: catálogo ${fmt(diag.inCatalog)} · só-estoque ${fmt(diag.stockOnly)} · só-preço ${fmt(diag.priceOnly)}`);
 
@@ -235,6 +247,7 @@ async function main(): Promise<void> {
     await upsertAll(sb, "catalog_review", catalog_review, "erp_code");
     if (product_eans.length) await upsertAll(sb, "product_eans", product_eans, "product_erp_code,ean");
     await upsertAll(sb, "customers", customers, "erp_code");
+    await upsertAll(sb, "customer_seller_links", customer_seller_links, "customer_erp_code,seller_erp_code");
     await sb.from("erp_import_runs").update({ status: "published", finished_at: new Date().toISOString() }).eq("id", runId);
     console.log(`\n✓ Importação concluída. import_run ${runId}\n`);
   } catch (err) {

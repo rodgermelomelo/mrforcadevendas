@@ -53,6 +53,7 @@ function Carrinho() {
         <h1 className="text-3xl font-bold sm:text-4xl">Carrinho</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
+          Rep. {customer.sellerErpCode ?? "—"} ·{" "}
           {table ? `Tabela ${table.code}` : "sem tabela"} · {table?.levelLabel ?? "nível pendente"} ·{" "}
           {customer.paymentTerm}
         </p>

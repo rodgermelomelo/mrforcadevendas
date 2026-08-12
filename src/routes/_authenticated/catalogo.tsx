@@ -48,6 +48,7 @@ function Catalogo() {
           {customer ? (
             <p className="mt-2 truncate text-sm text-muted-foreground">
               Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
+              Rep. {customer.sellerErpCode ?? "—"} ·{" "}
               {table ? `${table.code} ${table.name}` : "sem tabela"} ·{" "}
               {table?.levelLabel ?? "nível pendente"} · {customer.paymentTerm}
             </p>

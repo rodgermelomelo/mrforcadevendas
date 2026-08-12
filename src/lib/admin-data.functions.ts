@@ -1,6 +1,35 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const PAGE_SIZE = 1000;
+
+async function fetchAllRows(
+  db: any,
+  table: string,
+  select = "*",
+  apply?: (query: any) => any,
+): Promise<{ data: any[]; error: any }> {
+  const rows: any[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    let query = db.from(table).select(select);
+    if (apply) query = apply(query);
+    const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
+    if (error) return { data: rows, error };
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
+  return { data: rows, error: null };
+}
+
+function normalizeAdminSearch(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.\-/\s]/g, "");
+}
+
 /** Todas as funções abaixo exigem papel de administrador. */
 async function assertAdmin(context: { supabase: any; userId: string }) {
   const { data } = await context.supabase.rpc("has_role", {
@@ -45,8 +74,8 @@ export const listPriceTables = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const [tablesRes, customersRes, pricesRes, productsRes] = await Promise.all([
       context.supabase.from("price_tables").select("*").order("code"),
-      context.supabase.from("customers").select("price_table_code"),
-      context.supabase.from("product_prices").select("*"),
+      fetchAllRows(context.supabase, "customer_seller_links", "price_table_code", (q) => q.eq("active", true)),
+      fetchAllRows(context.supabase, "product_prices", "*", (q) => q.order("product_erp_code").order("price_table_code")),
       context.supabase.from("products").select("erp_code, name"),
     ]);
 
@@ -122,16 +151,16 @@ export const listSellers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AdminSeller[]> => {
     await assertAdmin(context);
-    const [sellersRes, customersRes, linksRes, profilesRes, goalsRes] = await Promise.all([
+    const [sellersRes, customerLinksRes, linksRes, profilesRes, goalsRes] = await Promise.all([
       context.supabase.from("erp_sellers").select("*").order("erp_code"),
-      context.supabase.from("customers").select("seller_erp_code"),
+      fetchAllRows(context.supabase, "customer_seller_links", "seller_erp_code", (q) => q.eq("active", true)),
       context.supabase.from("user_erp_seller_links").select("*"),
       context.supabase.from("profiles").select("id, full_name, email"),
       context.supabase.from("seller_goals" as any).select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
     ]);
     const goals = new Map((goalsRes.data ?? []).map((g: any) => [g.seller_erp_code, Number(g.target_value)]));
     const count = new Map<string, number>();
-    for (const c of customersRes.data ?? []) {
+    for (const c of customerLinksRes.data ?? []) {
       count.set(c.seller_erp_code, (count.get(c.seller_erp_code) ?? 0) + 1);
     }
     const profileLabel = new Map(
@@ -318,9 +347,13 @@ export const getSellerDetail = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const code = data.erpCode;
 
-    const [sellersRes, customersRes, ordersRes, linksRes, profilesRes] = await Promise.all([
+    const [sellersRes, customerLinksRes, ordersRes, linksRes, profilesRes] = await Promise.all([
       context.supabase.from("erp_sellers").select("*").eq("erp_code", code).maybeSingle(),
-      context.supabase.from("customers").select("erp_code, trade_name, city, uf, restricted, active").eq("seller_erp_code", code).order("trade_name"),
+      context.supabase
+        .from("customer_seller_links" as any)
+        .select("customer_erp_code")
+        .eq("seller_erp_code", code)
+        .eq("active", true),
       context.supabase.from("orders").select("id, number, customer_name, total, status, created_at").eq("seller_erp_code", code).order("created_at", { ascending: false }).limit(20),
       context.supabase.from("user_erp_seller_links").select("user_id").eq("seller_erp_code", code),
       context.supabase.from("profiles").select("id, full_name, email"),
@@ -328,6 +361,16 @@ export const getSellerDetail = createServerFn({ method: "POST" })
 
     const s = sellersRes.data;
     if (!s) throw new Error("Representante não encontrado.");
+    const customerCodes = [...new Set((customerLinksRes.data ?? []).map((l: any) => l.customer_erp_code))];
+    const customersRes =
+      customerCodes.length > 0
+        ? await context.supabase
+            .from("customers")
+            .select("erp_code, trade_name, city, uf, restricted, active")
+            .in("erp_code", customerCodes)
+            .order("trade_name")
+        : { data: [], error: null };
+    if (customersRes.error) throw new Error(customersRes.error.message);
 
     const profileLabel = new Map(
       (profilesRes.data ?? []).map((p: any) => [p.id, p.full_name || p.email || p.id.slice(0, 8)]),
@@ -400,49 +443,63 @@ export const listCustomers = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const page = Math.max(0, data.page ?? 0);
     const size = 25;
-    let query = context.supabase
-      .from("customers")
-      .select(
+    const [linksRes, customersRes] = await Promise.all([
+      fetchAllRows(
+        context.supabase,
+        "customer_seller_links",
+        "customer_erp_code, seller_erp_code, price_table_code, payment_term, segment_code, active",
+        (q) => q.order("seller_erp_code").order("customer_erp_code"),
+      ),
+      fetchAllRows(
+        context.supabase,
+        "customers",
         "erp_code, legal_name, trade_name, city, uf, seller_erp_code, price_table_code, payment_term, segment_code, restricted, restriction_reason, credit_limit, min_order_value, active",
-        { count: "exact" },
-      );
-    const term = (data.term ?? "").trim();
-    if (term) {
-      query = query.or(
-        `erp_code.ilike.%${term}%,legal_name.ilike.%${term}%,trade_name.ilike.%${term}%,city.ilike.%${term}%`,
-      );
-    }
-    if (data.sellerErpCode) {
-      query = query.eq("seller_erp_code", data.sellerErpCode);
-    }
-    if (data.restricted !== undefined) {
-      query = query.eq("restricted", data.restricted);
-    }
-    if (data.active !== undefined) {
-      query = query.eq("active", data.active);
-    }
-    const { data: rows, count, error } = await query
-      .order("trade_name")
-      .range(page * size, page * size + size - 1);
-    if (error) throw new Error(error.message);
-    return {
-      total: count ?? 0,
-      rows: (rows ?? []).map((c: any) => ({
-        erpCode: c.erp_code,
+        (q) => q.order("trade_name"),
+      ),
+    ]);
+    if (linksRes.error) throw new Error(linksRes.error.message);
+    if (customersRes.error) throw new Error(customersRes.error.message);
+
+    const customerByCode = new Map((customersRes.data ?? []).map((c: any) => [c.erp_code, c]));
+    const rows = (linksRes.data ?? [])
+      .map((link: any) => ({ link, customer: customerByCode.get(link.customer_erp_code) }))
+      .filter((ctx: any) => Boolean(ctx.customer))
+      .map(({ link, customer: c }: any): AdminCustomer => ({
+        erpCode: link.customer_erp_code,
         legalName: c.legal_name,
         tradeName: c.trade_name,
         city: c.city,
         uf: c.uf,
-        sellerErpCode: c.seller_erp_code,
-        priceTableCode: c.price_table_code,
-        paymentTerm: c.payment_term,
-        segmentCode: c.segment_code,
+        sellerErpCode: link.seller_erp_code,
+        priceTableCode: link.price_table_code,
+        paymentTerm: link.payment_term,
+        segmentCode: link.segment_code,
         restricted: c.restricted,
         restrictionReason: c.restriction_reason,
         creditLimit: Number(c.credit_limit),
         minOrderValue: Number(c.min_order_value),
-        active: c.active,
-      })),
+        active: Boolean(link.active && c.active),
+      }))
+      .filter((row) => {
+        if (data.sellerErpCode && row.sellerErpCode !== data.sellerErpCode) return false;
+        if (data.restricted !== undefined && row.restricted !== data.restricted) return false;
+        if (data.active !== undefined && row.active !== data.active) return false;
+        const q = normalizeAdminSearch((data.term ?? "").trim());
+        if (!q) return true;
+        return normalizeAdminSearch(
+          [row.erpCode, row.legalName, row.tradeName, row.city, row.uf, row.sellerErpCode].join(" "),
+        ).includes(q);
+      })
+      .sort(
+        (a, b) =>
+          a.tradeName.localeCompare(b.tradeName, "pt-BR") ||
+          a.sellerErpCode.localeCompare(b.sellerErpCode),
+      );
+    const total = rows.length;
+    const pagedRows = rows.slice(page * size, page * size + size);
+    return {
+      total,
+      rows: pagedRows,
     };
   });
 
@@ -468,22 +525,37 @@ export const updateCustomer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { erpCode, ...rest } = data;
-    const patch: Record<string, unknown> = {};
-    if (rest.priceTableCode !== undefined) patch["price_table_code"] = rest.priceTableCode;
-    if (rest.paymentTerm !== undefined) patch["payment_term"] = rest.paymentTerm;
-    if (rest.segmentCode !== undefined) patch["segment_code"] = rest.segmentCode || null;
-    if (rest.sellerErpCode !== undefined) patch["seller_erp_code"] = rest.sellerErpCode;
-    if (rest.restricted !== undefined) patch["restricted"] = rest.restricted;
-    if (rest.restrictionReason !== undefined) patch["restriction_reason"] = rest.restrictionReason || null;
-    if (rest.creditLimit !== undefined) patch["credit_limit"] = rest.creditLimit;
-    if (rest.minOrderValue !== undefined) patch["min_order_value"] = rest.minOrderValue;
-    if (rest.active !== undefined) patch["active"] = rest.active;
-    patch["updated_at"] = new Date().toISOString();
+    const customerPatch: Record<string, unknown> = {};
+    if (rest.restricted !== undefined) customerPatch["restricted"] = rest.restricted;
+    if (rest.restrictionReason !== undefined) customerPatch["restriction_reason"] = rest.restrictionReason || null;
+    if (rest.creditLimit !== undefined) customerPatch["credit_limit"] = rest.creditLimit;
+    if (rest.minOrderValue !== undefined) customerPatch["min_order_value"] = rest.minOrderValue;
+    if (Object.keys(customerPatch).length > 0) customerPatch["updated_at"] = new Date().toISOString();
 
-    const { error } = await context.supabase.from("customers").update(patch as never).eq("erp_code", erpCode);
-    if (error) throw new Error(error.message);
+    const linkPatch: Record<string, unknown> = {};
+    if (rest.priceTableCode !== undefined) linkPatch["price_table_code"] = rest.priceTableCode;
+    if (rest.paymentTerm !== undefined) linkPatch["payment_term"] = rest.paymentTerm;
+    if (rest.segmentCode !== undefined) linkPatch["segment_code"] = rest.segmentCode || null;
+    if (rest.active !== undefined) linkPatch["active"] = rest.active;
+    if (Object.keys(linkPatch).length > 0) linkPatch["updated_at"] = new Date().toISOString();
+
+    if (Object.keys(customerPatch).length > 0) {
+      const { error } = await context.supabase.from("customers").update(customerPatch as never).eq("erp_code", erpCode);
+      if (error) throw new Error(error.message);
+    }
+    if (Object.keys(linkPatch).length > 0 && rest.sellerErpCode) {
+      const { error } = await context.supabase
+        .from("customer_seller_links" as any)
+        .update(linkPatch)
+        .eq("customer_erp_code", erpCode)
+        .eq("seller_erp_code", rest.sellerErpCode);
+      if (error) throw new Error(error.message);
+    }
     // Auditoria sanitizada: só os campos comerciais alterados, sem PII.
-    await audit(context, "customers", erpCode, "update", { fields: Object.keys(patch) });
+    await audit(context, "customers", erpCode, "update", {
+      sellerErpCode: rest.sellerErpCode,
+      fields: [...Object.keys(customerPatch), ...Object.keys(linkPatch)],
+    });
     return { ok: true };
   });
 

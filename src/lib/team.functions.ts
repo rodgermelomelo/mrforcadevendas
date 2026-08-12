@@ -53,6 +53,26 @@ export interface TeamOverview {
 
 /** Status que contam como venda efetiva no período. */
 const SOLD_STATUSES = ["confirmed", "approved", "auto_approved"];
+const PAGE_SIZE = 1000;
+
+async function fetchAllRows(
+  db: any,
+  table: string,
+  select = "*",
+  apply?: (query: any) => any,
+): Promise<{ data: any[]; error: any }> {
+  const rows: any[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    let query = db.from(table).select(select);
+    if (apply) query = apply(query);
+    const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
+    if (error) return { data: rows, error };
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
+  return { data: rows, error: null };
+}
 
 /* ------------------------------- permissões ------------------------------ */
 
@@ -101,7 +121,7 @@ export const getTeamOverview = createServerFn({ method: "POST" })
           .gte("created_at", start.toISOString())
           .lt("created_at", end.toISOString())
           .order("created_at", { ascending: false }),
-        supabase.from("customers").select("seller_erp_code, active"),
+        fetchAllRows(supabase, "customer_seller_links", "seller_erp_code, active", (q) => q.eq("active", true)),
         supabase.from("user_erp_seller_links").select("user_id, seller_erp_code"),
         supabase.from("profiles").select("id, full_name, email"),
         supabase.rpc("is_approver", { _user_id: userId }),

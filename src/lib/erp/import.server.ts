@@ -47,6 +47,7 @@ export interface ImportEntities {
   inventory_snapshots: Record<string, unknown>[];
   catalog_review: Record<string, unknown>[];
   customers: Record<string, unknown>[];
+  customer_seller_links: Record<string, unknown>[];
 }
 
 /** Monta as entidades do banco a partir dos registros do arquivo (mesma lógica do script). */
@@ -186,6 +187,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
   // upsert em lote falha com "ON CONFLICT ... cannot affect row a second time".
   // Última ocorrência vence.
   const customersByCode = new Map<string, Record<string, unknown>>();
+  const customerSellerLinksByKey = new Map<string, Record<string, unknown>>();
   for (const c of records.customers) {
     customersByCode.set(c.erpCode, {
       erp_code: c.erpCode,
@@ -200,8 +202,18 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       restricted: false,
       active: true,
     });
+    customerSellerLinksByKey.set(`${c.erpCode}\u0001${c.erpSellerCode}`, {
+      customer_erp_code: c.erpCode,
+      seller_erp_code: c.erpSellerCode,
+      price_table_code: c.priceTableCode || "000",
+      payment_term: "",
+      segment_code: null,
+      active: true,
+      source: "erp",
+    });
   }
   const customers = [...customersByCode.values()];
+  const customer_seller_links = [...customerSellerLinksByKey.values()];
 
   // Diagnóstico → catalog_review
   const catalogCodes = new Set(records.products.map((p) => p.erpCode));
@@ -239,6 +251,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     inventory_snapshots,
     catalog_review,
     customers,
+    customer_seller_links,
   };
 }
 
@@ -361,5 +374,11 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["inventory_snapshots"] = await upsertAll(sb, "inventory_snapshots", e.inventory_snapshots, "product_erp_code");
   done["catalog_review"] = await upsertAll(sb, "catalog_review", e.catalog_review, "erp_code");
   done["customers"] = await upsertAll(sb, "customers", e.customers, "erp_code");
+  done["customer_seller_links"] = await upsertAll(
+    sb,
+    "customer_seller_links",
+    e.customer_seller_links,
+    "customer_erp_code,seller_erp_code",
+  );
   return done;
 }

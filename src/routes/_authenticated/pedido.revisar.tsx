@@ -107,6 +107,7 @@ function RevisarPedido() {
     try {
       const order = await sales.submitOrder({
         customerErpCode: customer.erpCode,
+        sellerErpCode: customer.sellerErpCode ?? "",
         priceTableCode: table?.code ?? "—",
         priceLevelLabel: table?.levelLabel ?? "—",
         paymentTerm: paymentTerm ?? customer.paymentTerm,
@@ -136,6 +137,7 @@ function RevisarPedido() {
         <h1 className="text-3xl font-bold sm:text-4xl">Revisar pedido</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
+          Rep. {customer.sellerErpCode ?? "—"} ·{" "}
           Tabela {table?.code ?? "—"} · {table?.levelLabel ?? "nível pendente"} ·{" "}
           {paymentTerm ?? customer.paymentTerm} · Vendedor {sellerName}
         </p>

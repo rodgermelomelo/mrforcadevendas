@@ -11,6 +11,7 @@ import type {
 
 export interface CreateOrderInput {
   customerErpCode: string;
+  sellerErpCode: string;
   priceTableCode: string;
   priceLevelLabel: string;
   paymentTerm: string;
@@ -156,11 +157,34 @@ export const createOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (customerError) throw new Error(customerError.message);
     if (!customer) throw new Error("Cliente inválido ou fora da sua carteira.");
+    if (!data.sellerErpCode) throw new Error("Representante da carteira não informado.");
     if (data.items.length === 0) throw new Error("Pedido sem itens.");
+
+    const { data: portfolioLink, error: portfolioError } = await supabase
+      .from("customer_seller_links" as any)
+      .select("seller_erp_code, price_table_code, payment_term")
+      .eq("customer_erp_code", data.customerErpCode)
+      .eq("seller_erp_code", data.sellerErpCode)
+      .eq("active", true)
+      .maybeSingle();
+    const portfolioTableMissing = String(portfolioError?.message ?? "")
+      .toLowerCase()
+      .includes("customer_seller_links");
+    if (portfolioError && !portfolioTableMissing) throw new Error(portfolioError.message);
+
+    const effectiveLink = (portfolioLink ??
+      (portfolioTableMissing && customer.seller_erp_code === data.sellerErpCode
+        ? { seller_erp_code: customer.seller_erp_code, price_table_code: customer.price_table_code }
+        : null)) as { seller_erp_code: string; price_table_code: string } | null;
+
+    if (!effectiveLink) throw new Error("Cliente inválido ou fora da carteira do representante selecionado.");
+    if (effectiveLink.price_table_code && effectiveLink.price_table_code !== data.priceTableCode) {
+      throw new Error("A tabela de preço do pedido não corresponde à carteira selecionada.");
+    }
 
     const [{ data: profile }, { data: seller }] = await Promise.all([
       supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
-      supabase.from("erp_sellers").select("name").eq("erp_code", customer.seller_erp_code).maybeSingle(),
+      supabase.from("erp_sellers").select("name").eq("erp_code", data.sellerErpCode).maybeSingle(),
     ]);
 
     const hasExceptions = data.exceptions.length > 0;
@@ -172,6 +196,7 @@ export const createOrder = createServerFn({ method: "POST" })
     const contentHash = await sha256(
       JSON.stringify({
         customer: customer.erp_code,
+        seller: data.sellerErpCode,
         table: data.priceTableCode,
         level: data.priceLevelLabel,
         items: data.items,
@@ -186,7 +211,7 @@ export const createOrder = createServerFn({ method: "POST" })
       .insert({
         customer_erp_code: customer.erp_code,
         customer_name: customer.trade_name,
-        seller_erp_code: customer.seller_erp_code,
+        seller_erp_code: data.sellerErpCode,
         seller_name: seller?.name ?? profile?.full_name ?? profile?.email ?? "Vendedor",
         created_by: userId,
         price_table_code: data.priceTableCode,
@@ -246,6 +271,7 @@ export const createOrder = createServerFn({ method: "POST" })
       snapshot: JSON.parse(
         JSON.stringify({
           customer: customer.erp_code,
+          seller: data.sellerErpCode,
           priceTable: data.priceTableCode,
           priceLevel: data.priceLevelLabel,
           paymentTerm: data.paymentTerm,

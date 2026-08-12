@@ -40,7 +40,7 @@ function Carteira() {
     return customers.filter((c) => {
       if (sellerFilter !== "all" && c.sellerErpCode !== sellerFilter) return false;
       if (!q) return true;
-      return normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf].join(" ")).includes(q);
+      return normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf, c.sellerErpCode].join(" ")).includes(q);
     });
   }, [term, customers, sellerFilter]);
 
@@ -200,7 +200,7 @@ function Carteira() {
                   </div>
                   <div className="truncate">CNPJ {maskTaxId(c.taxId)}</div>
                   <div className="truncate">
-                    Segmento {c.segment} · Condição {c.paymentTerm}
+                    Rep. {c.sellerErpCode ?? "—"} · Segmento {c.segment} · Condição {c.paymentTerm}
                   </div>
                 </div>
 

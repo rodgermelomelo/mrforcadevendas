@@ -137,6 +137,29 @@ export const createCustomer = createServerFn({ method: "POST" })
     }
     if (!created) throw new Error(lastErr || "Não foi possível cadastrar o cliente.");
 
+    const { error: linkError } = await (supabaseAdmin as any)
+      .from("customer_seller_links")
+      .upsert(
+        {
+          customer_erp_code: created.erp_code,
+          seller_erp_code: data.sellerErpCode,
+          price_table_code: data.priceTableCode,
+          payment_term: data.paymentTerm,
+          segment_code: data.segmentCode,
+          active: true,
+          source: "manual",
+        },
+        { onConflict: "customer_erp_code,seller_erp_code" },
+      );
+    if (
+      linkError &&
+      !String(linkError.message ?? "")
+        .toLowerCase()
+        .includes("customer_seller_links")
+    ) {
+      throw new Error(linkError.message);
+    }
+
     await supabase.from("audit_logs").insert({
       actor_id: userId,
       entity: "customers",
@@ -145,5 +168,5 @@ export const createCustomer = createServerFn({ method: "POST" })
       detail: { sellerErpCode: data.sellerErpCode, priceTableCode: data.priceTableCode },
     });
 
-    return { ok: true, id: created.id, erpCode: created.erp_code };
+    return { ok: true, id: `${created.id}:${data.sellerErpCode}`, erpCode: created.erp_code };
   });

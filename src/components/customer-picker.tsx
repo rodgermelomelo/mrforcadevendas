@@ -140,7 +140,7 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
     const q = normalizeSearchText(term.trim());
     const list = q
       ? customers.filter((c) =>
-          normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf].join(" ")).includes(q),
+          normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf, c.sellerErpCode].join(" ")).includes(q),
         )
       : customers;
     return { rows: list.slice(0, 60), total: list.length };
@@ -159,7 +159,7 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
     return (
       <CommandItem
         key={`${prefix}-${c.id}`}
-        value={`${c.tradeName} ${c.legalName} ${c.erpCode} ${c.taxId} ${c.city}`}
+        value={`${c.tradeName} ${c.legalName} ${c.erpCode} ${c.taxId} ${c.city} ${c.sellerErpCode}`}
         onSelect={() => startWithCustomer(c.id)}
         className="items-start gap-3 rounded-xl py-3 data-[selected=true]:[&_*]:text-accent-foreground"
       >
@@ -176,6 +176,7 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
               {c.city}/{c.uf}
             </span>
             <span>CNPJ {maskTaxId(c.taxId)}</span>
+            <span>Rep. {c.sellerErpCode ?? "—"}</span>
             <span>{table ? `${table.code} · ${table.name}` : "Sem tabela"}</span>
           </div>
         </div>

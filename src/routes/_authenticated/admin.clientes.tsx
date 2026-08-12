@@ -163,56 +163,55 @@ function CustomersPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {(query.data?.rows ?? []).map((customer) => (
-            <div key={customer.erpCode} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setOpenCode(openCode === customer.erpCode ? null : customer.erpCode)}
-                className="flex w-full items-start justify-between gap-3 text-left"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{customer.tradeName}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {customer.erpCode} · {customer.city}/{customer.uf} · Tabela {customer.priceTableCode} · Rep.{" "}
-                    {customer.sellerErpCode}
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-1.5">
-                  {customer.restricted && (
-                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
-                      Restrito
-                    </span>
-                  )}
-                  {!customer.active && (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                      Inativo
-                    </span>
-                  )}
-                </div>
-              </button>
+          {(query.data?.rows ?? []).map((customer) => {
+            const rowKey = `${customer.erpCode}:${customer.sellerErpCode}`;
+            return (
+              <div key={rowKey} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setOpenCode(openCode === rowKey ? null : rowKey)}
+                  className="flex w-full items-start justify-between gap-3 text-left"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{customer.tradeName}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {customer.erpCode} · {customer.city}/{customer.uf} · Tabela {customer.priceTableCode} · Rep.{" "}
+                      {customer.sellerErpCode}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1.5">
+                    {customer.restricted && (
+                      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                        Restrito
+                      </span>
+                    )}
+                    {!customer.active && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                        Inativo
+                      </span>
+                    )}
+                  </div>
+                </button>
 
-              {openCode === customer.erpCode && (
-                <CustomerForm
-                  customer={customer}
-                  saving={mutation.isPending}
-                  tables={(tablesQuery.data ?? []).map((t) => ({ code: t.code, label: `${t.code} · ${t.name}` }))}
-                  terms={(registriesQuery.data?.paymentTerms ?? []).map((t) => ({
-                    code: t.code,
-                    label: `${t.code} · ${t.label}`,
-                  }))}
-                  segments={(registriesQuery.data?.segments ?? []).map((s) => ({
-                    code: s.code,
-                    label: `${s.code} · ${s.label}`,
-                  }))}
-                  sellers={(sellersQuery.data ?? []).map((s) => ({
-                    code: s.erpCode,
-                    label: `${s.erpCode} · ${s.name}`,
-                  }))}
-                  onSave={(patch) => mutation.mutate({ erpCode: customer.erpCode, ...patch })}
-                />
-              )}
-            </div>
-          ))}
+                {openCode === rowKey && (
+                  <CustomerForm
+                    customer={customer}
+                    saving={mutation.isPending}
+                    tables={(tablesQuery.data ?? []).map((t) => ({ code: t.code, label: `${t.code} · ${t.name}` }))}
+                    terms={(registriesQuery.data?.paymentTerms ?? []).map((t) => ({
+                      code: t.code,
+                      label: `${t.code} · ${t.label}`,
+                    }))}
+                    segments={(registriesQuery.data?.segments ?? []).map((s) => ({
+                      code: s.code,
+                      label: `${s.code} · ${s.label}`,
+                    }))}
+                    onSave={(patch) => mutation.mutate({ erpCode: customer.erpCode, ...patch })}
+                  />
+                )}
+              </div>
+            );
+          })}
           <Pager page={page} total={query.data?.total ?? 0} size={SIZE} onChange={setPage} />
         </div>
       )}
@@ -231,7 +230,6 @@ function CustomerForm({
   tables,
   terms,
   segments,
-  sellers,
   onSave,
 }: {
   customer: AdminCustomer;
@@ -239,7 +237,6 @@ function CustomerForm({
   tables: Option[];
   terms: Option[];
   segments: Option[];
-  sellers: Option[];
   onSave: (patch: Record<string, unknown>) => void;
 }) {
   const [form, setForm] = useState({
@@ -310,18 +307,8 @@ function CustomerForm({
           </select>
         </label>
         <label className="space-y-1">
-          <span className={labelCls}>Representante</span>
-          <select
-            className={field}
-            value={form.sellerErpCode}
-            onChange={(e) => setForm({ ...form, sellerErpCode: e.target.value })}
-          >
-            {sellers.map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+          <span className={labelCls}>Representante da carteira</span>
+          <div className={`${field} bg-muted text-muted-foreground`}>{form.sellerErpCode}</div>
         </label>
         <label className="space-y-1">
           <span className={labelCls}>Limite de crédito (R$)</span>
