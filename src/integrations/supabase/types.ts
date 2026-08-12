@@ -275,6 +275,86 @@ export type Database = {
           },
         ]
       }
+      commission_rule_sellers: {
+        Row: {
+          created_at: string
+          id: string
+          rule_id: string
+          seller_erp_code: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rule_id: string
+          seller_erp_code: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rule_id?: string
+          seller_erp_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_rule_sellers_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "commission_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_rules: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          notes: string
+          percent: number
+          priority: number
+          product_erp_code: string | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          percent?: number
+          priority?: number
+          product_erp_code?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          percent?: number
+          priority?: number
+          product_erp_code?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       customer_financial_snapshots: {
         Row: {
           captured_at: string
@@ -309,6 +389,45 @@ export type Database = {
             referencedColumns: ["erp_code"]
           },
         ]
+      }
+      customer_seller_links: {
+        Row: {
+          active: boolean
+          created_at: string
+          customer_erp_code: string
+          id: string
+          payment_term: string
+          price_table_code: string
+          segment_code: string | null
+          seller_erp_code: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          customer_erp_code: string
+          id?: string
+          payment_term?: string
+          price_table_code?: string
+          segment_code?: string | null
+          seller_erp_code: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          customer_erp_code?: string
+          id?: string
+          payment_term?: string
+          price_table_code?: string
+          segment_code?: string | null
+          seller_erp_code?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       customers: {
         Row: {
