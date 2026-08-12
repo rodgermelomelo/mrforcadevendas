@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Info, Search, ShieldCheck } from "lucide-react";
 import {
   ACCESS_LEVEL_HINT,
@@ -88,8 +88,8 @@ export function PermissionMatrix() {
               const rows = modules.filter((m) => m.group === group);
               if (rows.length === 0) return null;
               return (
-                <>
-                  <tr key={group} className="bg-background/60">
+                <Fragment key={group}>
+                  <tr className="bg-background/60">
                     <td
                       colSpan={roles.length + 1}
                       className="sticky left-0 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground"
@@ -118,7 +118,7 @@ export function PermissionMatrix() {
                       })}
                     </tr>
                   ))}
-                </>
+                </Fragment>
               );
             })}
           </tbody>
