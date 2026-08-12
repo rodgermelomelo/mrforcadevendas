@@ -153,3 +153,6 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
     </article>
   );
 }
+
+/** Memoizado: o grid virtualizado remonta linhas com frequência ao rolar. */
+export const ProductCard = memo(ProductCardComponent);
