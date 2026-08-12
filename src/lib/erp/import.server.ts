@@ -306,7 +306,7 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["products"] = await upsertAll(sb, "products", e.products, "erp_code");
   
   // Garantir que as marcas detectadas existam na tabela brands para não quebrar o catálogo
-  const distinctBrands = [...new Set(e.products.map(p => p.brand as string))].filter(Boolean);
+  const distinctBrands = [...new Set(e.products.map(p => p['brand'] as string))].filter(Boolean);
   if (distinctBrands.length > 0) {
     const brandRows = distinctBrands.map(name => ({ name, active: true }));
     // Upsert na tabela brands ignorando se já existir
