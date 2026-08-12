@@ -32,9 +32,12 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 function Catalogo() {
   const { customer, table, addItem, itemCount, products, role, brandMetadata, loading } =
     useSales();
+  
+  // Memoize basic flags to prevent unnecessary re-renders
+  const isAdmin = useMemo(() => role === "administrador", [role]);
+  const showPriceTableDetails = useMemo(() => canViewPriceTableDetails(role), [role]);
+  
   const { openCustomerPicker } = useCustomerPicker();
-  const isAdmin = role === "administrador";
-  const showPriceTableDetails = canViewPriceTableDetails(role);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 

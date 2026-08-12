@@ -21,7 +21,7 @@ export interface WorkspaceDb {
   from(table: string): QueryBuilder;
 }
 
-export const PAGE_SIZE = 1000;
+export const PAGE_SIZE = 2000; // Aumentado para reduzir o número de requisições sequenciais (round-trips)
 
 export function dbClient(supabase: unknown): WorkspaceDb {
   return supabase as WorkspaceDb;
