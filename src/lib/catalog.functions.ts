@@ -23,24 +23,38 @@ export const getWorkspace = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<WorkspaceData> => {
     const { supabase, userId } = context;
 
-    // Sequential batches to avoid deep type instantiation in large Promise.all
+    // Use a single batch for some and individual for others to balance speed and TS depth
     const customersRes = await supabase.from("customers").select("*").eq("active", true).order("trade_name");
     const productsRes = await supabase.from("products").select("*").eq("active", true).order("erp_code");
     const pricesRes = await supabase.from("product_prices").select("*");
     const tablesRes = await supabase.from("price_tables").select("*");
     const groupsRes = await supabase.from("product_groups").select("*");
-    const inventoryRes = await supabase.from("inventory_snapshots").select("*");
-    const enrichRes = await supabase.from("product_enrichments").select("*");
-    const linksRes = await supabase.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId);
-    const profileRes = await supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle();
-    const rulesRes = await supabase.from("approval_rules").select("*").eq("active", true);
-    const roleRes = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
-    const sellersRes = await supabase.from("erp_sellers").select("erp_code, name").order("erp_code");
-    const brandsRes = await supabase.from("brands").select("name, active, metadata").eq("active", true);
-    const goalsRes = await supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01");
+    
+    // Group remaining queries that are less likely to trigger depth issues
+    const [
+      inventoryRes,
+      enrichRes,
+      linksRes,
+      profileRes,
+      rulesRes,
+      roleRes,
+      sellersRes,
+      brandsRes,
+      goalsRes
+    ] = await Promise.all([
+      supabase.from("inventory_snapshots" as any).select("*"),
+      supabase.from("product_enrichments" as any).select("*"),
+      supabase.from("user_erp_seller_links" as any).select("seller_erp_code").eq("user_id", userId),
+      supabase.from("profiles" as any).select("full_name, email").eq("id", userId).maybeSingle(),
+      supabase.from("approval_rules" as any).select("*").eq("active", true),
+      supabase.from("user_roles" as any).select("role").eq("user_id", userId).maybeSingle(),
+      supabase.from("erp_sellers" as any).select("erp_code, name").order("erp_code"),
+      supabase.from("brands" as any).select("name, active, metadata").eq("active", true),
+      supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01"),
+    ]);
 
     const today = new Date().toISOString().slice(0, 10);
-    const approvalRules: ApprovalRule[] = (rulesRes.data ?? [])
+    const approvalRules: ApprovalRule[] = (rulesRes.data as any[] ?? [])
       .filter((r) => r.valid_from <= today && (r.valid_to === null || r.valid_to >= today))
       .map((r) => ({
         exception: r.exception_type as ApprovalRule["exception"],
@@ -51,14 +65,14 @@ export const getWorkspace = createServerFn({ method: "GET" })
         ...(r.max_amount === null ? {} : { maxAmount: Number(r.max_amount) }),
       }));
 
-    const groupName = new Map((groupsRes.data ?? []).map((g) => [g.code, g.name]));
-    const stock = new Map((inventoryRes.data ?? []).map((i) => [i.product_erp_code, Number(i.quantity)]));
-    const image = new Map((enrichRes.data ?? []).map((e) => [e.product_erp_code, e.image_url]));
+    const groupName = new Map((groupsRes.data as any[] ?? []).map((g) => [g.code, g.name]));
+    const stock = new Map((inventoryRes.data as any[] ?? []).map((i) => [i.product_erp_code, Number(i.quantity)]));
+    const image = new Map((enrichRes.data as any[] ?? []).map((e) => [e.product_erp_code, e.image_url]));
 
-    const activeBrands = new Set((brandsRes.data ?? []).map((b: any) => b.name));
+    const activeBrands = new Set((brandsRes.data as any[] ?? []).map((b: any) => b.name));
     
     const pricesByProduct = new Map<string, Record<string, number[]>>();
-    for (const row of pricesRes.data ?? []) {
+    for (const row of pricesRes.data as any[] ?? []) {
       const current = pricesByProduct.get(row.product_erp_code) ?? {};
       current[row.price_table_code] = [
         Number(row.value_1),
@@ -71,14 +85,14 @@ export const getWorkspace = createServerFn({ method: "GET" })
       pricesByProduct.set(row.product_erp_code, current);
     }
 
-    const priceTables: PriceTable[] = (tablesRes.data ?? []).map((t) => ({
+    const priceTables: PriceTable[] = (tablesRes.data as any[] ?? []).map((t) => ({
       code: t.code,
       name: t.name,
       mappedLevel: t.mapped_level,
       levelLabel: t.level_label,
     }));
 
-    const customers: Customer[] = (customersRes.data ?? []).map((c) => ({
+    const customers: Customer[] = (customersRes.data as any[] ?? []).map((c) => ({
       id: c.id,
       erpCode: c.erp_code,
       legalName: c.legal_name,
@@ -98,7 +112,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       sellerErpCode: c.seller_erp_code,
     }));
 
-    const products: Product[] = (productsRes.data ?? [])
+    const products: Product[] = (productsRes.data as any[] ?? [])
       .filter((p) => {
         if (activeBrands.size === 0) return true;
         const brand = p.brand || (groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros").split(" ")[0];
@@ -119,7 +133,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       }));
 
     const lastUpdate =
-      (inventoryRes.data ?? [])
+      (inventoryRes.data as any[] ?? [])
         .map((i) => i.captured_at)
         .sort()
         .at(-1) ?? null;
@@ -134,7 +148,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
     
     const goalsBySeller = new Map((goalsRes.data as any[] ?? []).map(g => [g.seller_erp_code, Number(g.goal_amount)]));
 
-    const sellers = (sellersRes.data ?? [])
+    const sellers = (sellersRes.data as any[] ?? [])
       .map((s) => ({
         code: s.erp_code,
         name: s.name || `Representante ${s.erp_code}`,
@@ -148,13 +162,13 @@ export const getWorkspace = createServerFn({ method: "GET" })
       customers,
       products,
       priceTables,
-      groups: (groupsRes.data ?? []).map((g) => g.name),
-      sellerName: profileRes.data?.full_name || profileRes.data?.email || "Vendedor",
-      sellerCodes: (linksRes.data ?? []).map((l) => l.seller_erp_code),
+      groups: (groupsRes.data as any[] ?? []).map((g) => g.name),
+      sellerName: (profileRes.data as any)?.full_name || (profileRes.data as any)?.email || "Vendedor",
+      sellerCodes: (linksRes.data as any[] ?? []).map((l) => l.seller_erp_code),
       sellers,
       lastUpdate,
       approvalRules,
-      role: roleRes.data?.role || null,
-      brandMetadata: Object.fromEntries((brandsRes.data ?? []).map((b: any) => [b.name, b.metadata || {}])),
+      role: (roleRes.data as any)?.role || null,
+      brandMetadata: Object.fromEntries((brandsRes.data as any[] ?? []).map((b: any) => [b.name, b.metadata || {}])),
     };
   });
