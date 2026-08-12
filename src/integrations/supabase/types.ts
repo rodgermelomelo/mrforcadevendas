@@ -1377,6 +1377,7 @@ export type Database = {
         | "auto_approved"
         | "approved"
         | "confirmed"
+        | "cancelled"
       integration_status:
         | "not_ready"
         | "awaiting_erp_integration"
@@ -1527,6 +1528,7 @@ export const Constants = {
         "auto_approved",
         "approved",
         "confirmed",
+        "cancelled",
       ],
       integration_status: [
         "not_ready",
