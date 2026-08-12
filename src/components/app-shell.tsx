@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Plus,
   LayoutGrid,
+  User,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,7 @@ const nav = [
   { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
   { to: "/carrinho", label: "Carrinho", icon: ShoppingCart, exact: false },
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
+  { to: "/perfil", label: "Perfil", icon: User, exact: false },
 ] as const;
 
 const adminNav = [
