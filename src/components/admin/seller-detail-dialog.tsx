@@ -9,6 +9,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SellerGoalsDialog } from "@/components/admin/seller-goals-dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { getSellerDetail } from "@/lib/admin-data.functions";
@@ -33,21 +36,28 @@ export function SellerDetailDialog({ erpCode, onClose }: SellerDetailDialogProps
     <Dialog open={!!erpCode} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="p-6 pb-0">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <DialogTitle className="flex items-center gap-2 text-2xl">
-                <User className="h-6 w-6 text-primary" />
-                {isLoading ? "Carregando..." : data?.seller.name}
-              </DialogTitle>
-              <DialogDescription>
-                Código ERP: {erpCode} {data?.seller.active ? (
-                  <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-600 border-green-200">Ativo</Badge>
-                ) : (
-                  <Badge variant="outline" className="ml-2 bg-destructive/10 text-destructive border-destructive/20">Inativo</Badge>
-                )}
-              </DialogDescription>
+            <div className="flex items-start justify-between w-full">
+              <div className="space-y-1">
+                <DialogTitle className="flex items-center gap-2 text-2xl">
+                  <User className="h-6 w-6 text-primary" />
+                  {isLoading ? "Carregando..." : data?.seller.name}
+                </DialogTitle>
+                <DialogDescription>
+                  Código ERP: {erpCode} {data?.seller.active ? (
+                    <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-600 border-green-200">Ativo</Badge>
+                  ) : (
+                    <Badge variant="outline" className="ml-2 bg-destructive/10 text-destructive border-destructive/20">Inativo</Badge>
+                  )}
+                </DialogDescription>
+              </div>
+              {data && (
+                <SellerGoalsDialog 
+                  erpCode={erpCode!} 
+                  sellerName={data.seller.name} 
+                  currentGoal={data.seller.monthlyGoal ?? 0}
+                />
+              )}
             </div>
-          </div>
         </DialogHeader>
 
         {isLoading ? (
