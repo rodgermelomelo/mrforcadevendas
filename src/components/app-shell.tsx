@@ -250,6 +250,18 @@ function AppShellInner({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isApprover && (
+            <Link
+              to="/equipe"
+              className={cn(
+                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                isActive("/equipe", false) ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <UsersRound className="h-5 w-5" />
+              Equipe
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
