@@ -310,6 +310,45 @@ export type Database = {
           },
         ]
       }
+      customer_seller_links: {
+        Row: {
+          active: boolean
+          created_at: string
+          customer_erp_code: string
+          id: string
+          payment_term: string
+          price_table_code: string
+          segment_code: string | null
+          seller_erp_code: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          customer_erp_code: string
+          id?: string
+          payment_term?: string
+          price_table_code?: string
+          segment_code?: string | null
+          seller_erp_code: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          customer_erp_code?: string
+          id?: string
+          payment_term?: string
+          price_table_code?: string
+          segment_code?: string | null
+          seller_erp_code?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           active: boolean
