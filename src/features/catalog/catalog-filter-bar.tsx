@@ -1,4 +1,4 @@
-import { ArrowUpDown, Building2, PackageCheck, Search, Sparkles, Tag, X } from "lucide-react";
+import { ArrowUpDown, Building2, PackageCheck, Search, Sparkles, Tag, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FilterChipRow } from "./filter-chip-row";
 import type { CatalogSort } from "./use-catalog-filters";
@@ -32,7 +38,7 @@ export interface CatalogFilterBarProps {
   resultCount: number;
 }
 
-/** Barra pegajosa de busca, ordenação e filtros do catálogo. */
+/** Barra de busca otimizada com filtros em popover para economizar espaço vertical. */
 export function CatalogFilterBar({
   term,
   onTermChange,
@@ -53,14 +59,15 @@ export function CatalogFilterBar({
   resultCount,
 }: CatalogFilterBarProps) {
   return (
-    <div className="sticky top-0 z-10 space-y-3 bg-background/80 pb-4 backdrop-blur-md sm:pb-5">
+    <div className="sticky top-0 z-10 space-y-3 bg-background/80 pb-4 backdrop-blur-md">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Busca */}
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={term}
             onChange={(e) => onTermChange(e.target.value)}
-            placeholder="Buscar por nome, código, grupo ou empresa"
+            placeholder="Buscar produtos..."
             className="h-11 rounded-2xl border-none bg-card px-11 text-sm shadow-soft ring-primary/5 transition-all focus-visible:ring-2"
           />
           {term && (
@@ -72,9 +79,11 @@ export function CatalogFilterBar({
             </button>
           )}
         </div>
+
         <div className="flex items-center gap-2">
+          {/* Ordenação */}
           <Select value={sortBy} onValueChange={(v) => onSortChange(v as CatalogSort)}>
-            <SelectTrigger className="h-11 w-full rounded-2xl border-none bg-card px-4 text-sm shadow-soft sm:w-[160px]">
+            <SelectTrigger className="h-11 w-[140px] rounded-2xl border-none bg-card px-4 text-xs font-medium shadow-soft">
               <div className="flex items-center gap-2">
                 <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                 <SelectValue placeholder="Ordenar" />
@@ -87,116 +96,135 @@ export function CatalogFilterBar({
               <SelectItem value="price-desc">Maior Preço</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Filtros Avançados */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className={cn(
+                  "h-11 rounded-2xl border-none bg-card px-4 shadow-soft hover:bg-muted transition-all",
+                  hasActiveFilters && "ring-2 ring-primary/20 text-primary"
+                )}
+              >
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                <span className="text-xs font-semibold">Filtros</span>
+                {hasActiveFilters && (
+                  <Badge className="ml-2 h-5 min-w-5 justify-center rounded-full bg-primary p-0 text-[10px] font-bold text-primary-foreground">
+                    {selectedBrands.length + selectedGroups.length + (onlyInStock ? 1 : 0) + (onlyLaunch ? 1 : 0)}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] rounded-3xl border-none p-5 shadow-2xl" align="end">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Filtros</h3>
+                  {hasActiveFilters && (
+                    <button 
+                      onClick={onClearFilters}
+                      className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Limpar tudo
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={onToggleInStock}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-[11px] font-semibold transition-all",
+                        onlyInStock
+                          ? "border-transparent bg-success text-white shadow-md"
+                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30",
+                      )}
+                    >
+                      <PackageCheck className="h-3.5 w-3.5" /> Estoque
+                    </button>
+                    <button
+                      onClick={onToggleLaunch}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-[11px] font-semibold transition-all",
+                        onlyLaunch
+                          ? "border-transparent bg-brand-gradient text-white shadow-md"
+                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30",
+                      )}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> Lançamentos
+                    </button>
+                  </div>
+
+                  <FilterChipRow
+                    label="Empresa"
+                    icon={<Building2 className="h-3 w-3" />}
+                    options={brands}
+                    selected={selectedBrands}
+                    onToggle={onToggleGroup}
+                  />
+
+                  <FilterChipRow
+                    label="Categoria"
+                    icon={<Tag className="h-3 w-3" />}
+                    options={groups}
+                    selected={selectedGroups}
+                    onToggle={onToggleBrand}
+                  />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {/* Filtros rápidos */}
-        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-0.5">
-          <button
-            onClick={onToggleInStock}
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95",
-              onlyInStock
-                ? "border-transparent bg-success text-white shadow-md shadow-success/20"
-                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground shadow-soft",
-            )}
-          >
-            <PackageCheck className="h-3.5 w-3.5" /> Com estoque
-          </button>
-          <button
-            onClick={onToggleLaunch}
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95",
-              onlyLaunch
-                ? "border-transparent bg-brand-gradient text-primary-foreground shadow-md shadow-primary/20"
-                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground shadow-soft",
-            )}
-          >
-            <Sparkles className="h-3.5 w-3.5" /> Lançamentos
-          </button>
-        </div>
-
-        {/* Chips ativos */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 px-1">
-            {selectedBrands.map((b) => (
-              <Badge
-                key={b}
-                variant="secondary"
-                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
-              >
-                {b}
-                <button onClick={() => onToggleBrand(b)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </Badge>
-            ))}
-            {selectedGroups.map((g) => (
-              <Badge
-                key={g}
-                variant="secondary"
-                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
-              >
-                {g}
-                <button onClick={() => onToggleGroup(g)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </Badge>
-            ))}
-            {onlyInStock && (
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1.5 rounded-full border-success/10 bg-success/5 px-2.5 py-1 text-[10px] font-bold text-success shadow-sm"
-              >
-                Estoque
-                <button onClick={onToggleInStock} className="rounded-full p-0.5 hover:bg-success/20 transition-colors">
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </Badge>
-            )}
-            {onlyLaunch && (
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1.5 rounded-full border-transparent bg-brand-gradient px-2.5 py-1 text-[10px] font-bold text-white shadow-md shadow-primary/20"
-              >
-                Lançamento
-                <button onClick={onToggleLaunch} className="rounded-full p-0.5 hover:bg-white/20 transition-colors">
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </Badge>
-            )}
-            <button
-              onClick={onClearFilters}
-              className="ml-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 hover:text-primary transition-colors"
+      {/* Chips de filtros ativos (linha única e discreta) */}
+      {hasActiveFilters && (
+        <div className="scrollbar-hide flex items-center gap-1.5 overflow-x-auto px-1">
+          {selectedBrands.map((b) => (
+            <Badge
+              key={b}
+              variant="secondary"
+              className="flex shrink-0 items-center gap-1 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
             >
-              Limpar tudo
-            </button>
-          </div>
-        )}
+              {b}
+              <X className="h-2.5 w-2.5 cursor-pointer opacity-60 hover:opacity-100" onClick={() => onToggleBrand(b)} />
+            </Badge>
+          ))}
+          {selectedGroups.map((g) => (
+            <Badge
+              key={g}
+              variant="secondary"
+              className="flex shrink-0 items-center gap-1 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
+            >
+              {g}
+              <X className="h-2.5 w-2.5 cursor-pointer opacity-60 hover:opacity-100" onClick={() => onToggleGroup(g)} />
+            </Badge>
+          ))}
+          {onlyInStock && (
+            <Badge
+              variant="secondary"
+              className="flex shrink-0 items-center gap-1 rounded-full border-success/10 bg-success/5 px-2.5 py-1 text-[10px] font-bold text-success shadow-sm"
+            >
+              Estoque
+              <X className="h-2.5 w-2.5 cursor-pointer opacity-60 hover:opacity-100" onClick={onToggleInStock} />
+            </Badge>
+          )}
+          {onlyLaunch && (
+            <Badge
+              variant="secondary"
+              className="flex shrink-0 items-center gap-1 rounded-full bg-brand-gradient px-2.5 py-1 text-[10px] font-bold text-white shadow-md"
+            >
+              Lançamento
+              <X className="h-2.5 w-2.5 cursor-pointer opacity-60 hover:opacity-100" onClick={onToggleLaunch} />
+            </Badge>
+          )}
+        </div>
+      )}
 
-        <FilterChipRow
-          label="Empresa"
-          icon={<Building2 className="h-3 w-3" />}
-          options={brands}
-          selected={selectedBrands}
-          onToggle={onToggleBrand}
-        />
-
-        <FilterChipRow
-          label="Categoria"
-          icon={<Tag className="h-3 w-3" />}
-          options={groups}
-          selected={selectedGroups}
-          onToggle={onToggleGroup}
-        />
-      </div>
-
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
-          Resultados encontrados
-        </p>
-        <p className="text-[10px] font-black text-muted-foreground/60">
+      {/* Totalizador discreto */}
+      <div className="flex items-center justify-between px-1 opacity-60">
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">
           {resultCount.toLocaleString("pt-BR")} PRODUTOS
         </p>
       </div>

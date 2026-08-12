@@ -8,7 +8,7 @@ export interface FilterChipRowProps<T extends string = string> {
   onToggle: (option: T) => void;
 }
 
-/** Linha rolável de chips de filtro (marcas ou categorias). */
+/** Grade de chips de filtro otimizada para visualização em popover. */
 export function FilterChipRow<T extends string = string>({
   label,
   icon,
@@ -16,21 +16,26 @@ export function FilterChipRow<T extends string = string>({
   selected,
   onToggle,
 }: FilterChipRowProps<T>) {
+  if (options.length === 0) return null;
+
   return (
-    <div>
-      <p className="mb-2 flex items-center gap-1.5 px-1 text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground/50">
-        {icon} {label}
-      </p>
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-0.5">
+    <div className="space-y-2.5">
+      <div className="flex items-center gap-1.5 px-0.5">
+        <span className="text-muted-foreground">{icon}</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
+          {label}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
         {options.map((option) => (
           <button
             key={option}
             onClick={() => onToggle(option)}
             className={cn(
-              "shrink-0 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95 shadow-soft",
+              "rounded-xl border px-3 py-1.5 text-[10px] font-bold transition-all active:scale-95",
               selected.includes(option)
                 ? "border-transparent bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                : "border-border bg-muted/20 text-muted-foreground hover:bg-muted/40",
             )}
           >
             {option}
