@@ -112,7 +112,10 @@ function AppShellInner({ children }: { children: ReactNode }) {
               <span className="block truncate text-xs text-muted-foreground">MR Cosméticos</span>
             </span>
           </Link>
-          <div className="mt-6 px-2 group-data-[collapsible=icon]:px-0">
+          <div className="mt-4 hidden lg:flex px-2 group-data-[collapsible=icon]:px-0">
+            <SidebarTrigger className="bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background h-10 w-full group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:p-0 flex justify-center items-center [&>svg]:h-5 [&>svg]:w-5" />
+          </div>
+          <div className="mt-4 px-2 group-data-[collapsible=icon]:px-0">
             <button
               type="button"
               onClick={() => openCustomerPicker({ startNewOrder: true })}
@@ -267,24 +270,26 @@ function AppShellInner({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col relative">
         <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 lg:px-6 pointer-events-none">
-          <div className="flex items-center gap-4 pointer-events-auto">
-            <SidebarTrigger className="hidden lg:flex bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background" />
-            <div className="flex min-w-0 items-center gap-2 lg:hidden bg-background/80 backdrop-blur px-3 py-1.5 rounded-xl border border-border/50 shadow-sm">
+          <div className="flex items-center gap-4 pointer-events-auto lg:hidden">
+            <div className="flex min-w-0 items-center gap-2 bg-background/80 backdrop-blur px-3 py-1.5 rounded-xl border border-border/50 shadow-sm">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-gradient text-[10px] font-black text-primary-foreground shadow-sm">
                 MR
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-xs font-semibold">Força de Vendas</span>
                 <span className="block truncate text-[10px] text-muted-foreground">
-                  {customer ? customer.tradeName : "Nenhum cliente"}
+                  {customer ? customer.tradeName : "Atendimento"}
                 </span>
               </span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 pointer-events-auto">
             {customer && (
-              <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur px-3 py-1.5 rounded-full border border-border/50 shadow-sm">
-                <Users className="h-3 w-3" />
-                <span className="font-medium text-foreground">{customer.tradeName}</span>
-                <span className="text-[10px] opacity-60">({customer.erpCode})</span>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur px-3 py-1.5 rounded-full border border-border/50 shadow-sm max-w-[180px] sm:max-w-[250px] lg:max-w-none">
+                <Users className="h-3 w-3 flex-shrink-0" />
+                <span className="font-medium text-foreground truncate">{customer.tradeName}</span>
+                <span className="text-[10px] opacity-60 hidden sm:inline">({customer.erpCode})</span>
               </div>
             )}
           </div>
@@ -313,7 +318,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 pb-28 pt-2 sm:px-6 lg:px-10 lg:pb-12 lg:pt-4 overflow-y-auto -mt-14 lg:-mt-16">
+        <main className="flex-1 px-4 pb-28 pt-2 sm:px-6 lg:px-10 lg:pb-12 lg:pt-1 overflow-y-auto -mt-14 lg:-mt-16">
           {children}
         </main>
 
