@@ -20,6 +20,7 @@ import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMapaClientesRouteImport } from './routes/_authenticated/mapa-clientes'
 import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/metas'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedVisitasRouteImport } from './routes/_authenticated/visitas'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
 import { Route as AuthenticatedAdminCadastrosRouteImport } from './routes/_authenticated/admin.cadastros'
@@ -94,6 +95,11 @@ const AuthenticatedMetasRoute = AuthenticatedMetasRouteImport.update({
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVisitasRoute = AuthenticatedVisitasRouteImport.update({
+  id: '/visitas',
+  path: '/visitas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/mapa-clientes': typeof AuthenticatedMapaClientesRoute
   '/metas': typeof AuthenticatedMetasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/visitas': typeof AuthenticatedVisitasRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/mapa-clientes': typeof AuthenticatedMapaClientesRoute
   '/metas': typeof AuthenticatedMetasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/visitas': typeof AuthenticatedVisitasRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/_authenticated/mapa-clientes': typeof AuthenticatedMapaClientesRoute
   '/_authenticated/metas': typeof AuthenticatedMetasRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/visitas': typeof AuthenticatedVisitasRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/mapa-clientes'
     | '/metas'
     | '/perfil'
+    | '/visitas'
     | '/admin/auditoria'
     | '/admin/cadastros'
     | '/admin/categorias'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/mapa-clientes'
     | '/metas'
     | '/perfil'
+    | '/visitas'
     | '/'
     | '/admin/auditoria'
     | '/admin/cadastros'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mapa-clientes'
     | '/_authenticated/metas'
     | '/_authenticated/perfil'
+    | '/_authenticated/visitas'
     | '/_authenticated/'
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/cadastros'
@@ -497,6 +509,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/visitas': {
+      id: '/_authenticated/visitas'
+      path: '/visitas'
+      fullPath: '/visitas'
+      preLoaderRoute: typeof AuthenticatedVisitasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
@@ -650,6 +669,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMapaClientesRoute: typeof AuthenticatedMapaClientesRoute
   AuthenticatedMetasRoute: typeof AuthenticatedMetasRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedVisitasRoute: typeof AuthenticatedVisitasRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminCadastrosRoute: typeof AuthenticatedAdminCadastrosRoute
@@ -681,6 +701,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMapaClientesRoute: AuthenticatedMapaClientesRoute,
   AuthenticatedMetasRoute: AuthenticatedMetasRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedVisitasRoute: AuthenticatedVisitasRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminCadastrosRoute: AuthenticatedAdminCadastrosRoute,

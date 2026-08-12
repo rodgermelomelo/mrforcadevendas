@@ -15,6 +15,7 @@ import {
   BadgePercent,
   Target,
   Map as MapIcon,
+  CalendarCheck2,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ const nav = [
   { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
   { to: "/carrinho", label: "Carrinho", icon: ShoppingCart, exact: false },
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
+  { to: "/visitas", label: "Visitas", icon: CalendarCheck2, exact: false },
   { to: "/metas", label: "Metas", icon: Target, exact: false },
   { to: "/perfil", label: "Perfil", icon: User, exact: false },
 ] as const;
