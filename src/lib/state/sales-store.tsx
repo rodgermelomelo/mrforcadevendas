@@ -139,8 +139,9 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   const coreQuery = useQuery({
     queryKey: ["workspace"],
     queryFn: () => fetchWorkspaceCore(),
-    staleTime: 5 * 60_000,
+    staleTime: 10 * 60_000,
     refetchOnWindowFocus: false,
+    gcTime: 30 * 60_000,
   });
   const catalogQuery = useQuery({
     queryKey: ["workspace", "catalog"],
@@ -148,11 +149,12 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     enabled: needsCatalog,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    gcTime: 15 * 60_000,
   });
   const ordersQuery = useQuery({
     queryKey: ["orders"],
     queryFn: () => fetchOrders(),
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
     refetchOnWindowFocus: false,
   });
 
