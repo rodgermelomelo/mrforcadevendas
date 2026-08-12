@@ -227,7 +227,9 @@ function getBaseCoordinate(
   const seed = hashString(cityKey);
   const angle = ((seed % 3600) / 3600) * Math.PI * 2;
   const distance = 0.45 + ((seed >>> 8) % 1000) / 1000;
-  const stateSpread = normalizeLocationText(uf) === "SP" ? 3.3 : 5.5;
+  
+  // Ajuste do spread para manter os pontos dentro do território brasileiro (especialmente SP)
+  const stateSpread = normalizeLocationText(uf) === "SP" ? 1.5 : 2.5;
 
   return {
     coordinate: {
