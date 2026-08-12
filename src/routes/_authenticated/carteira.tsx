@@ -1,12 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X, Users, Info } from "lucide-react";
+import {
+  Search,
+  ShieldAlert,
+  MapPin,
+  Plus,
+  ShoppingCart,
+  PackageSearch,
+  X,
+  Users,
+  Info,
+} from "lucide-react";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
 import { cn, normalizeSearchText } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCustomerPicker } from "@/components/customer-picker";
 import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { CustomerDetailDialog } from "@/components/admin/customer-detail-dialog";
@@ -42,7 +58,9 @@ function Carteira() {
     return customers.filter((c) => {
       if (sellerFilter !== "all" && c.sellerErpCode !== sellerFilter) return false;
       if (!q) return true;
-      return normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf, c.sellerErpCode].join(" ")).includes(q);
+      return normalizeSearchText(
+        [c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf, c.sellerErpCode].join(" "),
+      ).includes(q);
     });
   }, [term, customers, sellerFilter]);
 
@@ -57,6 +75,11 @@ function Carteira() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-start gap-2">
+          <Button asChild variant="outline" className="rounded-xl">
+            <Link to="/mapa-clientes">
+              <MapPin className="mr-1 h-4 w-4" /> Ver mapa
+            </Link>
+          </Button>
           <NewCustomerDialog onCreated={(id) => startWithCustomer(id)} />
           <Button
             onClick={() => openCustomerPicker({ startNewOrder: true })}
@@ -129,7 +152,8 @@ function Carteira() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")} clientes
+        {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")}{" "}
+        clientes
         {sellerFilter !== "all" && ` · representante ${sellerFilter}`}
       </p>
 
@@ -144,7 +168,10 @@ function Carteira() {
           </p>
           <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-info/10 px-4 py-2 text-xs text-info border border-info/20 max-w-sm mx-auto">
             <ShieldAlert className="h-3 w-3" />
-            <span>Nota: Clientes inativos ou desativados administrativamente não são exibidos na carteira comercial.</span>
+            <span>
+              Nota: Clientes inativos ou desativados administrativamente não são exibidos na
+              carteira comercial.
+            </span>
           </div>
           <Button variant="outline" onClick={() => setTerm("")} className="mt-6 rounded-xl">
             Limpar busca
@@ -164,7 +191,7 @@ function Carteira() {
                   selected && "border-primary/50 ring-1 ring-primary/30",
                 )}
               >
-                <div 
+                <div
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 cursor-pointer"
                   onClick={() => startWithCustomer(c.id)}
                 >
@@ -176,9 +203,9 @@ function Carteira() {
                     <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
                       {c.erpCode}
                     </span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -190,7 +217,7 @@ function Carteira() {
                   </div>
                 </div>
 
-                <div 
+                <div
                   className="mt-4 space-y-1.5 text-xs text-muted-foreground cursor-pointer"
                   onClick={() => startWithCustomer(c.id)}
                 >
@@ -206,7 +233,7 @@ function Carteira() {
                   </div>
                 </div>
 
-                <div 
+                <div
                   className="mt-4 flex flex-wrap gap-2 cursor-pointer"
                   onClick={() => startWithCustomer(c.id)}
                 >
@@ -276,10 +303,10 @@ function Carteira() {
         </div>
       )}
 
-      <CustomerDetailDialog 
-        customer={detailCustomer} 
-        open={!!detailCustomer} 
-        onOpenChange={(open) => !open && setDetailCustomer(null)} 
+      <CustomerDetailDialog
+        customer={detailCustomer}
+        open={!!detailCustomer}
+        onOpenChange={(open) => !open && setDetailCustomer(null)}
       />
     </div>
   );

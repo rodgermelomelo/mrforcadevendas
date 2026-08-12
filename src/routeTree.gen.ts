@@ -17,6 +17,7 @@ import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
+import { Route as AuthenticatedMapaClientesRouteImport } from './routes/_authenticated/mapa-clientes'
 import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/metas'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -79,6 +80,12 @@ const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
   path: '/equipe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMapaClientesRoute =
+  AuthenticatedMapaClientesRouteImport.update({
+    id: '/mapa-clientes',
+    path: '/mapa-clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMetasRoute = AuthenticatedMetasRouteImport.update({
   id: '/metas',
   path: '/metas',
@@ -217,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/equipe': typeof AuthenticatedEquipeRoute
+  '/mapa-clientes': typeof AuthenticatedMapaClientesRoute
   '/metas': typeof AuthenticatedMetasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
@@ -247,6 +255,7 @@ export interface FileRoutesByTo {
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/equipe': typeof AuthenticatedEquipeRoute
+  '/mapa-clientes': typeof AuthenticatedMapaClientesRoute
   '/metas': typeof AuthenticatedMetasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/': typeof AuthenticatedIndexRoute
@@ -280,6 +289,7 @@ export interface FileRoutesById {
   '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
+  '/_authenticated/mapa-clientes': typeof AuthenticatedMapaClientesRoute
   '/_authenticated/metas': typeof AuthenticatedMetasRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/catalogo'
     | '/equipe'
+    | '/mapa-clientes'
     | '/metas'
     | '/perfil'
     | '/admin/auditoria'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/catalogo'
     | '/equipe'
+    | '/mapa-clientes'
     | '/metas'
     | '/perfil'
     | '/'
@@ -376,6 +388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/carteira'
     | '/_authenticated/catalogo'
     | '/_authenticated/equipe'
+    | '/_authenticated/mapa-clientes'
     | '/_authenticated/metas'
     | '/_authenticated/perfil'
     | '/_authenticated/'
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       path: '/equipe'
       fullPath: '/equipe'
       preLoaderRoute: typeof AuthenticatedEquipeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mapa-clientes': {
+      id: '/_authenticated/mapa-clientes'
+      path: '/mapa-clientes'
+      fullPath: '/mapa-clientes'
+      preLoaderRoute: typeof AuthenticatedMapaClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/metas': {
@@ -627,6 +647,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCarteiraRoute: typeof AuthenticatedCarteiraRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
+  AuthenticatedMapaClientesRoute: typeof AuthenticatedMapaClientesRoute
   AuthenticatedMetasRoute: typeof AuthenticatedMetasRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -657,6 +678,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCarteiraRoute: AuthenticatedCarteiraRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
+  AuthenticatedMapaClientesRoute: AuthenticatedMapaClientesRoute,
   AuthenticatedMetasRoute: AuthenticatedMetasRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

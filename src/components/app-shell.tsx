@@ -14,6 +14,7 @@ import {
   UsersRound,
   BadgePercent,
   Target,
+  Map as MapIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,7 @@ import { useIsApprover } from "@/components/use-is-approver";
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
   { to: "/carteira", label: "Carteira", icon: Users, exact: false },
+  { to: "/mapa-clientes", label: "Mapa", icon: MapIcon, exact: false },
   { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
   { to: "/carrinho", label: "Carrinho", icon: ShoppingCart, exact: false },
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
@@ -49,7 +51,6 @@ const adminNav = [
   { to: "/admin/importacoes", label: "Importações" },
   { to: "/admin/auditoria", label: "Auditoria" },
 ] as const;
-
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -77,7 +78,6 @@ function AppShellInner({ children }: { children: ReactNode }) {
 
   const isActive = (to: string, exact: boolean) =>
     exact ? pathname === to : pathname.startsWith(to);
-
 
   return (
     <div className="flex min-h-screen">
@@ -189,7 +189,6 @@ function AppShellInner({ children }: { children: ReactNode }) {
             <LogOut className="h-4 w-4" /> Sair
           </button>
         </div>
-
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -207,26 +206,26 @@ function AppShellInner({ children }: { children: ReactNode }) {
               </span>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => openCustomerPicker({ startNewOrder: true })}
-              className="grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground"
-              aria-label="Novo pedido"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-            <Link
-              to="/carrinho"
-              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card"
-              aria-label="Abrir carrinho"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+              <button
+                type="button"
+                onClick={() => openCustomerPicker({ startNewOrder: true })}
+                className="grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground"
+                aria-label="Novo pedido"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              <Link
+                to="/carrinho"
+                className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card"
+                aria-label="Abrir carrinho"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {itemCount > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
             </div>
           </div>
         </header>
