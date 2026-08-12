@@ -190,14 +190,6 @@ export function CatalogFilterBar({
           selected={selectedGroups}
           onToggle={onToggleGroup}
         />
-
-        <FilterChipRow
-          label="Segmento"
-          icon={<Search className="h-3 w-3" />}
-          options={segments}
-          selected={selectedSegments}
-          onToggle={onToggleSegment}
-        />
       </div>
 
       <div className="flex items-center justify-between px-1">
