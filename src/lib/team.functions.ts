@@ -34,7 +34,7 @@ export interface TeamOrderRow {
 
 export interface TeamOverview {
   month: string;
-  scope: "all" | "visible";
+  scope: "all" | "visible" | "team";
   canManageGoals: boolean;
   totals: {
     sellers: number;
@@ -49,6 +49,43 @@ export interface TeamOverview {
   sellers: TeamSellerRow[];
   pendingOrders: TeamOrderRow[];
   recentOrders: TeamOrderRow[];
+}
+
+export interface CommercialTeamRow {
+  id: string;
+  name: string;
+  description: string;
+  leaderUserId: string | null;
+  leaderName: string;
+  leaderEmail: string | null;
+  active: boolean;
+  sellerCodes: string[];
+  sellerNames: string[];
+  sellerCount: number;
+  customerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamUserOption {
+  id: string;
+  name: string;
+  email: string | null;
+  roles: string[];
+}
+
+export interface TeamSellerOption {
+  erpCode: string;
+  name: string;
+  active: boolean;
+  customerCount: number;
+}
+
+export interface CommercialTeamsPayload {
+  canManageTeams: boolean;
+  teams: CommercialTeamRow[];
+  users: TeamUserOption[];
+  sellers: TeamSellerOption[];
 }
 
 /** Status que contam como venda efetiva no período. */
@@ -81,14 +118,27 @@ async function assertApprover(context: { supabase: any; userId: string }) {
   if (data !== true) throw new Error("Área exclusiva de gerentes, gestores e supervisores.");
 }
 
+async function getAdminFlag(context: { supabase: any; userId: string }) {
+  const { data, error } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
+  if (error) throw new Error(error.message);
+  return data === true;
+}
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  if (!(await getAdminFlag(context))) throw new Error("Apenas administradores podem gerenciar equipes.");
+}
+
 /* --------------------------------- dados --------------------------------- */
 
 export const getTeamOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { month?: string } | undefined) => {
+  .inputValidator((input: { month?: string; teamId?: string } | undefined) => {
     const month = input?.month;
     if (month && !/^\d{4}-\d{2}$/.test(month)) throw new Error("Período inválido.");
-    return { month: month ?? new Date().toISOString().slice(0, 7) };
+    return {
+      month: month ?? new Date().toISOString().slice(0, 7),
+      teamId: input?.teamId?.trim() || undefined,
+    };
   })
   .handler(async ({ data, context }): Promise<TeamOverview> => {
     await assertApprover(context);
@@ -98,18 +148,29 @@ export const getTeamOverview = createServerFn({ method: "POST" })
     const start = new Date(`${monthStart}T00:00:00.000Z`);
     const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1));
 
-    const [adminRes, visibleRes] = await Promise.all([
-      supabase.rpc("is_admin", { _user_id: userId }),
+    const [adminRes, visibleRes, teamMembersRes] = await Promise.all([
+      getAdminFlag(context),
       supabase.rpc("visible_seller_codes", { _user_id: userId }),
+      data.teamId
+        ? supabase.from("commercial_team_sellers").select("seller_erp_code").eq("team_id", data.teamId)
+        : Promise.resolve({ data: null, error: null }),
     ]);
 
-    const isAdmin = adminRes.data === true;
+    const isAdmin = adminRes === true;
+    if (teamMembersRes.error) throw new Error(teamMembersRes.error.message);
     const visibleCodes: string[] = Array.isArray(visibleRes.data)
       ? visibleRes.data.map((r: any) => (typeof r === "string" ? r : r?.visible_seller_codes)).filter(Boolean)
       : [];
+    const teamCodes: string[] | null = data.teamId
+      ? ((teamMembersRes.data ?? []) as any[]).map((r) => r.seller_erp_code).filter(Boolean)
+      : null;
 
     let sellersQuery = supabase.from("erp_sellers").select("erp_code, name, active").order("name");
-    if (!isAdmin) sellersQuery = sellersQuery.in("erp_code", visibleCodes.length ? visibleCodes : ["__none__"]);
+    if (teamCodes) {
+      sellersQuery = sellersQuery.in("erp_code", teamCodes.length ? teamCodes : ["__none__"]);
+    } else if (!isAdmin) {
+      sellersQuery = sellersQuery.in("erp_code", visibleCodes.length ? visibleCodes : ["__none__"]);
+    }
 
     const [sellersRes, goalsRes, ordersRes, customersRes, linksRes, profilesRes, canManageRes] =
       await Promise.all([
@@ -195,7 +256,7 @@ export const getTeamOverview = createServerFn({ method: "POST" })
 
     return {
       month: data.month,
-      scope: isAdmin ? "all" : "visible",
+      scope: data.teamId ? "team" : isAdmin ? "all" : "visible",
       canManageGoals: canManageRes.data === true,
       totals: {
         sellers: rows.length,
@@ -213,6 +274,186 @@ export const getTeamOverview = createServerFn({ method: "POST" })
       pendingOrders: orders.filter((o) => o.status === "pending_approval").slice(0, 20).map(toRow),
       recentOrders: orders.slice(0, 20).map(toRow),
     };
+  });
+
+export const getCommercialTeams = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<CommercialTeamsPayload> => {
+    await assertApprover(context);
+    const { supabase, userId } = context;
+    const isAdmin = await getAdminFlag(context);
+
+    const [teamsRes, membersRes, sellersRes, customersRes, profilesRes, rolesRes] = await Promise.all([
+      supabase
+        .from("commercial_teams")
+        .select("id, name, description, leader_user_id, active, created_at, updated_at")
+        .order("name"),
+      supabase.from("commercial_team_sellers").select("team_id, seller_erp_code"),
+      supabase.from("erp_sellers").select("erp_code, name, active").order("name"),
+      fetchAllRows(supabase, "customer_seller_links", "seller_erp_code, active", (q) => q.eq("active", true)),
+      isAdmin
+        ? supabase.from("profiles").select("id, full_name, email").order("full_name")
+        : supabase.from("profiles").select("id, full_name, email").eq("id", userId),
+      isAdmin
+        ? supabase.from("user_roles").select("user_id, role")
+        : supabase.from("user_roles").select("user_id, role").eq("user_id", userId),
+    ]);
+
+    for (const res of [teamsRes, membersRes, sellersRes, profilesRes, rolesRes]) {
+      if (res.error) throw new Error(res.error.message);
+    }
+    if (customersRes.error) throw new Error(customersRes.error.message);
+
+    const sellers = (sellersRes.data ?? []) as any[];
+    const sellerName = new Map(sellers.map((s) => [s.erp_code, s.name]));
+    const membersByTeam = new Map<string, string[]>();
+    for (const member of (membersRes.data ?? []) as any[]) {
+      const list = membersByTeam.get(member.team_id) ?? [];
+      list.push(member.seller_erp_code);
+      membersByTeam.set(member.team_id, list);
+    }
+
+    const customerCount = new Map<string, number>();
+    for (const c of customersRes.data ?? []) {
+      if (c.active === false) continue;
+      customerCount.set(c.seller_erp_code, (customerCount.get(c.seller_erp_code) ?? 0) + 1);
+    }
+
+    const rolesByUser = new Map<string, string[]>();
+    for (const role of (rolesRes.data ?? []) as any[]) {
+      const list = rolesByUser.get(role.user_id) ?? [];
+      list.push(role.role);
+      rolesByUser.set(role.user_id, list);
+    }
+
+    const users = ((profilesRes.data ?? []) as any[]).map((profile) => ({
+      id: profile.id,
+      name: profile.full_name || profile.email || profile.id.slice(0, 8),
+      email: profile.email,
+      roles: rolesByUser.get(profile.id) ?? [],
+    }));
+    const userById = new Map(users.map((u) => [u.id, u]));
+
+    const teams = ((teamsRes.data ?? []) as any[]).map((team) => {
+      const sellerCodes = (membersByTeam.get(team.id) ?? []).sort();
+      const leader = team.leader_user_id ? userById.get(team.leader_user_id) : null;
+      return {
+        id: team.id,
+        name: team.name,
+        description: team.description ?? "",
+        leaderUserId: team.leader_user_id,
+        leaderName: leader?.name ?? "Sem líder",
+        leaderEmail: leader?.email ?? null,
+        active: team.active,
+        sellerCodes,
+        sellerNames: sellerCodes.map((code) => sellerName.get(code) ?? code),
+        sellerCount: sellerCodes.length,
+        customerCount: sellerCodes.reduce((acc, code) => acc + (customerCount.get(code) ?? 0), 0),
+        createdAt: team.created_at,
+        updatedAt: team.updated_at,
+      } satisfies CommercialTeamRow;
+    });
+
+    return {
+      canManageTeams: isAdmin,
+      teams,
+      users,
+      sellers: sellers.map((seller) => ({
+        erpCode: seller.erp_code,
+        name: seller.name,
+        active: seller.active,
+        customerCount: customerCount.get(seller.erp_code) ?? 0,
+      })),
+    };
+  });
+
+export const saveCommercialTeam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      teamId?: string;
+      name: string;
+      description?: string;
+      leaderUserId: string;
+      sellerCodes: string[];
+      active?: boolean;
+    }) => {
+      if (!input?.name?.trim()) throw new Error("Informe o nome da equipe.");
+      if (!input?.leaderUserId) throw new Error("Selecione o líder da equipe.");
+      if (!Array.isArray(input.sellerCodes) || input.sellerCodes.length === 0) {
+        throw new Error("Selecione pelo menos um representante.");
+      }
+      return {
+        teamId: input.teamId?.trim() || undefined,
+        name: input.name.trim(),
+        description: input.description?.trim() ?? "",
+        leaderUserId: input.leaderUserId,
+        sellerCodes: [...new Set(input.sellerCodes.map((code) => code.trim()).filter(Boolean))],
+        active: input.active ?? true,
+      };
+    },
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const payload = {
+      name: data.name,
+      description: data.description,
+      leader_user_id: data.leaderUserId,
+      active: data.active,
+    };
+
+    const teamRes = data.teamId
+      ? await context.supabase
+          .from("commercial_teams")
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq("id", data.teamId)
+          .select("id")
+          .single()
+      : await context.supabase
+          .from("commercial_teams")
+          .insert({ ...payload, created_by: context.userId })
+          .select("id")
+          .single();
+    if (teamRes.error) throw new Error(teamRes.error.message);
+
+    const teamId = teamRes.data.id as string;
+    const deleteRes = await context.supabase.from("commercial_team_sellers").delete().eq("team_id", teamId);
+    if (deleteRes.error) throw new Error(deleteRes.error.message);
+
+    const insertRes = await context.supabase
+      .from("commercial_team_sellers")
+      .insert(data.sellerCodes.map((code) => ({ team_id: teamId, seller_erp_code: code })));
+    if (insertRes.error) throw new Error(insertRes.error.message);
+
+    await context.supabase.from("audit_logs" as any).insert({
+      actor_id: context.userId,
+      entity: "commercial_teams",
+      entity_id: teamId,
+      action: data.teamId ? "update" : "create",
+      detail: { name: data.name, leaderUserId: data.leaderUserId, sellerCount: data.sellerCodes.length },
+    });
+
+    return { ok: true, teamId };
+  });
+
+export const deleteCommercialTeam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { teamId: string }) => {
+    if (!input?.teamId) throw new Error("Equipe inválida.");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase.from("commercial_teams").delete().eq("id", data.teamId);
+    if (error) throw new Error(error.message);
+    await context.supabase.from("audit_logs" as any).insert({
+      actor_id: context.userId,
+      entity: "commercial_teams",
+      entity_id: data.teamId,
+      action: "delete",
+      detail: {},
+    });
+    return { ok: true };
   });
 
 export const getIsApprover = createServerFn({ method: "GET" })

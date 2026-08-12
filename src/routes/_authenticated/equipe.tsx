@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   ClipboardList,
@@ -11,40 +12,30 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SellerGoalsHistory } from "@/components/admin/seller-goals-history";
 import { useIsApprover } from "@/components/use-is-approver";
 import { MetricCard } from "@/components/shared/metric-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { CommercialTeamsManager } from "@/features/team/commercial-teams-manager";
+import type { TeamFormState } from "@/features/team/commercial-team-form-dialog";
 import { TeamSellerCard } from "@/features/team/team-seller-card";
 import { TeamOrderList } from "@/features/team/team-order-list";
-import { getTeamOverview } from "@/lib/team.functions";
+import { deleteCommercialTeam, getCommercialTeams, getTeamOverview, saveCommercialTeam } from "@/lib/team.functions";
 import { formatBRL } from "@/lib/pricing";
 
 export const Route = createFileRoute("/_authenticated/equipe")({
   head: () => ({
     meta: [
       { title: "Equipe comercial — MR Força de Vendas" },
-      {
-        name: "description",
-        content:
-          "Acompanhe metas, pedidos e progresso de cada representante da sua equipe por período.",
-      },
+      { name: "description", content: "Acompanhe metas, pedidos e progresso de cada representante da sua equipe por período." },
       { property: "og:title", content: "Equipe comercial — MR Força de Vendas" },
-      {
-        property: "og:description",
-        content: "Painel de gestão da equipe comercial da MR Cosméticos: metas, pedidos e progresso.",
-      },
+      { property: "og:description", content: "Painel de gestão da equipe comercial da MR Cosméticos: metas, pedidos e progresso." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -62,14 +53,49 @@ function monthLabel(month: string) {
 
 function TeamPage() {
   const { data: isApprover, isLoading: checkingRole } = useIsApprover();
+  const queryClient = useQueryClient();
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedTeamId, setSelectedTeamId] = useState<string | undefined>();
   const [goalSeller, setGoalSeller] = useState<{ code: string; name: string } | null>(null);
   const fetchOverview = useServerFn(getTeamOverview);
+  const fetchTeams = useServerFn(getCommercialTeams);
+  const saveTeam = useServerFn(saveCommercialTeam);
+  const removeTeam = useServerFn(deleteCommercialTeam);
 
   const overviewQuery = useQuery({
-    queryKey: ["team-overview", month],
+    queryKey: ["team-overview", month, selectedTeamId],
     enabled: isApprover === true,
-    queryFn: () => fetchOverview({ data: { month } }),
+    queryFn: () => fetchOverview({ data: selectedTeamId ? { month, teamId: selectedTeamId } : { month } }),
+  });
+
+  const teamsQuery = useQuery({
+    queryKey: ["commercial-teams"],
+    enabled: isApprover === true,
+    queryFn: () => fetchTeams(),
+  });
+
+  const saveTeamMutation = useMutation({
+    mutationFn: (input: TeamFormState) => {
+      const { teamId, ...rest } = input;
+      return saveTeam({ data: teamId ? { ...rest, teamId } : rest });
+    },
+    onSuccess: async () => {
+      toast.success("Equipe salva.");
+      await queryClient.invalidateQueries({ queryKey: ["commercial-teams"] });
+      await queryClient.invalidateQueries({ queryKey: ["team-overview"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: (teamId: string) => removeTeam({ data: { teamId } }),
+    onSuccess: async (_result, teamId) => {
+      if (selectedTeamId === teamId) setSelectedTeamId(undefined);
+      toast.success("Equipe apagada.");
+      await queryClient.invalidateQueries({ queryKey: ["commercial-teams"] });
+      await queryClient.invalidateQueries({ queryKey: ["team-overview"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   if (checkingRole) {
@@ -93,6 +119,7 @@ function TeamPage() {
   }
 
   const data = overviewQuery.data;
+  const selectedTeam = teamsQuery.data?.teams.find((team) => team.id === selectedTeamId);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -102,7 +129,19 @@ function TeamPage() {
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Acompanhe metas, pedidos e progresso dos representantes sob sua gestão.
             {data?.scope === "visible" && " A visibilidade segue as carteiras liberadas para o seu perfil."}
+            {data?.scope === "team" && selectedTeam && ` Filtrado por ${selectedTeam.name}.`}
           </p>
+          {selectedTeam && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3 rounded-xl"
+              onClick={() => setSelectedTeamId(undefined)}
+            >
+              Ver todas as equipes
+            </Button>
+          )}
         </div>
         <div className="space-y-1">
           <Label htmlFor="period" className="text-xs">
@@ -166,7 +205,10 @@ function TeamPage() {
           </section>
 
           <Tabs defaultValue="representantes" className="space-y-4">
-            <TabsList className="rounded-xl">
+            <TabsList className="flex h-auto flex-wrap justify-start rounded-xl">
+              <TabsTrigger value="equipes" className="rounded-lg">
+                Equipes
+              </TabsTrigger>
               <TabsTrigger value="representantes" className="rounded-lg">
                 Representantes
               </TabsTrigger>
@@ -177,6 +219,20 @@ function TeamPage() {
                 Pedidos do período
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="equipes">
+              <CommercialTeamsManager
+                payload={teamsQuery.data}
+                loading={teamsQuery.isLoading}
+                saving={saveTeamMutation.isPending}
+                deleting={deleteTeamMutation.isPending}
+                error={teamsQuery.isError ? (teamsQuery.error as Error).message : undefined}
+                selectedTeamId={selectedTeamId}
+                onSave={(input) => saveTeamMutation.mutate(input)}
+                onDelete={(teamId) => deleteTeamMutation.mutate(teamId)}
+                onSelectTeam={setSelectedTeamId}
+              />
+            </TabsContent>
 
             <TabsContent value="representantes" className="space-y-3">
               {data.sellers.length === 0 ? (
