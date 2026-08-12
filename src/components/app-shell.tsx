@@ -98,122 +98,158 @@ function AppShellInner({ children }: { children: ReactNode }) {
     exact ? pathname === to : pathname.startsWith(to);
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-6 lg:flex">
-        <Link to="/" className="mb-8 flex items-center gap-3 px-2">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-sm font-black text-primary-foreground">
-            MR
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold">Força de Vendas</span>
-            <span className="block truncate text-xs text-muted-foreground">MR Cosméticos</span>
-          </span>
-        </Link>
-        <button
-          type="button"
-          onClick={() => openCustomerPicker({ startNewOrder: true })}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 py-2.5 text-sm font-semibold text-primary-foreground shadow-lift transition-opacity hover:opacity-95"
-        >
-          <Plus className="h-4 w-4" /> Novo pedido
-        </button>
-        <nav className="flex flex-col gap-1">
-          {nav.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
+    <div className="flex min-h-svh w-full">
+      <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+        <SidebarHeader className="py-6 px-4">
+          <Link to="/" className="flex items-center gap-3 px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-sm font-black text-primary-foreground shadow-sm">
+              MR
+            </span>
+            <span className="min-w-0 group-data-[collapsible=icon]:hidden">
+              <span className="block truncate text-sm font-semibold">Força de Vendas</span>
+              <span className="block truncate text-xs text-muted-foreground">MR Cosméticos</span>
+            </span>
+          </Link>
+          <div className="mt-6 group-data-[collapsible=icon]:px-0">
+            <button
+              type="button"
+              onClick={() => openCustomerPicker({ startNewOrder: true })}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive(item.to, item.exact)
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                "flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient py-2.5 text-sm font-semibold text-primary-foreground shadow-lift transition-all hover:opacity-95",
+                "group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:p-0"
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
-              {item.to === "/carrinho" && itemCount > 0 && (
-                <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
-          ))}
-          {isApprover && (
-            <Link
-              to="/equipe"
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive("/equipe", false)
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-              )}
-            >
-              <UsersRound className="h-4 w-4 shrink-0" />
-              <span className="truncate">Equipe</span>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive("/admin", false)
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-              )}
-            >
-              <LayoutGrid className="h-4 w-4 shrink-0" />
-              <span className="truncate">Administração</span>
-            </Link>
-          )}
-        </nav>
-        {isAdmin && pathname.startsWith("/admin") && (
-          <div className="mt-6 border-t border-sidebar-border pt-4">
-            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Menu Admin
-            </p>
-            {adminNav.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                  isActive(item.to, true)
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-                )}
-              >
-                {item.to === "/admin/comissoes" ? (
-                  <BadgePercent className="h-4 w-4 shrink-0" />
-                ) : (
-                  <ShieldCheck className="h-4 w-4 shrink-0" />
-                )}
-                <span className="truncate">{item.label}</span>
-              </Link>
-            ))}
+              <Plus className="h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden">Novo pedido</span>
+            </button>
           </div>
-        )}
+        </SidebarHeader>
 
-        <div className="mt-auto space-y-3 px-3">
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            {sellerName}
-            <br />
-            Dados atualizados em {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
-          </p>
-          <button
-            type="button"
-            onClick={signOut}
-            className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground"
-          >
-            <LogOut className="h-4 w-4" /> Sair
-          </button>
-        </div>
-      </aside>
+        <SidebarContent className="px-3">
+          <SidebarMenu>
+            {nav.map((item) => (
+              <SidebarMenuItem key={item.to}>
+                <Link
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive(item.to, item.exact)
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                  )}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">{item.label}</span>
+                  {item.to === "/carrinho" && itemCount > 0 && (
+                    <span className={cn(
+                      "ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground",
+                      "group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:top-1 group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:min-w-4 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:text-[10px] group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
+                    )}>
+                      {itemCount}
+                    </span>
+                  )}
+                </Link>
+              </SidebarMenuItem>
+            ))}
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur lg:hidden">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-gradient text-xs font-black text-primary-foreground">
+            {isApprover && (
+              <SidebarMenuItem>
+                <Link
+                  to="/equipe"
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive("/equipe", false)
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                  )}
+                >
+                  <UsersRound className="h-4 w-4 shrink-0" />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">Equipe</span>
+                </Link>
+              </SidebarMenuItem>
+            )}
+
+            {isAdmin && (
+              <SidebarMenuItem>
+                <Link
+                  to="/admin"
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive("/admin", false)
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                  )}
+                >
+                  <LayoutGrid className="h-4 w-4 shrink-0" />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">Administração</span>
+                </Link>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+
+          {isAdmin && pathname.startsWith("/admin") && (
+            <div className="mt-6 border-t border-sidebar-border pt-4 group-data-[collapsible=icon]:hidden">
+              <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Menu Admin
+              </p>
+              <SidebarMenu>
+                {adminNav.map((item) => (
+                  <SidebarMenuItem key={item.to}>
+                    <Link
+                      to={item.to}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                        isActive(item.to, true)
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                      )}
+                    >
+                      {item.to === "/admin/comissoes" ? (
+                        <BadgePercent className="h-4 w-4 shrink-0" />
+                      ) : (
+                        <ShieldCheck className="h-4 w-4 shrink-0" />
+                      )}
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </div>
+          )}
+        </SidebarContent>
+
+        <SidebarFooter className="p-4 bg-sidebar-accent/20 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:bg-transparent">
+          <div className="space-y-3">
+            <div className="px-2 group-data-[collapsible=icon]:hidden">
+              <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">
+                <span className="text-foreground block font-semibold">{sellerName}</span>
+                Atualizado: {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={signOut}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground",
+                "group-data-[collapsible=icon]:justify-center"
+              )}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden font-medium">Sair</span>
+            </button>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+
+      <div className="flex min-w-0 flex-1 flex-col relative">
+        <header className="sticky top-0 z-30 h-16 border-b border-border/70 bg-background/85 backdrop-blur flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger className="hidden lg:flex" />
+            <div className="flex min-w-0 items-center gap-2 lg:hidden">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-gradient text-xs font-black text-primary-foreground shadow-sm">
                 MR
               </span>
               <span className="min-w-0">
@@ -223,32 +259,42 @@ function AppShellInner({ children }: { children: ReactNode }) {
                 </span>
               </span>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => openCustomerPicker({ startNewOrder: true })}
-                className="grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground"
-                aria-label="Novo pedido"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-              <Link
-                to="/carrinho"
-                className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card"
-                aria-label="Abrir carrinho"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {itemCount > 0 && (
-                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
-                    {itemCount}
-                  </span>
-                )}
-              </Link>
-            </div>
+            {customer && (
+              <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full border border-border/50">
+                <Users className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">{customer.tradeName}</span>
+                <span className="text-[10px] opacity-60">({customer.erpCode})</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => openCustomerPicker({ startNewOrder: true })}
+              className="lg:hidden grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
+              aria-label="Novo pedido"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <Link
+              to="/carrinho"
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card shadow-sm hover:bg-muted/50 transition-colors"
+              aria-label="Abrir carrinho"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground border-2 border-background">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">{children}</main>
+        <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8 overflow-y-auto">
+          {children}
+        </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around overflow-x-auto border-t border-border/70 bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {nav.map((item) => {
@@ -259,7 +305,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
@@ -279,7 +325,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
             <Link
               to="/equipe"
               className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
                 isActive("/equipe", false) ? "text-primary" : "text-muted-foreground",
               )}
             >
@@ -291,7 +337,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
             <Link
               to="/admin"
               className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
                 isActive("/admin", false) ? "text-primary" : "text-muted-foreground",
               )}
             >
@@ -302,5 +348,6 @@ function AppShellInner({ children }: { children: ReactNode }) {
         </nav>
       </div>
     </div>
+  );
   );
 }
