@@ -1018,6 +1018,41 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_goals: {
+        Row: {
+          created_at: string | null
+          id: string
+          month: string
+          seller_erp_code: string
+          target_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          month: string
+          seller_erp_code: string
+          target_value?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          month?: string
+          seller_erp_code?: string
+          target_value?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_goals_seller_erp_code_fkey"
+            columns: ["seller_erp_code"]
+            isOneToOne: false
+            referencedRelation: "erp_sellers"
+            referencedColumns: ["erp_code"]
+          },
+        ]
+      }
       team_visibility: {
         Row: {
           created_at: string
