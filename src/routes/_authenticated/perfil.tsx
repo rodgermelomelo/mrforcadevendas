@@ -5,6 +5,9 @@ import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { SellerGoalsHistory } from "@/components/admin/seller-goals-history";
+import { getGoalPermissions } from "@/lib/admin-data.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
@@ -25,7 +28,13 @@ function ProfilePage() {
   // Encontra o seller vinculado ao usuário atual se houver
   const seller = sellers.find(s => s.name === sellerName);
   
-  const currentMonth = new Date().toISOString().slice(0, 7) + "-01";
+  const fetchPerms = useServerFn(getGoalPermissions);
+  const permsQuery = useQuery({
+    queryKey: ["goal-permissions"],
+    queryFn: () => fetchPerms(),
+  });
+  const canManageGoals = permsQuery.data?.canManage ?? false;
+
   const goal = seller?.monthlyGoal ?? 0;
 
   const totalSold = orders
@@ -143,14 +152,18 @@ function ProfilePage() {
           <section className="surface-card p-6">
             <div className="flex items-center gap-2 mb-6">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-bold">Histórico de Performance</h3>
+              <h3 className="text-lg font-bold">Histórico de Metas</h3>
             </div>
-            
-            <div className="h-40 flex items-center justify-center border border-dashed rounded-xl">
-              <p className="text-sm text-muted-foreground text-center px-4">
-                Gráfico de evolução disponível após o fechamento do primeiro ciclo de metas.
-              </p>
-            </div>
+
+            {seller ? (
+              <SellerGoalsHistory erpCode={seller.code} canManage={canManageGoals} />
+            ) : (
+              <div className="h-40 flex items-center justify-center border border-dashed rounded-xl">
+                <p className="text-sm text-muted-foreground text-center px-4">
+                  Sua conta ainda não está vinculada a um representante do ERP.
+                </p>
+              </div>
+            )}
           </section>
         </main>
       </div>
