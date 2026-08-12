@@ -33,6 +33,7 @@ import {
   type AdminUser,
 } from "@/lib/admin-data.functions";
 import { ProvisionarView } from "./admin.provisionar";
+import { PermissionMatrix } from "@/features/admin/permission-matrix";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
   component: UsersPage,
@@ -97,6 +98,7 @@ function UsersPage() {
       <Tabs defaultValue="gestao" className="w-full">
         <TabsList className="mb-6 rounded-xl">
           <TabsTrigger value="gestao" className="rounded-lg">Gestão de Usuários</TabsTrigger>
+          <TabsTrigger value="matriz" className="rounded-lg">Matriz de Permissões</TabsTrigger>
           <TabsTrigger value="provisionar" className="rounded-lg">Criar Acessos em Lote</TabsTrigger>
         </TabsList>
 
@@ -132,6 +134,10 @@ function UsersPage() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="matriz">
+          <PermissionMatrix />
         </TabsContent>
 
         <TabsContent value="provisionar">
