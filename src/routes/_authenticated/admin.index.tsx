@@ -40,17 +40,17 @@ const areas = [
     text: "Defina qual dos 6 valores é o preço aplicável em cada tabela. Sem esse mapeamento o pedido é bloqueado.",
     critical: true,
   },
-  { to: "/admin/representantes", icon: Users, title: "Representantes", text: "quero gerenciar os representantes também, ver lista da carteira de cliente, analisar pedidos, e etc..." },
+  { to: "/admin/representantes", icon: Users, title: "Representantes", text: "Gerencie representantes, carteiras e analise pedidos." },
   { to: "/admin/clientes", icon: Building2, title: "Clientes", text: "Tabela, condição, restrição, limite e valor mínimo." },
-  { to: "/admin/produtos", icon: Package, title: "Produtos, estoque e preços", text: "Implemente edição em lote de marca nos produtos para eu corrigir rapidamente a marca de vários itens de uma vez." },
+  { to: "/admin/estoque", icon: Package, title: "Estoque e Produtos", text: "Gestão unificada do catálogo, estoque, preços, marcas e categorias." },
   { to: "/admin/usuarios", icon: UserCog, title: "Usuários e papéis", text: "Gerencie permissões e vínculos comerciais." },
-  { to: "/admin/marcas", icon: Bookmark, title: "Marcas e Categorias", text: "Gerencie a visibilidade das marcas e ajuste categorias organizacionais." },
   { to: "/admin/cadastros", icon: ListChecks, title: "Cadastros gerais", text: "Configurações auxiliares do sistema." },
   { to: "/admin/regras", icon: Scale, title: "Regras comerciais", text: "Matriz de aprovação por exceção, faixa e autoridade." },
   { to: "/admin/diagnostico", icon: Stethoscope, title: "Diagnóstico do catálogo", text: "Classificação dos códigos vindos do ERP." },
   { to: "/admin/importacoes", icon: Upload, title: "Central de Importações", text: "Upload e publicação atômica do dados.txt." },
   { to: "/admin/auditoria", icon: ScrollText, title: "Auditoria", text: "Registro sanitizado das alterações administrativas." },
 ] as const;
+
 
 function AdminIndexPage() {
   const load = useServerFn(listBaseCounts);
