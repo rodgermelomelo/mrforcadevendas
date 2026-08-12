@@ -98,6 +98,7 @@ function UsersPage() {
       <Tabs defaultValue="gestao" className="w-full">
         <TabsList className="mb-6 rounded-xl">
           <TabsTrigger value="gestao" className="rounded-lg">Gestão de Usuários</TabsTrigger>
+          <TabsTrigger value="matriz" className="rounded-lg">Matriz de Permissões</TabsTrigger>
           <TabsTrigger value="provisionar" className="rounded-lg">Criar Acessos em Lote</TabsTrigger>
         </TabsList>
 
