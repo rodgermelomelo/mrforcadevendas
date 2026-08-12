@@ -23,46 +23,21 @@ export const getWorkspace = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<WorkspaceData> => {
     const { supabase, userId } = context;
 
-    // Split queries to avoid "Type instantiation is excessively deep" error in Promise.all
-    const [
-      customersRes,
-      productsRes,
-      pricesRes,
-      tablesRes,
-      groupsRes
-    ] = await Promise.all([
-      supabase.from("customers").select("*").eq("active", true).order("trade_name"),
-      supabase.from("products").select("*").eq("active", true).order("erp_code"),
-      supabase.from("product_prices").select("*"),
-      supabase.from("price_tables").select("*"),
-      supabase.from("product_groups").select("*"),
-    ]);
-
-    const [
-      inventoryRes,
-      enrichRes,
-      linksRes,
-      profileRes,
-      rulesRes
-    ] = await Promise.all([
-      supabase.from("inventory_snapshots").select("*"),
-      supabase.from("product_enrichments").select("*"),
-      supabase.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId),
-      supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
-      supabase.from("approval_rules").select("*").eq("active", true),
-    ]);
-
-    const [
-      roleRes,
-      sellersRes,
-      brandsRes,
-      goalsRes
-    ] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-      supabase.from("erp_sellers").select("erp_code, name").order("erp_code"),
-      supabase.from("brands").select("name, active, metadata").eq("active", true),
-      supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01"),
-    ]);
+    // Sequential batches to avoid deep type instantiation in large Promise.all
+    const customersRes = await supabase.from("customers").select("*").eq("active", true).order("trade_name");
+    const productsRes = await supabase.from("products").select("*").eq("active", true).order("erp_code");
+    const pricesRes = await supabase.from("product_prices").select("*");
+    const tablesRes = await supabase.from("price_tables").select("*");
+    const groupsRes = await supabase.from("product_groups").select("*");
+    const inventoryRes = await supabase.from("inventory_snapshots").select("*");
+    const enrichRes = await supabase.from("product_enrichments").select("*");
+    const linksRes = await supabase.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId);
+    const profileRes = await supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle();
+    const rulesRes = await supabase.from("approval_rules").select("*").eq("active", true);
+    const roleRes = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
+    const sellersRes = await supabase.from("erp_sellers").select("erp_code, name").order("erp_code");
+    const brandsRes = await supabase.from("brands").select("name, active, metadata").eq("active", true);
+    const goalsRes = await supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01");
 
     const today = new Date().toISOString().slice(0, 10);
     const approvalRules: ApprovalRule[] = (rulesRes.data ?? [])
