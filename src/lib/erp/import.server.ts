@@ -138,7 +138,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
         if (labelUpper.includes("ACEMAR")) {
           const parts = g.label.split(/\s*-\s*/);
           if (parts.length > 1) {
-            category = parts[1].trim().toUpperCase();
+            category = (parts[1] || "").trim().toUpperCase() || category;
           } else {
             // Se for apenas "ACEMAR", tentamos extrair o que vem depois
             category = labelUpper.replace("ACEMAR", "").trim() || category;
