@@ -13,7 +13,7 @@ import type {
 } from "leaflet";
 import type { CustomerCityCluster, CustomerMapPoint } from "@/lib/customer-map";
 import { cn } from "@/lib/utils";
-import { Map as MapIcon } from "lucide-react";
+import { Group, Map as MapIcon } from "lucide-react";
 
 export const CUSTOMER_TILE_PROVIDERS = [
   {
