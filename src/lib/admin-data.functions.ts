@@ -15,10 +15,11 @@ async function audit(
   context: { supabase: any; userId: string },
   entity: string,
   entityId: string,
-  action: string,
-  detail: Record<string, unknown>,
+  audit,
+  audit as auditSafe,
 ) {
-  await context.supabase.from("audit_logs").insert({
+  // Use typed insert when possible, or as any for new tables
+  await context.supabase.from("audit_logs" as any).insert({
     actor_id: context.userId,
     entity,
     entity_id: entityId,
@@ -122,12 +123,12 @@ export const listSellers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AdminSeller[]> => {
     await assertAdmin(context);
-    const [sellersRes, customersRes, linksRes, profilesRes] = await Promise.all([
+    const [sellersRes, customersRes, linksRes, profilesRes, goalsRes] = await Promise.all([
       context.supabase.from("erp_sellers").select("*").order("erp_code"),
       context.supabase.from("customers").select("seller_erp_code"),
       context.supabase.from("user_erp_seller_links").select("*"),
       context.supabase.from("profiles").select("id, full_name, email"),
-      context.supabase.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
+      context.supabase.from("seller_goals" as any).select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
     ]);
     const goals = new Map((goalsRes.data ?? []).map((g: any) => [g.seller_erp_code, Number(g.target_value)]));
     const count = new Map<string, number>();
@@ -166,7 +167,7 @@ export const listSellerGoals = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<SellerGoal[]> => {
     await assertAdmin(context);
     const { data: rows, error } = await context.supabase
-      .from("seller_goals")
+      .from("seller_goals" as any)
       .select("*")
       .eq("month", data.month);
     if (error) throw new Error(error.message);
@@ -183,7 +184,7 @@ export const updateSellerGoal = createServerFn({ method: "POST" })
   .inputValidator((input: { sellerErpCode: string; month: string; targetValue: number }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase.from("seller_goals").upsert(
+    const { error } = await context.supabase.from("seller_goals" as any).upsert(
       {
         seller_erp_code: data.sellerErpCode,
         month: data.month,
