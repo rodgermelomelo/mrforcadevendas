@@ -10,7 +10,7 @@ export interface BrandMetadataEntry {
   parentBrand?: string | null;
 }
 
-export const CATALOG_PAGE_SIZE = 20;
+export const CATALOG_PAGE_SIZE = 60;
 
 interface UseCatalogFiltersParams {
   products: Product[];
@@ -91,7 +91,7 @@ export function useCatalogFilters({
       if (a.isLaunch !== b.isLaunch) return a.isLaunch ? -1 : 1;
       return a.erpCode.localeCompare(b.erpCode);
     });
-  }, [term, selectedGroups, selectedBrands, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
+  }, [term, selectedGroups, selectedBrands, selectedSegments, onlyLaunch, onlyInStock, products, sortBy, table, brandMetadata]);
 
   const pagedItems = useMemo(() => filtered.slice(0, page * pageSize), [filtered, page, pageSize]);
   const hasMore = pagedItems.length < filtered.length;
@@ -103,10 +103,11 @@ export function useCatalogFilters({
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return;
     setLoading(true);
-    setTimeout(() => {
+    // Sem atraso artificial: apenas cede um frame para o skeleton aparecer.
+    requestAnimationFrame(() => {
       setPage((prev) => prev + 1);
       setLoading(false);
-    }, 400);
+    });
   }, [loading, hasMore]);
 
   /** Marcas principais disponíveis (categorias sobem para a marca pai). */

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
@@ -19,7 +19,7 @@ export interface ProductCardProps {
   onOpenDetail: () => void;
 }
 
-export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: ProductCardProps) {
+function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: ProductCardProps) {
   const { table, role } = useSales();
   const [qty, setQty] = useState(1);
   const price = resolvePrice(product, table);
@@ -153,3 +153,6 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
     </article>
   );
 }
+
+/** Memoizado: o grid virtualizado remonta linhas com frequência ao rolar. */
+export const ProductCard = memo(ProductCardComponent);
