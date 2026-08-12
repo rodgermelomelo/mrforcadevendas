@@ -182,30 +182,46 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
               {/* Ações */}
               {hasCustomer && !blocked && (
                 <div className="pt-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold">Quantidade</span>
-                    <QuantityStepper value={qty} onChange={setQty} size="md" />
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-sm font-bold">Quantidade</span>
+                      <p className="text-xs text-muted-foreground">
+                        Máximo disponível: {maxQty} un.
+                      </p>
+                    </div>
+                    <QuantityStepper value={qty} onChange={(n) => setQty(clamp(n))} size="md" />
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {[6, 12, 30, 60].map((n) => (
                       <Button
                         key={n}
                         variant="outline"
                         size="sm"
-                        className="flex-1 rounded-xl h-10 font-bold border-border/50 hover:border-primary hover:bg-primary/5 transition-all"
-                        onClick={() => setQty(n)}
+                        disabled={n > maxQty}
+                        className={cn(
+                          "flex-1 rounded-xl h-10 font-bold border-border/50 transition-all hover:border-primary hover:bg-primary/5",
+                          qty === n && "border-primary bg-primary/10 text-primary",
+                        )}
+                        onClick={() => setQty(clamp(n))}
                       >
                         {n}
                       </Button>
                     ))}
                   </div>
 
+                  <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 px-4 py-3">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Subtotal ({qty} un.)
+                    </span>
+                    <span className="text-lg font-bold">{formatBRL(subtotal)}</span>
+                  </div>
+
                   <Button 
                     className="w-full h-12 rounded-xl bg-brand-gradient text-lg font-bold shadow-lift"
                     onClick={handleAdd}
                   >
-                    <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Pedido
+                    <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar {qty} ao Pedido
                   </Button>
                 </div>
               )}
