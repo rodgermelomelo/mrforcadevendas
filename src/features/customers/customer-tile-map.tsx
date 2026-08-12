@@ -125,9 +125,32 @@ export function CustomerTileMap({
   const mapRef = useRef<LeafletMap | null>(null);
   const tileLayerRef = useRef<TileLayer | null>(null);
   const dataLayerRef = useRef<any>(null);
+  const plainLayerRef = useRef<any>(null);
+  const clusterLayerRef = useRef<any>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [ready, setReady] = useState(false);
   const [tileFailures, setTileFailures] = useState(0);
+  const [clusteringEnabled, setClusteringEnabled] = useState(true);
+  const [prefLoaded, setPrefLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CLUSTERING_PREF_KEY);
+      if (stored !== null) setClusteringEnabled(stored === "true");
+    } catch {
+      // ignora storage indisponível
+    }
+    setPrefLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!prefLoaded) return;
+    try {
+      window.localStorage.setItem(CLUSTERING_PREF_KEY, String(clusteringEnabled));
+    } catch {
+      // ignora storage indisponível
+    }
+  }, [clusteringEnabled, prefLoaded]);
 
   const selectedCluster = useMemo(
     () => clusters.find((cluster) => cluster.key === selectedCityKey) ?? null,
