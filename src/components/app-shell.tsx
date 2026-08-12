@@ -112,7 +112,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
               <span className="block truncate text-xs text-muted-foreground">MR Cosméticos</span>
             </span>
           </Link>
-          <div className="mt-6 group-data-[collapsible=icon]:px-0">
+          <div className="mt-6 px-2 group-data-[collapsible=icon]:px-0">
             <button
               type="button"
               onClick={() => openCustomerPicker({ startNewOrder: true })}
@@ -121,8 +121,8 @@ function AppShellInner({ children }: { children: ReactNode }) {
                 "group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:p-0"
               )}
             >
-              <Plus className="h-4 w-4" />
-              <span className="group-data-[collapsible=icon]:hidden">Novo pedido</span>
+              <Plus className="h-4 w-4 shrink-0" />
+              <span className="truncate group-data-[collapsible=icon]:hidden">Novo pedido</span>
             </button>
           </div>
         </SidebarHeader>
@@ -210,7 +210,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
           </SidebarMenu>
 
           {isAdmin && pathname.startsWith("/admin") && (
-            <div className="mt-6 border-t border-sidebar-border pt-4 group-data-[collapsible=icon]:hidden">
+            <div className="mt-4 border-t border-sidebar-border pt-3 group-data-[collapsible=icon]:hidden">
               <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Menu Admin
               </p>
@@ -240,12 +240,14 @@ function AppShellInner({ children }: { children: ReactNode }) {
           )}
         </SidebarContent>
 
-        <SidebarFooter className="p-4 bg-sidebar-accent/20 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:bg-transparent">
-          <div className="space-y-3">
+        <SidebarFooter className="p-2 bg-sidebar-accent/20 group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:bg-transparent">
+          <div className="space-y-2">
             <div className="px-2 group-data-[collapsible=icon]:hidden">
-              <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">
-                <span className="text-foreground block font-semibold">{sellerName}</span>
-                Atualizado: {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
+              <p className="text-[10px] leading-tight text-muted-foreground font-medium">
+                <span className="text-foreground block font-semibold truncate">{sellerName}</span>
+                <span className="block truncate opacity-80">
+                  {erpLastUpdate ? formatDateTimeBR(erpLastUpdate) : "—"}
+                </span>
               </p>
             </div>
             <button
@@ -253,11 +255,11 @@ function AppShellInner({ children }: { children: ReactNode }) {
               onClick={signOut}
               className={cn(
                 "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground",
-                "group-data-[collapsible=icon]:justify-center"
+                "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
               )}
             >
-              <LogOut className="h-4 w-4" />
-              <span className="group-data-[collapsible=icon]:hidden font-medium">Sair</span>
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden font-medium truncate">Sair</span>
             </button>
           </div>
         </SidebarFooter>
