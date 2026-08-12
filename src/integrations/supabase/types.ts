@@ -275,6 +275,86 @@ export type Database = {
           },
         ]
       }
+      commission_rule_sellers: {
+        Row: {
+          created_at: string
+          id: string
+          rule_id: string
+          seller_erp_code: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rule_id: string
+          seller_erp_code: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rule_id?: string
+          seller_erp_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_rule_sellers_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "commission_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_rules: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          notes: string
+          percent: number
+          priority: number
+          product_erp_code: string | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          percent?: number
+          priority?: number
+          product_erp_code?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          percent?: number
+          priority?: number
+          product_erp_code?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       customer_financial_snapshots: {
         Row: {
           captured_at: string
@@ -619,6 +699,12 @@ export type Database = {
       }
       order_items: {
         Row: {
+          commission_base: number
+          commission_percent: number
+          commission_rule_id: string | null
+          commission_rule_name: string | null
+          commission_scope: string
+          commission_value: number
           discount_percent: number
           id: string
           order_id: string
@@ -629,6 +715,12 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          commission_base?: number
+          commission_percent?: number
+          commission_rule_id?: string | null
+          commission_rule_name?: string | null
+          commission_scope?: string
+          commission_value?: number
           discount_percent?: number
           id?: string
           order_id: string
@@ -639,6 +731,12 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          commission_base?: number
+          commission_percent?: number
+          commission_rule_id?: string | null
+          commission_rule_name?: string | null
+          commission_scope?: string
+          commission_value?: number
           discount_percent?: number
           id?: string
           order_id?: string
@@ -695,6 +793,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          commission_calculated_at: string | null
+          commission_total: number
           confirmed_at: string | null
           content_hash: string
           created_at: string
@@ -720,6 +820,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          commission_calculated_at?: string | null
+          commission_total?: number
           confirmed_at?: string | null
           content_hash?: string
           created_at?: string
@@ -745,6 +847,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          commission_calculated_at?: string | null
+          commission_total?: number
           confirmed_at?: string | null
           content_hash?: string
           created_at?: string
