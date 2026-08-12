@@ -129,8 +129,8 @@ export function ProvisionarView() {
     <div className="w-full space-y-6">
       <header>
         <p className="text-sm text-muted-foreground">
-          Crie o usuário de cada representante, atribua o perfil e valide antes de salvar.
-          {" "}Só aparecem representantes <strong>sem usuário</strong>.
+          Crie o usuário e a senha temporária para cada representante importado do ERP.
+          {" "}Apenas representantes <strong>sem usuário vinculado</strong> são listados abaixo.
         </p>
       </header>
 
@@ -141,10 +141,10 @@ export function ProvisionarView() {
             checked={onlyWithCustomers}
             onChange={(e) => setOnlyWithCustomers(e.target.checked)}
           />
-          Só com clientes na carteira
+          Exibir apenas representantes com clientes
         </label>
         <span className="text-sm text-muted-foreground">
-          {sellersWithoutUser.length} representante(s) sem acesso
+          {sellersWithoutUser.length} representante(s) aguardando acesso
         </span>
         <div className="ml-auto flex gap-2">
           <Button
@@ -154,7 +154,7 @@ export function ProvisionarView() {
             onClick={() => validateMut.mutate()}
           >
             {validateMut.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-1 h-4 w-4" />}
-            Validar ({selectedCount})
+            Validar Dados ({selectedCount})
           </Button>
           <Button
             className="rounded-xl bg-brand-gradient"
@@ -162,22 +162,22 @@ export function ProvisionarView() {
             onClick={() => provisionMut.mutate()}
           >
             {provisionMut.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <UserPlus className="mr-1 h-4 w-4" />}
-            Provisionar selecionados
+            Criar Acessos Selecionados
           </Button>
         </div>
       </div>
 
       {!allValid && selectedCount > 0 && Object.keys(validation).length > 0 && (
-        <p className="text-xs text-warning">Corrija os itens marcados e valide novamente antes de provisionar.</p>
+        <p className="text-xs text-warning">Verifique os dados marcados em vermelho antes de prosseguir.</p>
       )}
 
       {results && (
         <div className="surface-card border-success/30 p-5">
           <h2 className="flex items-center gap-2 font-semibold text-success">
-            <CheckCircle2 className="h-5 w-5" /> Resultado do provisionamento
+            <CheckCircle2 className="h-5 w-5" /> Acessos criados com sucesso
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Anote as senhas provisórias e repasse aos representantes — eles devem trocá-la no primeiro acesso.
+            Copie as senhas provisórias abaixo e envie aos representantes.
           </p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">
