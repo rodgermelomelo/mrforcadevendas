@@ -49,6 +49,7 @@ interface CustomerTileMapProps {
 }
 
 const BRAZIL_CENTER: LatLngExpression = [-14.235, -51.9253];
+const CLUSTERING_PREF_KEY = "mr-fdv:map-clustering";
 export const SELLER_COLORS = [
   "#e92b8d", // Magenta (Primary)
   "#0ea5e9", // Sky Blue
