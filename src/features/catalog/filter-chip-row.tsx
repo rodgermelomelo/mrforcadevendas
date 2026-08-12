@@ -18,10 +18,10 @@ export function FilterChipRow<T extends string = string>({
 }: FilterChipRowProps<T>) {
   return (
     <div>
-      <p className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+      <p className="mb-2 flex items-center gap-1.5 px-1 text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground/50">
         {icon} {label}
       </p>
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
+      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-0.5">
         {options.map((option) => (
           <button
             key={option}
