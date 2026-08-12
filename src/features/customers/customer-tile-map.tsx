@@ -54,17 +54,17 @@ interface CustomerTileMapProps {
 }
 
 const BRAZIL_CENTER: LatLngExpression = [-14.235, -51.9253];
-const SELLER_COLORS = [
-  "#e92b8d",
-  "#0ea5e9",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ef4444",
-  "#14b8a6",
-  "#6366f1",
-  "#f97316",
-  "#84cc16",
+export const SELLER_COLORS = [
+  "#e92b8d", // Magenta (Primary)
+  "#0ea5e9", // Sky Blue
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#8b5cf6", // Violet
+  "#ef4444", // Red
+  "#14b8a6", // Teal
+  "#6366f1", // Indigo
+  "#f97316", // Orange
+  "#84cc16", // Lime
 ];
 
 function colorForSeller(code: string | undefined) {

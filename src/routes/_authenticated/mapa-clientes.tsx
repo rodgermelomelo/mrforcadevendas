@@ -245,9 +245,18 @@ function CustomerMapPage() {
             />
 
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <LegendDot className="bg-primary" label="Cliente por representante" />
-              <LegendDot className="bg-sky-500" label="Estimado pela UF" />
-              <LegendDot className="bg-emerald-500" label="Cidade selecionada" />
+              <LegendDot className="bg-primary" label="Cliente na base" />
+              <LegendDot className="bg-sky-500" label="Coordenada Estimada" />
+              <LegendDot className="bg-emerald-500" label="Cidade Selecionada" />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-l border-border/50 pl-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  Cores por Representante:
+                </span>
+                <LegendDot className="bg-[#e92b8d]" label="Rep. A" />
+                <LegendDot className="bg-[#0ea5e9]" label="Rep. B" />
+                <LegendDot className="bg-[#f59e0b]" label="Rep. C" />
+                <LegendDot className="bg-[#8b5cf6]" label="Outros..." />
+              </div>
               {usedFallback && (
                 <span className="rounded-full border border-warning/25 bg-warning/10 px-2 py-1 font-medium text-warning">
                   Fallback ativado para Esri Street
