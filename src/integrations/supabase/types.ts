@@ -491,6 +491,78 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_visits: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_erp_code: string
+          id: string
+          next_visit_date: string
+          notes: string
+          proof_photo_mime: string
+          proof_photo_path: string
+          proof_photo_size: number
+          proof_status: string
+          routine_interval_days: number
+          seller_erp_code: string
+          shelf_status: string
+          updated_at: string
+          visit_reason: string
+          visited_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_erp_code: string
+          id?: string
+          next_visit_date?: string
+          notes?: string
+          proof_photo_mime?: string
+          proof_photo_path?: string
+          proof_photo_size?: number
+          proof_status?: string
+          routine_interval_days?: number
+          seller_erp_code: string
+          shelf_status?: string
+          updated_at?: string
+          visit_reason?: string
+          visited_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_erp_code?: string
+          id?: string
+          next_visit_date?: string
+          notes?: string
+          proof_photo_mime?: string
+          proof_photo_path?: string
+          proof_photo_size?: number
+          proof_status?: string
+          routine_interval_days?: number
+          seller_erp_code?: string
+          shelf_status?: string
+          updated_at?: string
+          visit_reason?: string
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_visits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_visits_customer_erp_code_fkey"
+            columns: ["customer_erp_code"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["erp_code"]
+          },
+        ]
+      }
       customers: {
         Row: {
           active: boolean
