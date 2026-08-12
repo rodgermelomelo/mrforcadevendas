@@ -266,46 +266,46 @@ function AppShellInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <div className="flex min-w-0 flex-1 flex-col relative">
-        <header className="sticky top-0 z-30 h-16 border-b border-border/70 bg-background/85 backdrop-blur flex items-center justify-between px-4 lg:px-6">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger className="hidden lg:flex" />
-            <div className="flex min-w-0 items-center gap-2 lg:hidden">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-gradient text-xs font-black text-primary-foreground shadow-sm">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 lg:px-6 pointer-events-none">
+          <div className="flex items-center gap-4 pointer-events-auto">
+            <SidebarTrigger className="hidden lg:flex bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background" />
+            <div className="flex min-w-0 items-center gap-2 lg:hidden bg-background/80 backdrop-blur px-3 py-1.5 rounded-xl border border-border/50 shadow-sm">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-gradient text-[10px] font-black text-primary-foreground shadow-sm">
                 MR
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold">Força de Vendas</span>
-                <span className="block truncate text-[11px] text-muted-foreground">
-                  {customer ? customer.tradeName : "Nenhum cliente selecionado"}
+                <span className="block truncate text-xs font-semibold">Força de Vendas</span>
+                <span className="block truncate text-[10px] text-muted-foreground">
+                  {customer ? customer.tradeName : "Nenhum cliente"}
                 </span>
               </span>
             </div>
             {customer && (
-              <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full border border-border/50">
-                <Users className="h-3.5 w-3.5" />
+              <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur px-3 py-1.5 rounded-full border border-border/50 shadow-sm">
+                <Users className="h-3 w-3" />
                 <span className="font-medium text-foreground">{customer.tradeName}</span>
                 <span className="text-[10px] opacity-60">({customer.erpCode})</span>
               </div>
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pointer-events-auto">
             <button
               type="button"
               onClick={() => openCustomerPicker({ startNewOrder: true })}
-              className="lg:hidden grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
+              className="lg:hidden grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
               aria-label="Novo pedido"
             >
               <Plus className="h-4 w-4" />
             </button>
             <Link
               to="/carrinho"
-              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card shadow-sm hover:bg-muted/50 transition-colors"
+              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/50 bg-background/80 backdrop-blur shadow-sm hover:bg-background transition-colors"
               aria-label="Abrir carrinho"
             >
               <ShoppingCart className="h-4 w-4" />
               {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground border-2 border-background">
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground border-2 border-background">
                   {itemCount}
                 </span>
               )}
@@ -313,7 +313,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8 overflow-y-auto">
+        <main className="flex-1 px-4 pb-28 pt-2 sm:px-6 lg:px-10 lg:pb-12 lg:pt-4 overflow-y-auto -mt-14 lg:-mt-16">
           {children}
         </main>
 
