@@ -1,33 +1,70 @@
-# Plano: Perfil do Usuário e Metas
+# Refatoração estrutural — componentes limpos e reutilizáveis
 
-Este plano descreve a implementação da funcionalidade de perfil para que vendedores e administradores possam visualizar seus dados e metas comerciais diretamente na plataforma.
+Objetivo: mesma tela, mesmo comportamento, código organizado por domínio. Nenhuma regra de negócio muda.
 
-## Ações do Usuário
-- O usuário poderá acessar seu perfil através de um novo item no menu lateral (AppShell) ou clicando no seu nome/avatar.
-- Na página de perfil, o vendedor visualizará suas informações básicas (nome, código ERP) e uma seção dedicada às suas metas comerciais do mês.
-- A página de metas mostrará o progresso em relação ao objetivo mensal, total vendido no período e a diferença restante.
+## Diagnóstico
 
-## Alterações Técnicas
+Arquivos com responsabilidades misturadas hoje:
 
-### 1. Banco de Dados (Supabase)
-- Criar a tabela `seller_goals` para armazenar as metas mensais por vendedor.
-- Campos sugeridos: `id`, `seller_erp_code`, `month` (data do primeiro dia do mês), `target_amount` (decimal), `created_at`, `updated_at`.
-- Habilitar RLS e permissões (vendedores leem suas metas, administradores gerenciam).
+| Arquivo | Linhas | Problema |
+|---|---|---|
+| `admin-data.functions.ts` | 1468 | Todas as funções de servidor do admin num único módulo (usuários, produtos, marcas, clientes, metas) |
+| `catalogo.tsx` | 648 | Rota + filtros + ordenação + paginação + card + skeleton no mesmo arquivo |
+| `admin.estoque.tsx` | 446 | Três abas (produtos, estoque, marcas) numa só rota |
+| `admin.usuarios.tsx` | 411 | Página + diálogo de criação + card de usuário + visibilidade |
+| `equipe.tsx` / `admin.clientes.tsx` | 363 / 391 | Métricas, tabelas e diálogos inline |
 
-### 2. Rotas e Componentes
-- **Nova rota:** `src/routes/_authenticated/perfil.tsx`.
-- **UI de Perfil:** Exibir dados do perfil (vindos da tabela `profiles` e `erp_sellers`).
-- **UI de Metas:** Gráfico de progresso ou barra de progresso indicando o atingimento da meta com base no `totalSold` calculado no dashboard e no `target_amount` do banco.
+Além disso existem **dois componentes com o mesmo nome** (`ProductDetailDialog`): o administrativo em `components/admin/` e o novo do catálogo em `components/`. Nomes precisam revelar a intenção.
 
-### 3. Integração
-- Criar funções de servidor (`src/lib/goals.functions.ts`) para buscar a meta do vendedor logado.
-- Atualizar o componente `AppShell` para incluir o link para "/perfil".
-- Atualizar o `MetricCard` de "Meta do mês" no dashboard para exibir o valor real vindo do banco de dados em vez de "Em breve".
+## Plano de extração
 
-### 4. Gestão Administrativa
-- Adicionar aba "Metas" na central administrativa (`/admin/representantes` ou `/admin/usuarios`) para que gestores possam inserir/editar metas dos vendedores.
+### 1. Organização por domínio (pastas)
+```text
+src/features/
+  catalog/    componentes + hooks do catálogo
+  team/       equipe e metas
+  admin/      usuários, estoque, marcas, clientes
+src/lib/domain/    tipos e constantes compartilhadas
+```
+Componentes de UI genéricos permanecem em `components/ui`.
 
-## Detalhes Técnicos
-- **Tabela `seller_goals`:** Chave primária UUID, FK para `erp_sellers.code`.
-- **Cálculo de Progresso:** `(total_vendido_mes / meta_mes) * 100`.
-- **Estilização:** Manter o padrão premium magenta/laranja e cards brancos com sombras suaves.
+### 2. Catálogo (maior ganho)
+- `useCatalogFilters()` — hook que concentra busca, marcas, categorias, ordenação, paginação e o "limpar filtros". A rota passa a só orquestrar.
+- `CatalogFilterBar` — barra de busca, ordenação e chips ativos (UI pura).
+- `BrandFilterRow` / `CategoryFilterRow` — mesma UI de chips roláveis, hoje duplicada duas vezes.
+- `ProductCard` e `ProductCardSkeleton` — arquivos próprios.
+- `QuantityStepper` — o seletor de quantidade existe hoje em três lugares (card, modal, carrinho) com o mesmo código.
+- Renomear os diálogos: `ProductQuickViewDialog` (vendas) e `ProductAdminDialog` (administrativo).
+
+### 3. Camada de servidor
+Quebrar `admin-data.functions.ts` por domínio, mantendo as assinaturas exportadas idênticas:
+`admin/users.functions.ts`, `admin/products.functions.ts`, `admin/brands.functions.ts`, `admin/customers.functions.ts`, `admin/goals.functions.ts`.
+Um arquivo de reexport mantém os imports atuais funcionando durante a transição.
+
+### 4. Componentes compartilhados extraídos
+- `MetricCard` — hoje reimplementado em dashboard, perfil e equipe.
+- `EmptyState` — estados vazios repetidos em catálogo, carteira e admin.
+- `PageHeader` — título + descrição + ações.
+- `StatusBadge` — mapeamento de status comercial/integração para cor, hoje espalhado.
+
+### 5. Constantes e utilitários
+- `lib/domain/roles.ts` — lista de perfis e rótulos (duplicada em 3 arquivos).
+- `lib/domain/order-status.ts` — rótulos e cores de status.
+- Formatações (`formatBRL`, datas) já centralizadas em `lib/pricing`; passam a ser a única fonte.
+
+## Ordem de execução (passos pequenos e reversíveis)
+
+1. Constantes e tipos compartilhados (`roles`, `order-status`).
+2. Componentes compartilhados (`MetricCard`, `EmptyState`, `PageHeader`, `StatusBadge`, `QuantityStepper`).
+3. Catálogo: hook de filtros + subcomponentes + renomeio dos diálogos.
+4. Admin estoque e usuários: uma aba/diálogo por arquivo.
+5. Equipe e clientes: extração de tabelas e diálogos.
+6. Quebra do módulo de funções de servidor por domínio.
+
+Cada passo termina com verificação de tipos e conferência visual da tela no preview antes do próximo.
+
+## Garantias
+
+- Nenhuma query, política de acesso, cálculo de preço ou regra de aprovação é alterada.
+- Nomes de rotas e URLs permanecem os mesmos.
+- Se algum passo alterar o visual, ele é revertido isoladamente sem afetar os demais.
