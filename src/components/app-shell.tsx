@@ -39,6 +39,13 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 
 const nav = [
@@ -272,114 +279,160 @@ function AppShellInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <div className="flex min-w-0 flex-1 flex-col relative">
-        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 lg:px-6 pointer-events-none">
-          <div className="flex items-center gap-4 pointer-events-auto lg:hidden">
-            <div className="flex min-w-0 items-center gap-2 bg-background/80 backdrop-blur px-3 py-1.5 rounded-xl border border-border/50 shadow-sm">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-gradient text-[10px] font-black text-primary-foreground shadow-sm">
+        {/* Barra superior mobile: altura real, sem sobrepor o conteúdo */}
+        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur-md lg:hidden">
+          <div className="flex h-14 items-center gap-3 px-4 pt-[env(safe-area-inset-top)]">
+            <Link to="/" className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-gradient text-[10px] font-black text-primary-foreground shadow-sm">
                 MR
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-xs font-semibold">Força de Vendas</span>
-                <span className="block truncate text-[10px] text-muted-foreground">
-                  {customer ? customer.tradeName : "Atendimento"}
+                <span className="block truncate text-sm font-semibold leading-tight">Força de Vendas</span>
+                <span className="block truncate text-[11px] leading-tight text-muted-foreground">
+                  MR Cosméticos
                 </span>
               </span>
-            </div>
-          </div>
+            </Link>
 
-          <div className="flex items-center gap-2 pointer-events-auto">
-            {customer && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur px-3 py-1.5 rounded-full border border-border/50 shadow-sm max-w-[180px] sm:max-w-[250px] lg:max-w-none">
-                <Users className="h-3 w-3 flex-shrink-0" />
-                <span className="font-medium text-foreground truncate">{customer.tradeName}</span>
-                <span className="text-[10px] opacity-60 hidden sm:inline">({customer.erpCode})</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3 pointer-events-auto lg:hidden">
             <button
               type="button"
               onClick={() => openCustomerPicker({ startNewOrder: true })}
-              className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
               aria-label="Novo pedido"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4.5 w-4.5" />
             </button>
             <Link
               to="/carrinho"
-              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/50 bg-background/80 backdrop-blur shadow-sm hover:bg-background transition-colors"
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border/60 bg-card transition-colors hover:bg-muted"
               aria-label="Abrir carrinho"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-4.5 w-4.5" />
               {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground border-2 border-background">
-                  {itemCount}
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                  {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
             </Link>
           </div>
+
+          {customer && (
+            <div className="flex items-center gap-2 border-t border-border/50 bg-muted/40 px-4 py-1.5 text-[11px]">
+              <Users className="h-3 w-3 shrink-0 text-primary" />
+              <span className="truncate font-medium text-foreground">{customer.tradeName}</span>
+              <span className="shrink-0 text-muted-foreground">({customer.erpCode})</span>
+            </div>
+          )}
         </header>
 
-        <main className="flex-1 px-4 pb-28 pt-2 sm:px-6 lg:px-10 lg:pb-12 lg:pt-1 overflow-y-auto -mt-14 lg:-mt-16">
+        {/* Cliente ativo no desktop */}
+        {customer && (
+          <div className="sticky top-0 z-30 hidden items-center justify-end gap-2 border-b border-border/50 bg-background/85 px-6 py-2 text-xs backdrop-blur-md lg:flex">
+            <Users className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium text-foreground">{customer.tradeName}</span>
+            <span className="text-muted-foreground">({customer.erpCode})</span>
+          </div>
+        )}
+
+        <main className="flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-10 lg:pb-12 lg:pt-6">
           {children}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around overflow-x-auto border-t border-border/70 bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {nav.filter(item => item.to !== "/carrinho").map((item) => {
-            const active = isActive(item.to, item.exact);
-            return (
+        <MobileTabBar
+          isActive={isActive}
+          isAdmin={Boolean(isAdmin)}
+          isApprover={Boolean(isApprover)}
+        />
+      </div>
+    </div>
+  );
+}
+
+const primaryTabs = [
+  { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
+  { to: "/carteira", label: "Carteira", icon: Users, exact: false },
+  { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
+  { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
+] as const;
+
+function MobileTabBar({
+  isActive,
+  isAdmin,
+  isApprover,
+}: {
+  isActive: (to: string, exact: boolean) => boolean;
+  isAdmin: boolean;
+  isApprover: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const moreItems = [
+    { to: "/visitas", label: "Visitas", icon: CalendarCheck2, show: true },
+    { to: "/metas", label: "Metas", icon: Target, show: true },
+    { to: "/perfil", label: "Perfil", icon: User, show: true },
+    { to: "/mapa-clientes", label: "Mapa", icon: MapIcon, show: isApprover },
+    { to: "/equipe", label: "Equipe", icon: UsersRound, show: isApprover },
+    { to: "/admin", label: "Administração", icon: LayoutGrid, show: isAdmin },
+  ].filter((item) => item.show);
+
+  const moreActive = moreItems.some((item) => isActive(item.to, false));
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+      {primaryTabs.map((item) => {
+        const active = isActive(item.to, item.exact);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={cn(
+              "flex min-h-12 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors",
+              active ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            <item.icon className={cn("h-5.5 w-5.5", active && "drop-shadow-sm")} />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        );
+      })}
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "flex min-h-12 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors",
+              moreActive ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            <Menu className="h-5.5 w-5.5" />
+            <span>Mais</span>
+          </button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="rounded-t-3xl border-none pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="text-base">Mais opções</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {moreItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => setOpen(false)}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
-                  active ? "text-primary" : "text-muted-foreground",
+                  "flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-center text-[11px] font-medium transition-colors",
+                  isActive(item.to, false)
+                    ? "border-primary/30 bg-primary/5 text-primary"
+                    : "text-muted-foreground hover:bg-muted",
                 )}
               >
                 <item.icon className="h-5 w-5" />
-                {item.label}
+                <span className="leading-tight">{item.label}</span>
               </Link>
-            );
-          })}
-          {isApprover && (
-            <Link
-              to="/mapa-clientes"
-              className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
-                isActive("/mapa-clientes", false) ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <MapIcon className="h-5 w-5" />
-              Mapa
-            </Link>
-          )}
-          {isApprover && (
-            <Link
-              to="/equipe"
-              className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
-                isActive("/equipe", false) ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <UsersRound className="h-5 w-5" />
-              Equipe
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
-                isActive("/admin", false) ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <LayoutGrid className="h-5 w-5" />
-              Admin
-            </Link>
-          )}
-        </nav>
-      </div>
-    </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </nav>
   );
 }

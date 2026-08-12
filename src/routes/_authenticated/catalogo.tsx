@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/page-header";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, Plus, ShoppingCart, Sparkles, UserPlus, ChevronDown } from "lucide-react";
@@ -48,12 +49,12 @@ function Catalogo() {
   const catalogLoading = loading && products.length === 0;
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-        <div className="min-w-0">
-          <h1 className="text-3xl font-bold sm:text-4xl">Catálogo</h1>
-          {customer ? (
-            <p className="mt-2 truncate text-sm text-muted-foreground">
+    <div className="mx-auto w-full max-w-[1600px] space-y-5 sm:space-y-6">
+      <PageHeader
+        title="Catálogo"
+        description={
+          customer ? (
+            <>
               Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
               Rep. {customer.sellerErpCode ?? "—"} ·{" "}
               {showPriceTableDetails && (
@@ -63,48 +64,47 @@ function Catalogo() {
                 </>
               )}
               {customer.paymentTerm}
-            </p>
+            </>
+          ) : catalogLoading ? (
+            "Carregando produtos, preços e estoque..."
           ) : (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {catalogLoading
-                ? "Carregando produtos, preços e estoque..."
-                : `${products.length.toLocaleString("pt-BR")} produtos · ${inStockCount.toLocaleString("pt-BR")} com estoque.`}{" "}
-              Selecione um cliente para ver preços e montar um pedido.
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 gap-2">
-          {customer ? (
-            <Button
-              onClick={() => openCustomerPicker({ startNewOrder: true })}
-              className="rounded-xl bg-brand-gradient shadow-lift"
-            >
-              <Plus className="mr-1 h-4 w-4" /> Novo pedido
+            `${products.length.toLocaleString("pt-BR")} produtos · ${inStockCount.toLocaleString("pt-BR")} com estoque. Selecione um cliente para ver preços.`
+          )
+        }
+        actions={
+          <>
+            {customer ? (
+              <Button
+                onClick={() => openCustomerPicker({ startNewOrder: true })}
+                className="h-11 rounded-xl bg-brand-gradient shadow-lift"
+              >
+                <Plus className="mr-1 h-4 w-4" /> Novo pedido
+              </Button>
+            ) : (
+              <Button
+                onClick={() => openCustomerPicker()}
+                className="h-11 rounded-xl bg-brand-gradient shadow-lift"
+              >
+                <UserPlus className="mr-1 h-4 w-4" /> Selecionar cliente
+              </Button>
+            )}
+            <Button asChild variant="outline" className="hidden h-11 rounded-xl lg:inline-flex">
+              <Link to="/carrinho">
+                <ShoppingCart className="mr-1 h-4 w-4" /> {itemCount}
+              </Link>
             </Button>
-          ) : (
-            <Button
-              onClick={() => openCustomerPicker()}
-              className="rounded-xl bg-brand-gradient shadow-lift"
-            >
-              <UserPlus className="mr-1 h-4 w-4" /> Selecionar cliente
-            </Button>
-          )}
-          <Button asChild variant="outline" className="shrink-0 rounded-xl">
-            <Link to="/carrinho">
-              <ShoppingCart className="mr-1 h-4 w-4" /> {itemCount}
-            </Link>
-          </Button>
-          {isAdmin && (
-            <Button
-              asChild
-              variant="outline"
-              className="shrink-0 rounded-xl border-primary/20 text-primary"
-            >
-              <Link to="/admin/produtos">Admin</Link>
-            </Button>
-          )}
-        </div>
-      </header>
+            {isAdmin && (
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 rounded-xl border-primary/20 text-primary"
+              >
+                <Link to="/admin/produtos">Admin</Link>
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {tableBlocked && (
         <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">

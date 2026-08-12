@@ -126,7 +126,7 @@ function CustomerMapPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             Distribuição Geográfica de Clientes
           </p>
-          <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Mapa de clientes</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-4xl">Mapa de clientes</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
             Mapa real com tiles CARTO e um pin por cliente. A posição usa cidade/UF do cadastro;
             quando vários clientes estão na mesma cidade, os pins são espalhados ao redor do centro.

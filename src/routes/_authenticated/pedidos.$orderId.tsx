@@ -80,7 +80,7 @@ function DetalhePedido() {
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <header className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold sm:text-4xl">{order.number}</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">{order.number}</h1>
           <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{order.customerName}</span>
             <span aria-hidden="true">·</span>

@@ -66,15 +66,15 @@ function Carteira() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+      <header className="flex flex-col gap-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold sm:text-4xl">Minha carteira</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">Minha carteira</h1>
+          <p className="mt-1.5 line-clamp-2 text-[13px] text-muted-foreground sm:mt-2 sm:line-clamp-none sm:text-sm">
             Selecionar um cliente é o ponto de partida do pedido — os preços são calculados pelo
             cadastro comercial dele.
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap items-start gap-2">
+        <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:shrink-0 sm:flex-wrap sm:items-start sm:overflow-visible sm:px-0 [&>*]:shrink-0">
           <Button asChild variant="outline" className="rounded-xl">
             <Link to="/mapa-clientes">
               <MapPin className="mr-1 h-4 w-4" /> Ver mapa

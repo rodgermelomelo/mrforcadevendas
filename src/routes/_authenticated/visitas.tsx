@@ -86,7 +86,7 @@ function VisitsPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             Campo comercial
           </p>
-          <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Visitas</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-4xl">Visitas</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
             Registre visitas aos clientes da carteira com foto obrigatória da loja ou gôndola e
             transforme a última visita em uma rotina mensal de acompanhamento.

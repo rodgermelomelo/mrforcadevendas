@@ -59,7 +59,7 @@ function Carrinho() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <header>
-        <h1 className="text-3xl font-bold sm:text-4xl">Carrinho</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">Carrinho</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> · Rep.{" "}
           {customer.sellerErpCode ?? "—"} ·{" "}
