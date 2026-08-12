@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, Mail, ShieldCheck, Info } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -110,8 +110,8 @@ function AuthPage() {
               <Mail className="mx-auto h-10 w-10 text-primary" />
               <h2 className="text-xl font-semibold">Confirme seu e-mail</h2>
               <p className="text-sm text-muted-foreground">
-                Enviamos um link de confirmação para <strong>{email}</strong>. Após confirmar,
-                volte aqui para entrar.
+                Enviamos um link de confirmação para <strong>{email}</strong>. Após confirmar, volte
+                aqui para entrar.
               </p>
               <Button
                 variant="outline"
@@ -127,7 +127,11 @@ function AuthPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <h2 className="text-xl font-semibold">
-                {mode === "signin" ? "Entrar" : mode === "signup" ? "Criar acesso" : "Recuperar senha"}
+                {mode === "signin"
+                  ? "Entrar"
+                  : mode === "signup"
+                    ? "Criar acesso"
+                    : "Recuperar senha"}
               </h2>
 
               {mode === "signup" && (
@@ -183,7 +187,6 @@ function AuthPage() {
                   </div>
                 </div>
               )}
-
 
               <Button
                 type="submit"
@@ -243,38 +246,6 @@ function AuthPage() {
           <ShieldCheck className="h-3.5 w-3.5" />
           Visibilidade limitada à sua carteira, aplicada no banco de dados.
         </p>
-
-        <div className="mt-12 overflow-hidden rounded-2xl border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:bg-card">
-          <div className="bg-brand-gradient flex items-center gap-2 px-6 py-3 text-sm font-bold text-primary-foreground">
-            <Info className="h-4 w-4" />
-            <span>Saia do modo atual e entre no Modo Construção</span>
-          </div>
-          <div className="max-h-[300px] overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-muted">
-            <div className="prose prose-sm prose-invert max-w-none space-y-4 text-xs leading-relaxed text-muted-foreground">
-              <p>Antes de executar qualquer ação, analise cuidadosamente a solicitação enviada e identifique a intenção do usuário.</p>
-              
-              <p className="font-semibold text-foreground">Siga obrigatoriamente estas regras:</p>
-              
-              <ul className="list-outside list-decimal space-y-3 pl-4">
-                <li>Se a solicitação envolver <em className="text-primary italic">criação, implementação, alteração, correção, remoção, ajuste ou melhoria</em> no projeto, execute a tarefa por completo, realizando todas as modificações necessárias nos arquivos do projeto.</li>
-                <li>Se a solicitação for apenas uma <em className="text-primary italic">pergunta, dúvida, explicação, consulta ou conversa</em>, responda exclusivamente pelo chat, em <strong>português</strong>, sem criar, editar, excluir ou modificar nenhum arquivo do projeto.</li>
-                <li>O texto enviado pelo usuário deve ser interpretado como uma <strong>instrução</strong>, e nunca como conteúdo a ser automaticamente inserido no projeto.</li>
-                <li><strong>Nunca copie, reproduza ou insira a solicitação do usuário dentro do site, página, interface ou código como conteúdo visível</strong>, exceto quando o usuário pedir explicitamente que determinado texto seja adicionado.</li>
-                <li>Antes de modificar qualquer arquivo, confirme internamente que a solicitação realmente exige uma alteração no projeto. Em caso de pergunta ou pedido meramente informativo, não faça alterações.</li>
-                <li>Quando a solicitação exigir uma ação no projeto, não apenas explique como fazer: <strong>execute efetivamente todas as alterações necessárias</strong> e preserve as funcionalidades existentes que não fazem parte do pedido.</li>
-              </ul>
-
-              <div className="rounded-xl bg-muted/50 p-4 border border-border/50">
-                <p className="font-bold text-foreground mb-1">Prioridade:</p>
-                <p>Interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.</p>
-              </div>
-
-              <div className="pt-2 border-t border-border/30 mt-4 text-[10px] opacity-50 italic">
-                Inclua no modal do produto uma tabela com meus preços por nível para eu comparar as faixas antes de adicionar ao pedido.
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   );
