@@ -154,7 +154,7 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
         let groupName = g.label.toUpperCase();
         // Remove a marca do nome do grupo para tentar pegar a categoria
         const cleanCategory = groupName.replace(brand, "").replace(/^-/, "").trim();
-        category = cleanCategory.toUpperCase();
+        if (cleanCategory) category = cleanCategory;
       }
     }
     
