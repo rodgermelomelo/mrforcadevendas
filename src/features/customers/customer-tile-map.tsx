@@ -299,8 +299,12 @@ export function CustomerTileMap({
       markers.push(marker);
     }
 
-    layer.addLayers(markers);
-  }, [clusters, onSelectCity, points, ready, selectedCityKey]);
+    if (typeof layer.addLayers === "function") {
+      layer.addLayers(markers);
+    } else {
+      markers.forEach((marker) => layer.addLayer(marker));
+    }
+  }, [clusteringEnabled, clusters, onSelectCity, points, ready, selectedCityKey]);
 
   useEffect(() => {
     if (!ready || !mapRef.current) return;
