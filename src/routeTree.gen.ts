@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
 import { Route as AuthenticatedCarteiraRouteImport } from './routes/_authenticated/carteira'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
+import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
@@ -69,6 +70,11 @@ const AuthenticatedCarteiraRoute = AuthenticatedCarteiraRouteImport.update({
 const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/carteira': typeof AuthenticatedCarteiraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
   '/_authenticated/carteira': typeof AuthenticatedCarteiraRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
+  '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/equipe'
     | '/perfil'
     | '/admin/auditoria'
     | '/admin/cadastros'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/carteira'
     | '/catalogo'
+    | '/equipe'
     | '/perfil'
     | '/'
     | '/admin/auditoria'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/carrinho'
     | '/_authenticated/carteira'
     | '/_authenticated/catalogo'
+    | '/_authenticated/equipe'
     | '/_authenticated/perfil'
     | '/_authenticated/'
     | '/_authenticated/admin/auditoria'
@@ -419,6 +431,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogo'
       fullPath: '/catalogo'
       preLoaderRoute: typeof AuthenticatedCatalogoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/equipe': {
+      id: '/_authenticated/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/perfil': {
@@ -568,6 +587,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCarrinhoRoute: typeof AuthenticatedCarrinhoRoute
   AuthenticatedCarteiraRoute: typeof AuthenticatedCarteiraRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
+  AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
@@ -595,6 +615,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCarrinhoRoute: AuthenticatedCarrinhoRoute,
   AuthenticatedCarteiraRoute: AuthenticatedCarteiraRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
+  AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,

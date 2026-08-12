@@ -11,6 +11,7 @@ import {
   Plus,
   LayoutGrid,
   User,
+  UsersRound,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ import { formatDateTimeBR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { CustomerPickerProvider, useCustomerPicker } from "@/components/customer-picker";
 import { useIsAdmin } from "@/components/admin/admin-page";
+import { useIsApprover } from "@/components/use-is-approver";
 
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
@@ -60,6 +62,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: isAdmin } = useIsAdmin();
+  const { data: isApprover } = useIsApprover();
 
   const signOut = async () => {
     await queryClient.cancelQueries();
@@ -112,6 +115,20 @@ function AppShellInner({ children }: { children: ReactNode }) {
               )}
             </Link>
           ))}
+          {isApprover && (
+            <Link
+              to="/equipe"
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive("/equipe", false)
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+              )}
+            >
+              <UsersRound className="h-4 w-4 shrink-0" />
+              <span className="truncate">Equipe</span>
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
@@ -208,7 +225,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
 
         <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">{children}</main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border/70 bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around overflow-x-auto border-t border-border/70 bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {nav.map((item) => {
             const isCarrinho = item.to === "/carrinho";
             const active = isActive(item.to, item.exact);
@@ -233,6 +250,18 @@ function AppShellInner({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isApprover && (
+            <Link
+              to="/equipe"
+              className={cn(
+                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                isActive("/equipe", false) ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <UsersRound className="h-5 w-5" />
+              Equipe
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
