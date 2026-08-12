@@ -31,6 +31,8 @@ export interface CatalogWorkspaceData {
   groups: string[];
 }
 
+const PAGE_SIZE = 2000;
+
 import {
   dbClient,
   errorMessage,

@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/" as any)({
   beforeLoad: async ({ context }) => {
     // Se estiver logado, vai direto para o catálogo que é a página principal de vendas
     if ((context as any).auth?.session) {
