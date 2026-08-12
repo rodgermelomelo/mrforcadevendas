@@ -18,18 +18,18 @@ export function FilterChipRow<T extends string = string>({
 }: FilterChipRowProps<T>) {
   return (
     <div>
-      <p className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+      <p className="mb-2 flex items-center gap-1.5 px-1 text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground/50">
         {icon} {label}
       </p>
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
+      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-0.5">
         {options.map((option) => (
           <button
             key={option}
             onClick={() => onToggle(option)}
             className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95",
+              "shrink-0 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95 shadow-soft",
               selected.includes(option)
-                ? "border-transparent bg-primary text-primary-foreground shadow-sm"
+                ? "border-transparent bg-primary text-primary-foreground shadow-md shadow-primary/20"
                 : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
             )}
           >
