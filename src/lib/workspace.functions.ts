@@ -292,12 +292,13 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
 
     const products = rows(productsRes)
       .filter((product) => {
-        if (activeBrands.size === 0) return true;
         const groupCode = text(product, "group_code");
         const group = groupName.get(groupCode) || groupCode || "Outros";
         const inferredBrand =
           text(product, "brand") || group.split(" ")[0]?.toUpperCase() || "OUTROS";
-        return activeBrands.has(inferredBrand);
+        
+        // Se a marca inferida ou explícita estiver na lista de marcas ativas (ou se não houver marcas cadastradas)
+        return activeBrands.size === 0 || activeBrands.has(inferredBrand);
       })
       .map((product): Product => {
         const groupCode = text(product, "group_code");
