@@ -21,7 +21,9 @@ export interface WorkspaceDb {
   from(table: string): QueryBuilder;
 }
 
-export const PAGE_SIZE = 2000; // Aumentado para reduzir o número de requisições sequenciais (round-trips)
+// O Data API entrega no máximo 1.000 linhas por resposta. Usar um tamanho maior
+// faz uma página cheia parecer incompleta e encerra a paginação cedo demais.
+export const PAGE_SIZE = 1000;
 
 export function dbClient(supabase: unknown): WorkspaceDb {
   return supabase as WorkspaceDb;
