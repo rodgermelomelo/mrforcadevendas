@@ -282,8 +282,8 @@ function MetricCard({
   icon: React.ReactNode;
   label: string;
   value: string;
-  hint?: string;
-  progress?: number;
+  hint?: string | undefined;
+  progress?: number | undefined;
 }) {
   return (
     <div className="surface-card p-5">
@@ -298,7 +298,7 @@ function MetricCard({
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "warning" }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: "warning" | undefined }) {
   return (
     <div>
       <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</dt>
