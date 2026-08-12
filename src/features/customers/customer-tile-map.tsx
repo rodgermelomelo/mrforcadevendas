@@ -1,4 +1,6 @@
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
@@ -139,6 +141,8 @@ export function CustomerTileMap({
       if (!containerRef.current || mapRef.current) return;
 
       const L = await import("leaflet");
+      await import("leaflet.markercluster");
+      
       if (cancelled || !containerRef.current) return;
 
       leafletRef.current = L;
@@ -151,7 +155,24 @@ export function CustomerTileMap({
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
       mapRef.current = map;
-      dataLayerRef.current = L.layerGroup().addTo(map);
+      
+      // Criar o grupo de clusters
+      const clusterGroup = (L as any).markerClusterGroup({
+        showCoverageOnHover: false,
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        iconCreateFunction: (cluster: any) => {
+          const count = cluster.getChildCount();
+          return L.divIcon({
+            html: `<div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white font-bold border-2 border-white shadow-lg text-xs">${count}</div>`,
+            className: "marker-cluster-custom",
+            iconSize: L.point(40, 40)
+          });
+        }
+      });
+      
+      clusterGroup.addTo(map);
+      dataLayerRef.current = clusterGroup;
       setReady(true);
     }
 
