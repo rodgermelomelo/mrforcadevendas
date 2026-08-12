@@ -160,8 +160,8 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       category: category.toUpperCase(),
       unit: p.unit || "UN",
       is_launch: false,
-      released: true,
-      active: true,
+      released: !p.erpCode.startsWith("Z"),
+      active: !p.erpCode.startsWith("Z"),
     };
   });
 
