@@ -21,6 +21,7 @@ export interface CreateOrderInput {
   orderDiscountPercent: number;
   isBonus: boolean;
   notes: string;
+  financialAgreement?: { nfPercent: number; boletoPercent: number; note: string } | null;
   exceptions: CommercialException[];
   requiredAuthority: Authority | null;
 }
@@ -250,6 +251,7 @@ export const createOrder = createServerFn({ method: "POST" })
           paymentTerm: data.paymentTerm,
           items: data.items,
           exceptions: data.exceptions,
+          financialAgreement: data.financialAgreement ?? null,
           subtotal: data.subtotal,
           discountTotal: data.discountTotal,
           total: data.total,

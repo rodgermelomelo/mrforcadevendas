@@ -36,6 +36,7 @@ export const approvalMatrix: ApprovalRule[] = [
   { exception: "restricted_customer", authority: "gerente_comercial" },
   { exception: "credit_limit_exceeded", authority: "administrador" },
   { exception: "bonus_order", authority: "gerente_comercial" },
+  { exception: "acordo_financeiro", authority: "gerente_comercial" },
 ];
 
 /** Substitui a matriz em memória pela versão configurada no banco (approval_rules). */
@@ -103,6 +104,7 @@ export interface ValidationInput {
   orderDiscountPercent: number;
   isBonus: boolean;
   nonStandardTerms: boolean;
+  financialAgreement?: { nfPercent: number; boletoPercent: number; note: string } | null;
   subtotal: number;
   total: number;
 }
@@ -189,6 +191,19 @@ export function validateOrder(input: ValidationInput): ValidationResult {
       label: "Condição fora do padrão",
       detail: "Condição de pagamento diferente da condição do cliente.",
       authority: resolveAuthority("non_standard_terms", { amount: input.total }),
+    });
+  }
+  const fa = input.financialAgreement;
+  if (fa && (fa.nfPercent > 0 || fa.boletoPercent > 0)) {
+    const parts = [
+      fa.nfPercent > 0 ? `${fa.nfPercent}% na NF` : "",
+      fa.boletoPercent > 0 ? `${fa.boletoPercent}% no boleto` : "",
+    ].filter(Boolean);
+    exceptions.push({
+      type: "acordo_financeiro",
+      label: "Acordo financeiro",
+      detail: `${parts.join(" · ")}${fa.note ? ` — ${fa.note}` : ""}`,
+      authority: resolveAuthority("acordo_financeiro", { amount: input.total }),
     });
   }
   if (input.customer && input.lines.length > 0 && input.total < input.customer.minOrderValue) {

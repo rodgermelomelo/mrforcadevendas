@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, Gift, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useSales } from "@/lib/state/sales-store";
@@ -42,6 +42,11 @@ function RevisarPedido() {
   } = sales;
   const navigate = useNavigate();
 
+  const [nfPercent, setNfPercent] = useState(0);
+  const [boletoPercent, setBoletoPercent] = useState(0);
+  const [agreementNote, setAgreementNote] = useState("");
+  const financialAgreement = { nfPercent, boletoPercent, note: agreementNote };
+
   const nonStandardTerms = Boolean(
     customer && paymentTerm && paymentTerm !== customer.paymentTerm,
   );
@@ -61,10 +66,11 @@ function RevisarPedido() {
         orderDiscountPercent,
         isBonus,
         nonStandardTerms,
+        financialAgreement,
         subtotal,
         total,
       }),
-    [customer, table, lines, orderDiscountPercent, isBonus, nonStandardTerms, subtotal, total],
+    [customer, table, lines, orderDiscountPercent, isBonus, nonStandardTerms, nfPercent, boletoPercent, agreementNote, subtotal, total],
   );
 
   if (!customer || lines.length === 0) {
@@ -111,6 +117,8 @@ function RevisarPedido() {
         orderDiscountPercent,
         isBonus,
         notes,
+        financialAgreement:
+          nfPercent > 0 || boletoPercent > 0 ? financialAgreement : null,
         exceptions: validation.exceptions,
         requiredAuthority: validation.requiredAuthority,
       });
@@ -212,6 +220,50 @@ function RevisarPedido() {
                 className="mt-1 rounded-xl"
               />
             </label>
+          </div>
+
+          <div className="surface-card space-y-3 p-5">
+            <div>
+              <h3 className="text-sm font-semibold">Acordo financeiro</h3>
+              <p className="text-xs text-muted-foreground">
+                Percentual concedido na nota fiscal e/ou somente no boleto. Qualquer acordo
+                envia o pedido para <strong>análise do gestor</strong> antes de confirmar.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-sm">
+                <span className="text-muted-foreground">% na nota fiscal</span>
+                <Input
+                  value={nfPercent}
+                  onChange={(e) => setNfPercent(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)}
+                  inputMode="decimal"
+                  className="mt-1 h-11 rounded-xl"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="text-muted-foreground">% somente no boleto</span>
+                <Input
+                  value={boletoPercent}
+                  onChange={(e) => setBoletoPercent(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)}
+                  inputMode="decimal"
+                  className="mt-1 h-11 rounded-xl"
+                />
+              </label>
+            </div>
+            <label className="block text-sm">
+              <span className="text-muted-foreground">Observação do acordo (opcional)</span>
+              <Input
+                value={agreementNote}
+                onChange={(e) => setAgreementNote(e.target.value)}
+                placeholder="Ex.: acordado com o gerente da conta"
+                className="mt-1 h-11 rounded-xl"
+              />
+            </label>
+            {(nfPercent > 0 || boletoPercent > 0) && (
+              <p className="text-xs text-warning">
+                Com acordo financeiro, este pedido vai para análise do gestor (não é confirmado automaticamente).
+              </p>
+            )}
           </div>
         </section>
 

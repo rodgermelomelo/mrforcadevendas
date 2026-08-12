@@ -83,7 +83,18 @@ export type ExceptionType =
   | "below_minimum"
   | "restricted_customer"
   | "credit_limit_exceeded"
-  | "bonus_order";
+  | "bonus_order"
+  | "acordo_financeiro";
+
+/** Acordo financeiro no pedido (impacta faturamento/cobrança → sempre vai à análise). */
+export interface FinancialAgreement {
+  /** Percentual concedido na nota fiscal. */
+  nfPercent: number;
+  /** Percentual concedido somente no boleto. */
+  boletoPercent: number;
+  /** Observação do acordo. */
+  note: string;
+}
 
 export interface CommercialException {
   type: ExceptionType;
