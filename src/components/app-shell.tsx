@@ -266,7 +266,6 @@ function AppShellInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <div className="flex min-w-0 flex-1 flex-col relative">
-      <div className="flex min-w-0 flex-1 flex-col relative">
         <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 lg:px-6 pointer-events-none">
           <div className="flex items-center gap-4 pointer-events-auto">
             <SidebarTrigger className="hidden lg:flex bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background" />
