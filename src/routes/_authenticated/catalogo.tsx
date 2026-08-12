@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useCustomerPicker } from "@/components/customer-picker";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
+import { ProductDetailDialog } from "@/components/product-detail-dialog";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
