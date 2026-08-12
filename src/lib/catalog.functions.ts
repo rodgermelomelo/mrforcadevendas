@@ -52,7 +52,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("erp_sellers").select("erp_code, name").order("erp_code"),
       supabase.from("brands").select("name, active, metadata").eq("active", true),
-      supabase.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
+      supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01"),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
@@ -147,14 +147,14 @@ export const getWorkspace = createServerFn({ method: "GET" })
       if (!code) continue;
       custCountBySeller.set(code, (custCountBySeller.get(code) ?? 0) + 1);
     }
-    const goalsBySeller = new Map((goalsRes.data ?? []).map(g => [g.seller_erp_code, Number(g.goal_amount)]));
+    const goalsBySeller = new Map((goalsRes.data as any[] ?? []).map(g => [g.seller_erp_code, Number(g.goal_amount)]));
 
     const sellers = (sellersRes.data ?? [])
       .map((s) => ({
         code: s.erp_code,
         name: s.name || `Representante ${s.erp_code}`,
         customerCount: custCountBySeller.get(s.erp_code) ?? 0,
-        monthlyGoal: goalsBySeller.get(s.erp_code),
+        monthlyGoal: goalsBySeller.get(s.erp_code) as number | undefined,
       }))
       .filter((s) => s.customerCount > 0)
       .sort((a, b) => b.customerCount - a.customerCount);
