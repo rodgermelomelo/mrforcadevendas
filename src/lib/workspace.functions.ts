@@ -52,6 +52,7 @@ import {
   text,
   booleanValue,
 } from "@/lib/workspace-core.server";
+import type { DbRow, QueryError } from "@/lib/workspace-core.server";
 
 
 export const getWorkspaceCore = createServerFn({ method: "GET" })
