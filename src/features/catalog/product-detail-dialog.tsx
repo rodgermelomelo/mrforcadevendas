@@ -21,6 +21,12 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
   const { customer, table, addItem } = useSales();
   const [qty, setQty] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [lastProductId, setLastProductId] = useState<string | null>(null);
+
+  if (product && product.id !== lastProductId) {
+    setLastProductId(product.id);
+    setQty(1);
+  }
 
   if (!product) return null;
 
@@ -28,6 +34,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
   const outOfStock = product.stock <= 0;
   const hasCustomer = Boolean(customer);
   const blocked = hasCustomer && (outOfStock || !price.ok);
+  const maxQty = product.stock > 0 ? Math.floor(product.stock) : 1;
+  const clamp = (n: number) => Math.min(maxQty, Math.max(1, n));
+  const subtotal = price.ok ? price.value * qty : 0;
 
   const handleAdd = () => {
     addItem(product.id, qty);
