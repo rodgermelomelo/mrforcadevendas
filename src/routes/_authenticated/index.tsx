@@ -60,7 +60,7 @@ function Dashboard() {
           icon={<TrendingUp className="h-4 w-4" />}
           label="Meta do mês"
           value={hydrated ? (goal > 0 ? formatBRL(goal) : "Não definida") : "—"}
-          hint={goal > 0 ? `${((totalSold / goal) * 100).toFixed(1)}% atingido` : "Contate seu supervisor"}
+          hint={goal > 0 ? `${goalProgress.toFixed(1)}% atingido` : "Contate seu supervisor"}
         />
         <MetricCard
           icon={<Wallet className="h-4 w-4" />}
