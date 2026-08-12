@@ -245,17 +245,21 @@ function CustomerMapPage() {
             />
 
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <LegendDot className="bg-primary" label="Cliente na base" />
-              <LegendDot className="bg-sky-500" label="Coordenada Estimada" />
+              <LegendDot className="bg-[#e92b8d]" label="Cliente (Coordenada Real)" />
+              <LegendDot className="bg-sky-500" label="Cliente (Posição Estimada)" />
               <LegendDot className="bg-emerald-500" label="Cidade Selecionada" />
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-l border-border/50 pl-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                  Cores por Representante:
+                  Cores dos Pins:
                 </span>
-                <LegendDot className="bg-[#e92b8d]" label="Rep. A" />
-                <LegendDot className="bg-[#0ea5e9]" label="Rep. B" />
-                <LegendDot className="bg-[#f59e0b]" label="Rep. C" />
-                <LegendDot className="bg-[#8b5cf6]" label="Outros..." />
+                <div className="flex items-center gap-1.5">
+                  <div className="flex -space-x-1">
+                    <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#0ea5e9]" />
+                    <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#f59e0b]" />
+                    <div className="h-2.5 w-2.5 rounded-full border border-white bg-[#8b5cf6]" />
+                  </div>
+                  <span className="text-muted-foreground">Por Representante</span>
+                </div>
               </div>
               {usedFallback && (
                 <span className="rounded-full border border-warning/25 bg-warning/10 px-2 py-1 font-medium text-warning">
