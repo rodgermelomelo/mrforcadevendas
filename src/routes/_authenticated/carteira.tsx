@@ -4,7 +4,7 @@ import { Search, ShieldAlert, MapPin, Plus, ShoppingCart, PackageSearch, X, User
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, normalizeSearchText } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomerPicker } from "@/components/customer-picker";
@@ -36,15 +36,11 @@ function Carteira() {
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
 
   const results = useMemo(() => {
-    const q = term.trim().toLowerCase().replace(/[.\-/]/g, "");
+    const q = normalizeSearchText(term.trim());
     return customers.filter((c) => {
       if (sellerFilter !== "all" && c.sellerErpCode !== sellerFilter) return false;
       if (!q) return true;
-      return [c.erpCode, c.legalName, c.tradeName, c.taxId, c.city]
-        .join(" ")
-        .toLowerCase()
-        .replace(/[.\-/]/g, "")
-        .includes(q);
+      return normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf].join(" ")).includes(q);
     });
   }, [term, customers, sellerFilter]);
 

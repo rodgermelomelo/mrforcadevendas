@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
+import { normalizeSearchText } from "@/lib/utils";
 
 const RECENT_KEY = "mr-fdv:recent-customers";
 
@@ -45,14 +46,6 @@ export function useCustomerPicker(): CustomerPickerContextValue {
   const ctx = useContext(CustomerPickerContext);
   if (!ctx) throw new Error("useCustomerPicker precisa estar dentro de CustomerPickerProvider");
   return ctx;
-}
-
-function normalize(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[.\-/\s]/g, "");
 }
 
 export function CustomerPickerProvider({ children }: { children: ReactNode }) {
@@ -144,13 +137,13 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const results = useMemo(() => {
-    const q = normalize(term.trim());
+    const q = normalizeSearchText(term.trim());
     const list = q
       ? customers.filter((c) =>
-          normalize([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city].join(" ")).includes(q),
+          normalizeSearchText([c.erpCode, c.legalName, c.tradeName, c.taxId, c.city, c.uf].join(" ")).includes(q),
         )
       : customers;
-    return list.slice(0, 60);
+    return { rows: list.slice(0, 60), total: list.length };
   }, [term, customers]);
 
   const recentCustomers = useMemo(
@@ -234,8 +227,16 @@ export function CustomerPickerProvider({ children }: { children: ReactNode }) {
               {recentCustomers.map(renderRow("recent"))}
             </CommandGroup>
           )}
-          <CommandGroup heading={term ? "Resultados" : "Minha carteira"}>
-            {results.map(renderRow("all"))}
+          <CommandGroup
+            heading={`${term ? "Resultados" : "Minha carteira"} (${results.total.toLocaleString("pt-BR")})`}
+          >
+            {results.rows.map(renderRow("all"))}
+            {results.total > results.rows.length && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                Mostrando {results.rows.length.toLocaleString("pt-BR")} de{" "}
+                {results.total.toLocaleString("pt-BR")}
+              </div>
+            )}
           </CommandGroup>
         </CommandList>
           </Command>

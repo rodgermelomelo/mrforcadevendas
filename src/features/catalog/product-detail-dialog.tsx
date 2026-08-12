@@ -46,16 +46,16 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden rounded-2xl p-0">
-        <div className="flex flex-col md:flex-row">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-6xl overflow-hidden rounded-2xl p-0 sm:w-[calc(100vw-2rem)]">
+        <div className="grid max-h-[calc(100vh-1rem)] grid-cols-1 overflow-y-auto md:grid-cols-[minmax(320px,0.95fr)_minmax(420px,1fr)] md:overflow-hidden">
           {/* Imagem e Galeria */}
-          <div className="relative aspect-square w-full bg-muted md:w-1/2 flex flex-col">
-            <div className="relative flex-1 bg-muted">
+          <div className="relative flex min-h-[420px] flex-col bg-muted md:h-[calc(100vh-2rem)] md:max-h-[760px] md:min-h-0">
+            <div className="relative min-h-0 flex-1 bg-muted">
               {productImage(product.imageUrl) ? (
                 <img
                   src={productImage(product.imageUrl) ?? ""}
                   alt={product.name}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               ) : (
                 <div className="grid h-full place-items-center bg-brand-gradient p-8 text-center text-lg font-bold text-primary-foreground">
@@ -92,7 +92,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
             </div>
 
             {/* Miniaturas da Galeria */}
-            <div className="flex gap-2 p-3 bg-white/50 backdrop-blur-sm border-t border-border/50">
+            <div className="flex shrink-0 gap-2 border-t border-border/50 bg-white/50 p-3 backdrop-blur-sm">
               {[0, 1, 2].map((i) => (
                 <button
                   key={i}
@@ -119,9 +119,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
           </div>
 
           {/* Conteúdo */}
-          <div className="flex flex-1 flex-col p-6 md:max-h-[600px] md:overflow-y-auto">
+          <div className="min-w-0 p-5 md:max-h-[calc(100vh-2rem)] md:overflow-y-auto lg:p-7">
             <DialogHeader className="text-left">
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div className="mb-2 flex flex-wrap gap-2 pr-10">
                 <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] uppercase font-bold px-2 py-0.5">
                   <Building2 className="mr-1 h-3 w-3" /> {product.brand}
                 </Badge>
@@ -129,20 +129,35 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   <Tag className="mr-1 h-3 w-3" /> {(product as any).category || product.group}
                 </Badge>
               </div>
-              <DialogTitle className="text-xl font-bold leading-tight">{product.name}</DialogTitle>
+              <DialogTitle className="min-w-0 break-words pr-10 text-2xl font-bold leading-tight">
+                {product.name}
+              </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1 font-mono">Código: {product.erpCode}</p>
             </DialogHeader>
 
             <div className="mt-6 space-y-6">
               {/* Preço e Estoque */}
-              <div className="rounded-2xl bg-muted/50 p-4 border border-border/50">
+              <div className="rounded-2xl border border-border/50 bg-muted/50 p-4">
                 {!hasCustomer ? (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Preço sob consulta</p>
-                    <p className="text-xs text-muted-foreground">Selecione um cliente para visualizar o preço da tabela correspondente.</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Preço sob consulta</p>
+                      <p className="text-xs text-muted-foreground">
+                        Selecione um cliente para visualizar o preço da tabela correspondente.
+                      </p>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Disponibilidade
+                      </p>
+                      <div className={cn("inline-flex items-center gap-1.5 font-semibold", outOfStock ? "text-destructive" : "text-success")}>
+                        <Package className="h-4 w-4" />
+                        {product.stock.toLocaleString("pt-BR")} {product.unit}
+                      </div>
+                    </div>
                   </div>
                 ) : price.ok ? (
-                  <div className="flex items-end justify-between">
+                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Valor Unitário</p>
                       <p className="text-3xl font-black tracking-tight text-foreground">{formatBRL(price.value)}</p>
@@ -152,14 +167,25 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Disponibilidade</p>
                       <div className={cn("flex items-center gap-1.5 font-semibold", outOfStock ? "text-destructive" : "text-success")}>
                         <Package className="h-4 w-4" />
-                        {product.stock} {product.unit}
+                        {product.stock.toLocaleString("pt-BR")} {product.unit}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-warning">
-                    <AlertCircle className="h-5 w-5" />
-                    <p className="text-sm font-semibold">{price.message}</p>
+                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <div className="flex min-w-0 items-start gap-2 text-warning">
+                      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                      <p className="min-w-0 break-words text-sm font-semibold">{price.message}</p>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Disponibilidade
+                      </p>
+                      <div className={cn("inline-flex items-center gap-1.5 font-semibold", outOfStock ? "text-destructive" : "text-success")}>
+                        <Package className="h-4 w-4" />
+                        {product.stock.toLocaleString("pt-BR")} {product.unit}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -167,14 +193,14 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
               {/* Informações Adicionais */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Detalhes</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid gap-4 text-sm sm:grid-cols-2">
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Unidade</p>
                     <p className="font-semibold">{product.unit}</p>
                   </div>
-                  <div className="space-y-1">
+                  <div className="min-w-0 space-y-1">
                     <p className="text-muted-foreground">Grupo Comercial</p>
-                    <p className="font-semibold">{product.group}</p>
+                    <p className="break-words font-semibold">{product.group}</p>
                   </div>
                 </div>
               </div>
@@ -231,7 +257,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   <p className="text-sm font-bold text-destructive">
                     {outOfStock
                       ? "Este produto está sem saldo em estoque e não pode ser adicionado ao pedido."
-                      : "Tabela de preço do cliente sem nível configurado para este item."}
+                      : price.ok
+                        ? ""
+                        : price.message}
                   </p>
                 </div>
               )}

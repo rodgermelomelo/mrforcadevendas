@@ -23,6 +23,8 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
   const [qty, setQty] = useState(1);
   const price = resolvePrice(product, table);
   const outOfStock = product.stock <= 0;
+  const maxQty = product.stock > 0 ? Math.floor(product.stock) : 1;
+  const clampQty = (value: number) => Math.min(maxQty, Math.max(1, value));
 
   // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
   const blocked = hasCustomer && (outOfStock || !price.ok);
@@ -91,35 +93,41 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
         <div className="mt-2">
           {!hasCustomer ? (
             <p className="text-[11px] text-muted-foreground">
-              Estoque {product.stock} {product.unit} · selecione um cliente para o preço
+              Estoque {product.stock.toLocaleString("pt-BR")} {product.unit} · selecione um cliente para o preço
             </p>
           ) : price.ok ? (
             <>
               <p className="text-lg font-bold">{formatBRL(price.value)}</p>
               <p className="text-[11px] text-muted-foreground">
-                {price.levelLabel} · estoque {product.stock} {product.unit}
+                {price.levelLabel} · estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
               </p>
             </>
           ) : (
-            <p className="text-xs font-medium text-warning">{price.message}</p>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-warning">{price.message}</p>
+              <p className="text-[11px] text-muted-foreground">
+                Estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
+              </p>
+            </div>
           )}
         </div>
 
         {hasCustomer && !blocked && (
           <>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <QuantityStepper value={qty} onChange={setQty} />
+              <QuantityStepper value={qty} onChange={(value) => setQty(clampQty(value))} />
               {QUANTITY_SHORTCUTS.map((n) => (
                 <button
                   key={n}
-                  onClick={() => setQty(n)}
-                  className="rounded-lg border border-border px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  disabled={n > maxQty}
+                  onClick={() => setQty(clampQty(n))}
+                  className="rounded-lg border border-border px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {n}
                 </button>
               ))}
             </div>
-            <Button className="mt-3 w-full rounded-xl" onClick={() => onAdd(qty)}>
+            <Button className="mt-3 w-full rounded-xl" onClick={() => onAdd(clampQty(qty))}>
               Adicionar
             </Button>
           </>

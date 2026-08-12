@@ -17,6 +17,31 @@ export interface WorkspaceData {
   brandMetadata: Record<string, any>;
 }
 
+const PAGE_SIZE = 1000;
+
+async function fetchAllRows(
+  db: any,
+  table: string,
+  select = "*",
+  apply?: (query: any) => any,
+): Promise<{ data: any[]; error: any }> {
+  const rows: any[] = [];
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    let query = db.from(table).select(select);
+    if (apply) query = apply(query);
+
+    const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
+    if (error) return { data: rows, error };
+
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
+
+  return { data: rows, error: null };
+}
+
 /** Carrega carteira + catálogo do usuário autenticado (RLS limita a carteira visível). */
 export const getWorkspace = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -26,20 +51,58 @@ export const getWorkspace = createServerFn({ method: "GET" })
     // Use absolute raw supabase access with "as any" to bypass complex type checks
     const db: any = supabase;
 
-    const customersRes = await db.from("customers").select("*").eq("active", true).order("trade_name");
-    const productsRes = await db.from("products").select("*").eq("active", true).order("erp_code");
-    const pricesRes = await db.from("product_prices").select("*");
-    const tablesRes = await db.from("price_tables").select("*");
-    const groupsRes = await db.from("product_groups").select("*");
-    const inventoryRes = await db.from("inventory_snapshots").select("*");
-    const enrichRes = await db.from("product_enrichments").select("*");
-    const linksRes = await db.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId);
-    const profileRes = await db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle();
-    const rulesRes = await db.from("approval_rules").select("*").eq("active", true);
-    const roleRes = await db.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
-    const sellersRes = await db.from("erp_sellers").select("erp_code, name").order("erp_code");
-    const brandsRes = await db.from("brands").select("name, active, metadata").eq("active", true);
-    const goalsRes = await db.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01");
+    const [
+      customersRes,
+      productsRes,
+      pricesRes,
+      tablesRes,
+      groupsRes,
+      inventoryRes,
+      enrichRes,
+      linksRes,
+      profileRes,
+      rulesRes,
+      roleRes,
+      sellersRes,
+      brandsRes,
+      goalsRes,
+    ] = await Promise.all([
+      fetchAllRows(db, "customers", "*", (q) => q.eq("active", true).order("trade_name")),
+      fetchAllRows(db, "products", "*", (q) => q.eq("active", true).order("erp_code")),
+      fetchAllRows(db, "product_prices", "*", (q) => q.order("product_erp_code").order("price_table_code")),
+      fetchAllRows(db, "price_tables", "*", (q) => q.order("code")),
+      fetchAllRows(db, "product_groups", "*", (q) => q.order("code")),
+      fetchAllRows(db, "inventory_snapshots", "*", (q) => q.order("product_erp_code")),
+      fetchAllRows(db, "product_enrichments", "*", (q) => q.order("product_erp_code")),
+      db.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId),
+      db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
+      db.from("approval_rules").select("*").eq("active", true),
+      db.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      db.from("erp_sellers").select("erp_code, name").order("erp_code"),
+      db.from("brands").select("name, active, metadata").eq("active", true),
+      db.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
+    ]);
+
+    const failed = [
+      ["customers", customersRes],
+      ["products", productsRes],
+      ["product_prices", pricesRes],
+      ["price_tables", tablesRes],
+      ["product_groups", groupsRes],
+      ["inventory_snapshots", inventoryRes],
+      ["product_enrichments", enrichRes],
+      ["user_erp_seller_links", linksRes],
+      ["profiles", profileRes],
+      ["approval_rules", rulesRes],
+      ["user_roles", roleRes],
+      ["erp_sellers", sellersRes],
+      ["brands", brandsRes],
+      ["seller_goals", goalsRes],
+    ].find(([, result]) => result.error);
+
+    if (failed) {
+      throw new Error(`Falha ao carregar ${failed[0]}: ${failed[1].error.message}`);
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     const approvalRules: ApprovalRule[] = (rulesRes.data ?? [])
