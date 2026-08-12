@@ -24,6 +24,7 @@ import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedVisitasRouteImport } from './routes/_authenticated/visitas'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
+import { Route as AuthenticatedAdminAuditoriaSegmentosRouteImport } from './routes/_authenticated/admin.auditoria-segmentos'
 import { Route as AuthenticatedAdminCadastrosRouteImport } from './routes/_authenticated/admin.cadastros'
 import { Route as AuthenticatedAdminCategoriasRouteImport } from './routes/_authenticated/admin.categorias'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
@@ -117,6 +118,12 @@ const AuthenticatedAdminAuditoriaRoute =
   AuthenticatedAdminAuditoriaRouteImport.update({
     id: '/admin/auditoria',
     path: '/admin/auditoria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAuditoriaSegmentosRoute =
+  AuthenticatedAdminAuditoriaSegmentosRouteImport.update({
+    id: '/admin/auditoria-segmentos',
+    path: '/admin/auditoria-segmentos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminCadastrosRoute =
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/visitas': typeof AuthenticatedVisitasRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/admin/auditoria-segmentos': typeof AuthenticatedAdminAuditoriaSegmentosRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -276,6 +284,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/visitas': typeof AuthenticatedVisitasRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/admin/auditoria-segmentos': typeof AuthenticatedAdminAuditoriaSegmentosRoute
   '/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -312,6 +321,7 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/visitas': typeof AuthenticatedVisitasRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/_authenticated/admin/auditoria-segmentos': typeof AuthenticatedAdminAuditoriaSegmentosRoute
   '/_authenticated/admin/cadastros': typeof AuthenticatedAdminCadastrosRoute
   '/_authenticated/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/visitas'
     | '/admin/auditoria'
+    | '/admin/auditoria-segmentos'
     | '/admin/cadastros'
     | '/admin/categorias'
     | '/admin/clientes'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/visitas'
     | '/admin/auditoria'
+    | '/admin/auditoria-segmentos'
     | '/admin/cadastros'
     | '/admin/categorias'
     | '/admin/clientes'
@@ -417,6 +429,7 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/visitas'
     | '/_authenticated/admin/auditoria'
+    | '/_authenticated/admin/auditoria-segmentos'
     | '/_authenticated/admin/cadastros'
     | '/_authenticated/admin/categorias'
     | '/_authenticated/admin/clientes'
@@ -550,6 +563,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/auditoria'
       fullPath: '/admin/auditoria'
       preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/auditoria-segmentos': {
+      id: '/_authenticated/admin/auditoria-segmentos'
+      path: '/admin/auditoria-segmentos'
+      fullPath: '/admin/auditoria-segmentos'
+      preLoaderRoute: typeof AuthenticatedAdminAuditoriaSegmentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/cadastros': {
@@ -692,6 +712,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedVisitasRoute: typeof AuthenticatedVisitasRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
+  AuthenticatedAdminAuditoriaSegmentosRoute: typeof AuthenticatedAdminAuditoriaSegmentosRoute
   AuthenticatedAdminCadastrosRoute: typeof AuthenticatedAdminCadastrosRoute
   AuthenticatedAdminCategoriasRoute: typeof AuthenticatedAdminCategoriasRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
@@ -724,6 +745,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedVisitasRoute: AuthenticatedVisitasRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
+  AuthenticatedAdminAuditoriaSegmentosRoute:
+    AuthenticatedAdminAuditoriaSegmentosRoute,
   AuthenticatedAdminCadastrosRoute: AuthenticatedAdminCadastrosRoute,
   AuthenticatedAdminCategoriasRoute: AuthenticatedAdminCategoriasRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,

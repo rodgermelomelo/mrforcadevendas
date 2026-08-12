@@ -11,6 +11,7 @@ import {
   Scale,
   Stethoscope,
   ScrollText,
+  Layers,
   BadgePercent,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -50,6 +51,7 @@ const areas = [
   { to: "/admin/comissoes", icon: BadgePercent, title: "Comissões", text: "Percentuais por marca, categoria, produto e representantes." },
   { to: "/admin/diagnostico", icon: Stethoscope, title: "Diagnóstico do catálogo", text: "Classificação dos códigos vindos do ERP." },
   { to: "/admin/importacoes", icon: Upload, title: "Central de Importações", text: "Upload e publicação atômica do dados.txt." },
+  { to: "/admin/auditoria-segmentos", icon: Layers, title: "Auditoria de segmentos", text: "Clientes atualizados e falhas do importador de segmentos, com logs sanitizados." },
   { to: "/admin/auditoria", icon: ScrollText, title: "Auditoria", text: "Registro sanitizado das alterações administrativas." },
 ] as const;
 

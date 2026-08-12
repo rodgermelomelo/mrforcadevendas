@@ -7,6 +7,8 @@ import {
   buildEntities,
   summarize,
   publishEntities,
+  importCustomerSegments,
+  saveSegmentAudit,
   sha256Hex,
 } from "./erp/import.server";
 
@@ -107,16 +109,34 @@ export const publishErpFile = createServerFn({ method: "POST" })
       const catalogImpact = await analyzeCatalogImpact(supabase, entities);
       const counts = await publishEntities(supabase, entities);
 
+      // Segmentos dos clientes + trilha de auditoria (nunca derruba a publicação).
+      let segments: {
+        detection: { offset: number | null; confidence: number; matched: number; scanned: number };
+        totals: Record<string, number>;
+      } | null = null;
+      try {
+        const outcome = await importCustomerSegments(supabase, result.records);
+        await saveSegmentAudit(supabase, run.id, outcome.entries);
+        segments = { detection: outcome.detection, totals: outcome.totals };
+      } catch (segError: any) {
+        await supabase.from("erp_import_errors").insert({
+          run_id: run.id,
+          record_type: "segmentos",
+          message: `importacao_de_segmentos: ${String(segError?.message ?? "erro desconhecido").slice(0, 300)}`,
+        });
+      }
+
       await supabase
         .from("erp_import_runs")
         .update({
           status: "published",
           finished_at: new Date().toISOString(),
-          totals: JSON.parse(JSON.stringify({ counts, catalogImpact })),
+          totals: JSON.parse(JSON.stringify({ counts, catalogImpact, segments })),
         })
         .eq("id", run.id);
 
-      return { publishedAt: new Date().toISOString(), counts, catalogImpact };
+      return { publishedAt: new Date().toISOString(), counts, catalogImpact, segments };
+
     } catch (e: any) {
       await supabase
         .from("erp_import_runs")

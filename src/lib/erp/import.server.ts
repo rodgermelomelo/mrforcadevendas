@@ -5,6 +5,13 @@
 import { parseDadosV4, type ParsedRecords, type ParseResult } from "@/lib/erp/parser/dados-v4";
 import { diagnoseCatalog, type CatalogDiagnosis } from "@/lib/erp/catalog-diagnosis";
 import { inferProductTaxonomy, productGroupLabelMap } from "@/lib/erp/product-taxonomy";
+import { sanitizeMessage } from "@/lib/erp/parser/sanitize";
+import {
+  resolveCustomerSegments,
+  type SegmentAuditEntry,
+  type SegmentAuditStatus,
+  type SegmentColumnDetection,
+} from "@/lib/erp/customer-segments";
 
 /** Configuração administrativa do nível de preço por tabela. */
 export const PRICE_LEVEL_MAP: Record<string, number> = {
@@ -380,3 +387,84 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   );
   return done;
 }
+
+/* ========================= IMPORTAÇÃO DE SEGMENTOS ======================== */
+
+export interface SegmentImportOutcome {
+  detection: SegmentColumnDetection;
+  totals: Record<SegmentAuditStatus, number>;
+  entries: SegmentAuditEntry[];
+}
+
+/**
+ * Aplica o segmento comercial de cada cliente e devolve a trilha de auditoria.
+ * Nunca lança: falhas viram linhas de auditoria com motivo sanitizado, para que
+ * um problema de segmento não derrube a publicação inteira do ERP.
+ */
+export async function importCustomerSegments(
+  sb: AdminClient,
+  records: ParsedRecords,
+): Promise<SegmentImportOutcome> {
+  const segmentCodes = records.segments.map((s) => s.erpCode);
+  const existing = await fetchAllRows(sb, "customers", "erp_code, segment_code");
+  const currentByCustomer = new Map<string, string | null>(
+    existing.map((row: any) => [String(row.erp_code), (row.segment_code as string | null) ?? null]),
+  );
+
+  const result = resolveCustomerSegments(records.customers, segmentCodes, currentByCustomer);
+  const entries = [...result.entries];
+
+  // Só gravamos quem realmente mudou.
+  const toUpdate = entries.filter((entry) => entry.status === "updated");
+  for (let i = 0; i < toUpdate.length; i += CHUNK) {
+    const slice = toUpdate.slice(i, i + CHUNK);
+    const results = await Promise.all(
+      slice.map(async (entry) => {
+        const { error } = await sb
+          .from("customers")
+          .update({ segment_code: entry.newSegmentCode })
+          .eq("erp_code", entry.customerErpCode);
+        if (!error) {
+          await sb
+            .from("customer_seller_links")
+            .update({ segment_code: entry.newSegmentCode })
+            .eq("customer_erp_code", entry.customerErpCode);
+        }
+        return error ? entry.customerErpCode : null;
+      }),
+    );
+    for (const failedCode of results) {
+      if (!failedCode) continue;
+      const entry = entries.find((e2) => e2.customerErpCode === failedCode);
+      if (!entry) continue;
+      entry.status = "failed";
+      entry.reason = "erro_ao_gravar";
+    }
+  }
+
+  const totals: Record<SegmentAuditStatus, number> = { updated: 0, unchanged: 0, skipped: 0, failed: 0 };
+  for (const entry of entries) totals[entry.status] = (totals[entry.status] ?? 0) + 1;
+
+  return { detection: result.detection, totals, entries };
+}
+
+/** Persiste a trilha de auditoria (somente códigos — nenhuma PII). */
+export async function saveSegmentAudit(
+  sb: AdminClient,
+  runId: string | null,
+  entries: SegmentAuditEntry[],
+): Promise<void> {
+  const rows = entries.map((entry) => ({
+    run_id: runId,
+    customer_erp_code: entry.customerErpCode,
+    previous_segment_code: entry.previousSegmentCode,
+    new_segment_code: entry.newSegmentCode,
+    status: entry.status,
+    reason: sanitizeMessage(entry.reason),
+  }));
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const { error } = await sb.from("segment_import_audit").insert(rows.slice(i, i + CHUNK));
+    if (error) throw new Error(`insert segment_import_audit: ${error.message}`);
+  }
+}
+
