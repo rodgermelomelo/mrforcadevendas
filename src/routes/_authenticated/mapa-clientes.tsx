@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   Building2,
@@ -28,8 +28,23 @@ import {
   CUSTOMER_TILE_PROVIDERS,
   type CustomerTileProviderId,
 } from "@/features/customers/customer-tile-map";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/mapa-clientes")({
+  beforeLoad: async ({ context }) => {
+    // Apenas gestores (supervisor, gerente, administrador) podem acessar
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", (context as any).user.id);
+
+    const allowedRoles = ["supervisor", "gerente_comercial", "administrador"];
+    const hasAccess = roles?.some((r: { role: string }) => allowedRoles.includes(r.role));
+
+    if (!hasAccess) {
+      throw redirect({ to: "/catalogo" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Mapa de clientes · MR Força de Vendas" },

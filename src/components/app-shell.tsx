@@ -44,7 +44,7 @@ import {
 const nav = [
   { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
   { to: "/carteira", label: "Carteira", icon: Users, exact: false },
-  { to: "/mapa-clientes", label: "Mapa", icon: MapIcon, exact: false },
+  
   { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
   { to: "/carrinho", label: "Carrinho", icon: ShoppingCart, exact: false },
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
@@ -152,6 +152,23 @@ function AppShellInner({ children }: { children: ReactNode }) {
                 </Link>
               </SidebarMenuItem>
             ))}
+            {isApprover && (
+              <SidebarMenuItem>
+                <Link
+                  to="/mapa-clientes"
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive("/mapa-clientes", false)
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                  )}
+                >
+                  <MapIcon className="h-4 w-4 shrink-0" />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">Mapa</span>
+                </Link>
+              </SidebarMenuItem>
+            )}
 
             {isApprover && (
               <SidebarMenuItem>
@@ -321,6 +338,18 @@ function AppShellInner({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isApprover && (
+            <Link
+              to="/mapa-clientes"
+              className={cn(
+                "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors min-w-[64px]",
+                isActive("/mapa-clientes", false) ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <MapIcon className="h-5 w-5" />
+              Mapa
+            </Link>
+          )}
           {isApprover && (
             <Link
               to="/equipe"
