@@ -294,11 +294,11 @@ function AppShellInner({ children }: { children: ReactNode }) {
             )}
           </div>
           
-          <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="flex items-center gap-3 pointer-events-auto lg:hidden">
             <button
               type="button"
               onClick={() => openCustomerPicker({ startNewOrder: true })}
-              className="lg:hidden grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
+              className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
               aria-label="Novo pedido"
             >
               <Plus className="h-4 w-4" />
