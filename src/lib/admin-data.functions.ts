@@ -949,7 +949,7 @@ export const listRegistries = createServerFn({ method: "GET" })
     const finalBrands = [...allBrandNames]
       .sort((a, b) => a.localeCompare(b))
       .map(name => {
-        const tableRow = brandsTableData.find((b: any) => b.name === name);
+        const tableRow = brandsTableData.find((b: any) => b.name.toUpperCase() === name);
         return {
           code: name,
           label: name,
