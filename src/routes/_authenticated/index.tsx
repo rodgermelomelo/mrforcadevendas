@@ -26,8 +26,12 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
-  const { orders, hydrated, customer, customers, erpLastUpdate, sellerName } = useSales();
+  const { orders, hydrated, customer, customers, erpLastUpdate, sellerName, sellers } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
+  
+  const seller = sellers.find(s => s.name === sellerName);
+  const goal = seller?.monthlyGoal ?? 0;
+  
   const recentCustomers = customers.filter(c => orders.some(o => o.customerId === c.erpCode)).slice(0, 3);
 
   const totalSold = orders
@@ -66,8 +70,8 @@ function Dashboard() {
         <MetricCard
           icon={<TrendingUp className="h-4 w-4" />}
           label="Meta do mês"
-          value="Em breve"
-          hint="Preparado para receber metas do ERP"
+          value={hydrated ? (goal > 0 ? formatBRL(goal) : "Não definida") : "—"}
+          hint={goal > 0 ? `${((totalSold / goal) * 100).toFixed(1)}% atingido` : "Contate seu supervisor"}
         />
         <MetricCard
           icon={<Wallet className="h-4 w-4" />}

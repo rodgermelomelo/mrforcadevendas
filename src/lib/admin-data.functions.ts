@@ -18,7 +18,7 @@ async function audit(
   action: string,
   detail: Record<string, unknown>,
 ) {
-  await context.supabase.from("audit_logs").insert({
+  await context.supabase.from("audit_logs" as any).insert({
     actor_id: context.userId,
     entity,
     entity_id: entityId,
@@ -115,18 +115,21 @@ export interface AdminSeller {
   active: boolean;
   customerCount: number;
   users: { userId: string; label: string }[];
+  monthlyGoal?: number;
 }
 
 export const listSellers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AdminSeller[]> => {
     await assertAdmin(context);
-    const [sellersRes, customersRes, linksRes, profilesRes] = await Promise.all([
+    const [sellersRes, customersRes, linksRes, profilesRes, goalsRes] = await Promise.all([
       context.supabase.from("erp_sellers").select("*").order("erp_code"),
       context.supabase.from("customers").select("seller_erp_code"),
       context.supabase.from("user_erp_seller_links").select("*"),
       context.supabase.from("profiles").select("id, full_name, email"),
+      context.supabase.from("seller_goals" as any).select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
     ]);
+    const goals = new Map((goalsRes.data ?? []).map((g: any) => [g.seller_erp_code, Number(g.target_value)]));
     const count = new Map<string, number>();
     for (const c of customersRes.data ?? []) {
       count.set(c.seller_erp_code, (count.get(c.seller_erp_code) ?? 0) + 1);
@@ -146,7 +149,54 @@ export const listSellers = createServerFn({ method: "GET" })
       active: s.active,
       customerCount: count.get(s.erp_code) ?? 0,
       users: linksBySeller.get(s.erp_code) ?? [],
+      monthlyGoal: goals.get(s.erp_code) ?? 0,
     }));
+  });
+
+export interface SellerGoal {
+  id: string;
+  sellerErpCode: string;
+  month: string;
+  targetValue: number;
+}
+
+export const listSellerGoals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { month: string }) => input)
+  .handler(async ({ data, context }): Promise<SellerGoal[]> => {
+    await assertAdmin(context);
+    const { data: rows, error } = await context.supabase
+      .from("seller_goals" as any)
+      .select("*")
+      .eq("month", data.month);
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r: any) => ({
+      id: r.id,
+      sellerErpCode: r.seller_erp_code,
+      month: r.month,
+      targetValue: Number(r.target_value),
+    }));
+  });
+
+export const updateSellerGoal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { sellerErpCode: string; month: string; targetValue: number }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase.from("seller_goals" as any).upsert(
+      {
+        seller_erp_code: data.sellerErpCode,
+        month: data.month,
+        target_value: data.targetValue,
+      },
+      { onConflict: "seller_erp_code, month" },
+    );
+    if (error) throw new Error(error.message);
+    await audit(context, "seller_goals", data.sellerErpCode, "update_goal", {
+      month: data.month,
+      target: data.targetValue,
+    });
+    return { ok: true };
   });
 
 export const updateSeller = createServerFn({ method: "POST" })
