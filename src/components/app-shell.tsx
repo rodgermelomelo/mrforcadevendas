@@ -271,7 +271,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col relative">
         <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 lg:px-6 pointer-events-none">
           <div className="flex items-center gap-4 pointer-events-auto">
-            <SidebarTrigger className="hidden lg:flex bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background" />
+            {/* SidebarTrigger was here, moved to SidebarHeader */}
             <div className="flex min-w-0 items-center gap-2 lg:hidden bg-background/80 backdrop-blur px-3 py-1.5 rounded-xl border border-border/50 shadow-sm">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-gradient text-[10px] font-black text-primary-foreground shadow-sm">
                 MR
