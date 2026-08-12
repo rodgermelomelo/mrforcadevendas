@@ -81,12 +81,11 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
 
   const products = records.products.map((p) => {
     // Tenta extrair a marca e a categoria da descrição oficial
-    // Heurística baseada nos exemplos reais e na estrutura desejada: MARCA -> CATEGORIA -> PRODUTO
     const desc = (p.officialDescription || "").toUpperCase();
     let brand = "OUTROS";
     let category = "DIVERSOS";
 
-    // 1. Identificar MARCA (com normalização de casing)
+    // 1. Identificar MARCA
     // Prioridade para marcas conhecidas na descrição
     if (desc.includes("DAILUS")) brand = "DAILUS";
     else if (desc.includes("ACEMAR")) brand = "ACEMAR";
@@ -96,15 +95,13 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     else if (desc.includes("VERNISSAGE")) brand = "VERNISSAGE";
     else if (desc.includes("FOX")) brand = "FOX";
     
-    // Fallback de marca pelo grupo ERP se não encontrou na descrição
+    // Fallback de marca pelo grupo ERP
     if (brand === "OUTROS" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
-        // Se o grupo é "ACEMAR - ACESSORIOS", a marca é ACEMAR
         const parts = g.label.trim().split(/\s*-\s*|\s+/);
         const groupFirstPart = parts[0] ? parts[0].toUpperCase() : g.label.toUpperCase();
         
-        // Lista de marcas conhecidas para validar o primeiro nome do grupo
         const KNOWN_BRANDS = ["DAILUS", "ACEMAR", "ÁGUA DE CHEIRO", "DIVINA FLORA", "CUCCIO", "VERNISSAGE", "FOX"];
         if (KNOWN_BRANDS.includes(groupFirstPart)) {
           brand = groupFirstPart;
@@ -113,7 +110,6 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
     }
 
     // 2. Identificar CATEGORIA
-    // Mapeamento de palavras-chave para categorias semânticas
     const categories = [
       "AMACIANTE", "AMOLECEDOR", "BASE", "BATOM", "BLUSH", "ESMALTE", 
       "PINCEL", "PÓ COMPACTO", "CORRETIVO", "ILUMINADOR", "MÁSCARA", 
@@ -129,19 +125,18 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       }
     }
 
-    // Heurística específica para ACEMAR: O grupo ERP costuma ser a categoria real
+    // Heurística específica para ACEMAR: O grupo ERP é a categoria real (ex: ACEMAR - ACESSORIOS)
     if (brand === "ACEMAR" && p.erpGroupCode) {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
-        // Ex: "ACEMAR - ACESSORIOS" -> Categoria "ACESSORIOS"
         const labelUpper = g.label.toUpperCase();
         if (labelUpper.includes("ACEMAR")) {
           const parts = g.label.split(/\s*-\s*/);
           if (parts.length > 1) {
             category = (parts[1] || "").trim().toUpperCase() || category;
           } else {
-            // Se for apenas "ACEMAR", tentamos extrair o que vem depois
-            category = labelUpper.replace("ACEMAR", "").trim() || category;
+            const clean = labelUpper.replace("ACEMAR", "").trim();
+            if (clean) category = clean;
           }
         }
       }
@@ -152,7 +147,6 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       const g = records.productGroups.find(group => group.erpCode === p.erpGroupCode);
       if (g?.label) {
         let groupName = g.label.toUpperCase();
-        // Remove a marca do nome do grupo para tentar pegar a categoria
         const cleanCategory = groupName.replace(brand, "").replace(/^-/, "").trim();
         if (cleanCategory) category = cleanCategory;
       }
@@ -331,12 +325,36 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["erp_sellers"] = await upsertAll(sb, "erp_sellers", e.erp_sellers, "erp_code");
   done["products"] = await upsertAll(sb, "products", e.products, "erp_code");
   
-  // Garantir que as marcas detectadas existam na tabela brands para não quebrar o catálogo
   const distinctBrands = [...new Set(e.products.map(p => p['brand'] as string))].filter(Boolean);
   if (distinctBrands.length > 0) {
     const brandRows = distinctBrands.map(name => ({ name, active: true }));
-    // Upsert na tabela brands ignorando se já existir
     await sb.from("brands").upsert(brandRows, { onConflict: "name", ignoreDuplicates: true });
+  }
+
+  const allProducts = await sb.from("products").select("erp_code, brand, category").eq("active", true);
+  if (allProducts.data) {
+    const brandsWithHierarchy = new Map<string, Set<string>>();
+    for (const p of allProducts.data) {
+      if (p.brand && p.category && p.brand !== "OUTROS" && p.category !== "DIVERSOS") {
+        const categories = brandsWithHierarchy.get(p.brand) || new Set();
+        categories.add(p.category);
+        brandsWithHierarchy.set(p.brand, categories);
+      }
+    }
+
+    for (const [brandName, brandCategories] of brandsWithHierarchy.entries()) {
+      const categoryRows = Array.from(brandCategories).map(cat => ({
+        name: cat,
+        active: true,
+        metadata: { isCategory: true, parentBrand: brandName }
+      }));
+      await sb.from("brands").upsert(categoryRows, { onConflict: "name", ignoreDuplicates: true });
+      
+      const { data: brandRow } = await sb.from("brands").select("metadata").eq("name", brandName).single();
+      const currentMeta = brandRow?.metadata || {};
+      const updatedMeta = { ...currentMeta, categories: Array.from(brandCategories) };
+      await sb.from("brands").update({ metadata: updatedMeta }).eq("name", brandName);
+    }
   }
 
   done["product_prices"] = await upsertAll(sb, "product_prices", e.product_prices, "product_erp_code,price_table_code");
