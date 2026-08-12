@@ -433,7 +433,7 @@ const PRODUCT_PAGE_SIZE = 25;
 
 /** Coleta códigos (limitado) para filtros que dependem de outras tabelas. */
 async function codesFrom(builder: any): Promise<Set<string>> {
-  const { data } = await builder.limit(20000);
+  const { data } = await builder.limit(40000);
   return new Set((data ?? []).map((r: any) => r.product_erp_code as string));
 }
 
