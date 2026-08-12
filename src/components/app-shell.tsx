@@ -112,7 +112,10 @@ function AppShellInner({ children }: { children: ReactNode }) {
               <span className="block truncate text-xs text-muted-foreground">MR Cosméticos</span>
             </span>
           </Link>
-          <div className="mt-6 px-2 group-data-[collapsible=icon]:px-0">
+          <div className="mt-4 hidden lg:flex px-2 group-data-[collapsible=icon]:px-0">
+            <SidebarTrigger className="bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background h-10 w-full group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:p-0 justify-center" />
+          </div>
+          <div className="mt-4 px-2 group-data-[collapsible=icon]:px-0">
             <button
               type="button"
               onClick={() => openCustomerPicker({ startNewOrder: true })}
