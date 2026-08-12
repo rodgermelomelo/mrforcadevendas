@@ -133,10 +133,12 @@ function RootComponent() {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       if (event === "SIGNED_OUT") {
-        // Sem sessão, revalidar a rota dispararia loaders protegidos sem token.
+        // Primeiro desmonta os observers protegidos. Limpar o cache enquanto o
+        // SalesProvider ainda está montado pode recriar consultas já sem token.
         void queryClient.cancelQueries();
-        queryClient.clear();
-        void router.navigate({ to: "/auth", replace: true });
+        void router.navigate({ to: "/auth", replace: true }).then(() => {
+          queryClient.clear();
+        });
         return;
       }
       void router.invalidate();

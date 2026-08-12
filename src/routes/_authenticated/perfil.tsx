@@ -52,9 +52,9 @@ function ProfilePage() {
 
   const signOut = async () => {
     await queryClient.cancelQueries();
-    queryClient.clear();
     await supabase.auth.signOut();
-    void navigate({ to: "/auth", replace: true });
+    await navigate({ to: "/auth", replace: true });
+    queryClient.clear();
   };
 
   const getRoleLabel = (r: string | null) => {
