@@ -49,7 +49,10 @@ function AuthPage() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        void navigate({ to: "/", replace: true });
+        // Invalida o router para forçar a re-execução do beforeLoad na rota raiz
+        void navigate({ to: "/", replace: true }).then(() => {
+          window.location.reload();
+        });
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email,
