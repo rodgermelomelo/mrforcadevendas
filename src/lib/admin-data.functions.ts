@@ -942,8 +942,8 @@ export const listRegistries = createServerFn({ method: "GET" })
     
     // Unificar marcas da tabela com marcas encontradas nos produtos (normalizando para maiúsculas)
     const allBrandNames = new Set([
-      ...brandsTableNames.map(n => n.toUpperCase()),
-      ...Array.from(productCounts.keys()).map(k => k.toUpperCase())
+      ...Array.from(brandsTableNames).map((n: any) => n.toUpperCase()),
+      ...Array.from(productCounts.keys()).map((k: any) => k.toUpperCase())
     ]);
 
     const finalBrands = [...allBrandNames]
