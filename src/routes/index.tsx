@@ -1,0 +1,1 @@
+por que a acemar esta constando com 0 produtos? sendo que tem várias categorias e produtos nela?
