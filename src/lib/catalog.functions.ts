@@ -10,7 +10,7 @@ export interface WorkspaceData {
   groups: string[];
   sellerName: string;
   sellerCodes: string[];
-  sellers: { code: string; name: string; customerCount: number; monthlyGoal?: number }[];
+  sellers: { code: string; name: string; customerCount: number; monthlyGoal?: number | undefined }[];
   lastUpdate: string | null;
   approvalRules: ApprovalRule[];
   role: string | null;
@@ -53,7 +53,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       supabase.from("erp_sellers").select("erp_code, name").order("erp_code"),
       supabase.from("brands").select("name, active, metadata").eq("active", true),
       supabase.from("seller_goals" as any).select("*").eq("month" as any, new Date().toISOString().slice(0, 7) + "-01"),
-    ]);
+    ] as const);
 
     const today = new Date().toISOString().slice(0, 10);
     const approvalRules: ApprovalRule[] = (rulesRes.data ?? [])
