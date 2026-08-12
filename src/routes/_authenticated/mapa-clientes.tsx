@@ -68,11 +68,22 @@ function CustomerMapPage() {
   const [tileProvider, setTileProvider] = useState<CustomerTileProviderId>("carto-voyager");
   const [usedFallback, setUsedFallback] = useState(false);
 
+  const segments = useMemo(() => {
+    const s = new Set<string>();
+    customers.forEach((c) => {
+      if (c.segment) s.add(c.segment);
+    });
+    return Array.from(s).sort();
+  }, [customers]);
+
+  const [segmentFilter, setSegmentFilter] = useState<string>("all");
+
   const filteredCustomers = useMemo(() => {
     const q = normalizeSearchText(term.trim());
 
     return customers.filter((customer) => {
       if (sellerFilter !== ALL_SELLERS && customer.sellerErpCode !== sellerFilter) return false;
+      if (segmentFilter !== "all" && customer.segment !== segmentFilter) return false;
       if (!q) return true;
 
       return normalizeSearchText(
@@ -84,10 +95,11 @@ function CustomerMapPage() {
           customer.city,
           customer.uf,
           customer.sellerErpCode,
+          customer.segment,
         ].join(" "),
       ).includes(q);
     });
-  }, [customers, sellerFilter, term]);
+  }, [customers, sellerFilter, segmentFilter, term]);
 
   const mapData = useMemo(() => buildCustomerMapData(filteredCustomers), [filteredCustomers]);
 
@@ -189,13 +201,58 @@ function CustomerMapPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={sellerFilter}
+              onValueChange={(value) => {
+                setSellerFilter(value);
+                setSelectedCityKey(null);
+              }}
+            >
+              <SelectTrigger className="h-12 w-full rounded-xl bg-card sm:w-[200px]">
+                <Users className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Representante" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                <SelectItem value={ALL_SELLERS}>Todos</SelectItem>
+                {sellers.map((seller) => (
+                  <SelectItem key={seller.code} value={seller.code}>
+                    {seller.code} · {seller.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={segmentFilter}
+              onValueChange={(value) => {
+                setSegmentFilter(value);
+                setSelectedCityKey(null);
+              }}
+            >
+              <SelectTrigger className="h-12 w-full rounded-xl bg-card sm:w-[180px]">
+                <Building2 className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Segmento" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                <SelectItem value="all">Todos Segmentos</SelectItem>
+                {segments.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button
               variant="outline"
               className="h-12 rounded-xl"
-              onClick={() => setSellerFilter(ALL_SELLERS)}
-              disabled={sellerFilter === ALL_SELLERS}
+              onClick={() => {
+                setSellerFilter(ALL_SELLERS);
+                setSegmentFilter("all");
+              }}
+              disabled={sellerFilter === ALL_SELLERS && segmentFilter === "all"}
             >
-              Limpar Filtro
+              Limpar
             </Button>
           </div>
           <div className="rounded-xl border border-border bg-card p-1">

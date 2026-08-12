@@ -11,6 +11,7 @@ import type {
 } from "leaflet";
 import type { CustomerCityCluster, CustomerMapPoint } from "@/lib/customer-map";
 import { cn } from "@/lib/utils";
+import { Map as MapIcon } from "lucide-react";
 
 export const CUSTOMER_TILE_PROVIDERS = [
   {
@@ -189,8 +190,11 @@ export function CustomerTileMap({
   }, [providerId, ready]);
 
   useEffect(() => {
-    if (tileFailures < 4 || providerId === "esri-streets") return;
-    onProviderFallback("esri-streets");
+    if (tileFailures < 4) return;
+    // Fallback logic disabled since esri-streets was removed.
+    // In a real scenario, we would fallback to the other available provider.
+    const otherProvider = providerId === "carto-voyager" ? "carto-positron" : "carto-voyager";
+    onProviderFallback(otherProvider);
   }, [onProviderFallback, providerId, tileFailures]);
 
   useEffect(() => {
