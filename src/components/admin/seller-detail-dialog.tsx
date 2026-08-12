@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SellerGoalsDialog } from "@/components/admin/seller-goals-dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
