@@ -38,7 +38,7 @@ function Dashboard() {
     <div className="mx-auto w-full max-w-6xl space-y-8">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">Bem-vindo ao Modo Construção, {sellerName}</p>
+          <p className="text-sm text-muted-foreground">Bem-vindo, {sellerName}</p>
           <h1 className="mt-1 text-3xl font-bold sm:text-4xl">
             Seu <span className="text-brand-gradient">painel comercial</span>
           </h1>

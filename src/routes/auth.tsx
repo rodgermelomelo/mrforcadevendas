@@ -268,6 +268,10 @@ function AuthPage() {
                 <p className="font-bold text-foreground mb-1">Prioridade:</p>
                 <p>Interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.</p>
               </div>
+
+              <div className="pt-2 border-t border-border/30 mt-4 text-[10px] opacity-50 italic">
+                vamos lá, Luciano é Gerente e gerencia uma equipe, Edmilson também, ambos Gerenciam uma equipe
+              </div>
             </div>
           </div>
         </div>
