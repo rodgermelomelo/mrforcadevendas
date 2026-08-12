@@ -52,9 +52,9 @@ function isClockSkewError(error: any): boolean {
   return message.includes("issued at future") || message.includes("jwt not yet valid");
 }
 
-async function runQuery<T extends { error: any }>(fn: () => Promise<T>): Promise<T> {
+async function runQuery(fn: () => Promise<any>): Promise<any> {
   let result = await fn();
-  for (let attempt = 0; attempt < 3 && isClockSkewError(result.error); attempt++) {
+  for (let attempt = 0; attempt < 3 && isClockSkewError(result?.error); attempt++) {
     await new Promise((resolve) => setTimeout(resolve, 700));
     result = await fn();
   }
