@@ -86,7 +86,7 @@ async function signedPhotoUrl(path: string) {
   }
 }
 
-async function toVisit(row: VisitRow): Promise<CustomerVisit> {
+async function toVisit(row: VisitRow, includePhotoUrl = true): Promise<CustomerVisit> {
   return {
     id: row.id,
     customerErpCode: row.customer_erp_code,
@@ -100,7 +100,7 @@ async function toVisit(row: VisitRow): Promise<CustomerVisit> {
     shelfStatus: row.shelf_status,
     proofStatus: row.proof_status,
     proofPhotoPath: row.proof_photo_path,
-    proofPhotoUrl: await signedPhotoUrl(row.proof_photo_path),
+    proofPhotoUrl: includePhotoUrl ? await signedPhotoUrl(row.proof_photo_path) : null,
     notes: row.notes,
     routineIntervalDays: row.routine_interval_days,
     nextVisitDate: row.next_visit_date,
@@ -156,7 +156,9 @@ export const listCustomerVisits = createServerFn({ method: "GET" })
       .limit(250);
     if (error) throw new Error(error.message);
 
-    return Promise.all(((data ?? []) as unknown as VisitRow[]).map((row) => toVisit(row)));
+    return Promise.all(
+      ((data ?? []) as unknown as VisitRow[]).map((row, index) => toVisit(row, index < 40)),
+    );
   });
 
 export const createCustomerVisit = createServerFn({ method: "POST" })

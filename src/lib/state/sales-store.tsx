@@ -9,10 +9,15 @@ import {
   type ReactNode,
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import type { CartItem, Customer, Order, PriceTable, Product } from "@/lib/domain/types";
 import { resolvePrice } from "@/lib/pricing";
-import { getWorkspace } from "@/lib/catalog.functions";
+import {
+  getCatalogWorkspace,
+  getWorkspaceCore,
+  type BrandMetadataEntry,
+} from "@/lib/workspace.functions";
 import { setApprovalMatrix } from "@/lib/orders/validation";
 import { createOrder, listOrders, type CreateOrderInput } from "@/lib/orders.functions";
 
@@ -58,7 +63,7 @@ interface SalesContextValue extends DraftState {
   productGroups: string[];
   erpLastUpdate: string | null;
   orders: Order[];
-  brandMetadata: Record<string, any>;
+  brandMetadata: Record<string, BrandMetadataEntry>;
   customer: Customer | null;
   table: PriceTable | undefined;
   lines: CartLine[];
@@ -67,7 +72,12 @@ interface SalesContextValue extends DraftState {
   total: number;
   itemCount: number;
   sellerName: string;
-  sellers: { code: string; name: string; customerCount: number; monthlyGoal?: number | undefined }[];
+  sellers: {
+    code: string;
+    name: string;
+    customerCount: number;
+    monthlyGoal?: number | undefined;
+  }[];
   role: string | null;
   selectCustomer: (id: string) => void;
   clearCustomer: () => void;
@@ -94,7 +104,11 @@ function formatStock(value: number, unit: string) {
   return `${value.toLocaleString("pt-BR")} ${unit}`;
 }
 
-function stockExceededResult(product: Product, requested: number, current: number): CartMutationResult {
+function stockExceededResult(
+  product: Product,
+  requested: number,
+  current: number,
+): CartMutationResult {
   const available = stockLimit(product);
   const already = current > 0 ? ` Você já tem ${current.toLocaleString("pt-BR")} no carrinho.` : "";
   return {
@@ -111,17 +125,36 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef<DraftState>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
   const queryClient = useQueryClient();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const needsCatalog =
+    pathname.startsWith("/catalogo") ||
+    pathname.startsWith("/carrinho") ||
+    pathname.startsWith("/pedido/revisar");
 
-  const fetchWorkspace = useServerFn(getWorkspace);
+  const fetchWorkspaceCore = useServerFn(getWorkspaceCore);
+  const fetchCatalogWorkspace = useServerFn(getCatalogWorkspace);
   const fetchOrders = useServerFn(listOrders);
   const submit = useServerFn(createOrder);
 
-  const workspaceQuery = useQuery({
+  const coreQuery = useQuery({
     queryKey: ["workspace"],
-    queryFn: () => fetchWorkspace(),
-    staleTime: 60_000,
+    queryFn: () => fetchWorkspaceCore(),
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
-  const ordersQuery = useQuery({ queryKey: ["orders"], queryFn: () => fetchOrders() });
+  const catalogQuery = useQuery({
+    queryKey: ["workspace", "catalog"],
+    queryFn: () => fetchCatalogWorkspace(),
+    enabled: needsCatalog,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const ordersQuery = useQuery({
+    queryKey: ["orders"],
+    queryFn: () => fetchOrders(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
   const createMutation = useMutation({
     mutationFn: (input: CreateOrderInput) => submit({ data: input }),
@@ -154,12 +187,12 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   }, [state, hydrated]);
 
   useEffect(() => {
-    if (workspaceQuery.data?.approvalRules) setApprovalMatrix(workspaceQuery.data.approvalRules);
-  }, [workspaceQuery.data]);
+    if (coreQuery.data?.approvalRules) setApprovalMatrix(coreQuery.data.approvalRules);
+  }, [coreQuery.data]);
 
-  const customers = useMemo(() => workspaceQuery.data?.customers ?? [], [workspaceQuery.data]);
-  const products = useMemo(() => workspaceQuery.data?.products ?? [], [workspaceQuery.data]);
-  const priceTables = useMemo(() => workspaceQuery.data?.priceTables ?? [], [workspaceQuery.data]);
+  const customers = useMemo(() => coreQuery.data?.customers ?? [], [coreQuery.data]);
+  const products = useMemo(() => catalogQuery.data?.products ?? [], [catalogQuery.data]);
+  const priceTables = useMemo(() => coreQuery.data?.priceTables ?? [], [coreQuery.data]);
 
   const customer = useMemo(
     () => customers.find((c) => c.id === state.customerId) ?? null,
@@ -201,19 +234,22 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     setState(nextState);
   }, []);
 
-  const update = useCallback((patch: Partial<DraftState>) => {
-    commitState((prev) => ({ ...prev, ...patch }));
-  }, [commitState]);
+  const update = useCallback(
+    (patch: Partial<DraftState>) => {
+      commitState((prev) => ({ ...prev, ...patch }));
+    },
+    [commitState],
+  );
 
   const value: SalesContextValue = {
     ...state,
-    hydrated: hydrated && !workspaceQuery.isLoading,
-    loading: workspaceQuery.isLoading || ordersQuery.isLoading,
+    hydrated: hydrated && !coreQuery.isLoading && (!needsCatalog || !catalogQuery.isLoading),
+    loading: coreQuery.isLoading || (needsCatalog && catalogQuery.isLoading),
     customers,
     products,
     priceTables,
-    productGroups: workspaceQuery.data?.groups ?? [],
-    erpLastUpdate: workspaceQuery.data?.lastUpdate ?? null,
+    productGroups: catalogQuery.data?.groups ?? [],
+    erpLastUpdate: coreQuery.data?.lastUpdate ?? null,
     orders: ordersQuery.data ?? [],
     customer,
     table,
@@ -222,10 +258,10 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     discountValue,
     total,
     itemCount,
-    sellerName: workspaceQuery.data?.sellerName ?? "Vendedor",
-    sellers: workspaceQuery.data?.sellers ?? [],
-    role: (workspaceQuery.data as any)?.role ?? null,
-    brandMetadata: workspaceQuery.data?.brandMetadata ?? {},
+    sellerName: coreQuery.data?.sellerName ?? "Vendedor",
+    sellers: coreQuery.data?.sellers ?? [],
+    role: coreQuery.data?.role ?? null,
+    brandMetadata: coreQuery.data?.brandMetadata ?? {},
     selectCustomer: (id) =>
       commitState((prev) => ({
         ...prev,
@@ -243,7 +279,13 @@ export function SalesProvider({ children }: { children: ReactNode }) {
       const addQuantity = Math.max(1, Math.floor(quantity));
       const requested = current + addQuantity;
       if (!product) {
-        return { ok: false, message: "Produto não encontrado no catálogo atual.", available: 0, requested, current };
+        return {
+          ok: false,
+          message: "Produto não encontrado no catálogo atual.",
+          available: 0,
+          requested,
+          current,
+        };
       }
       if (requested > stockLimit(product)) return stockExceededResult(product, requested, current);
 
@@ -265,11 +307,20 @@ export function SalesProvider({ children }: { children: ReactNode }) {
       const requested = Math.floor(quantity);
       const current = stateRef.current.cart.find((i) => i.productId === productId)?.quantity ?? 0;
       if (requested <= 0) {
-        commitState((prev) => ({ ...prev, cart: prev.cart.filter((i) => i.productId !== productId) }));
+        commitState((prev) => ({
+          ...prev,
+          cart: prev.cart.filter((i) => i.productId !== productId),
+        }));
         return { ok: true, quantity: 0 };
       }
       if (!product) {
-        return { ok: false, message: "Produto não encontrado no catálogo atual.", available: 0, requested, current };
+        return {
+          ok: false,
+          message: "Produto não encontrado no catálogo atual.",
+          available: 0,
+          requested,
+          current,
+        };
       }
       if (requested > stockLimit(product)) return stockExceededResult(product, requested, current);
 
@@ -289,7 +340,10 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         ),
       })),
     removeItem: (productId) =>
-      commitState((prev) => ({ ...prev, cart: prev.cart.filter((i) => i.productId !== productId) })),
+      commitState((prev) => ({
+        ...prev,
+        cart: prev.cart.filter((i) => i.productId !== productId),
+      })),
     clearCart: () => update({ cart: [], orderDiscountPercent: 0, isBonus: false, notes: "" }),
     setOrderDiscount: (percent) =>
       update({ orderDiscountPercent: Math.min(100, Math.max(0, percent)) }),

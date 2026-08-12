@@ -22,7 +22,10 @@ export const Route = createFileRoute("/_authenticated/pedido/revisar")({
           "Checkout comercial com descontos por item e por pedido, bonificação, exceções e roteamento de aprovação.",
       },
       { property: "og:title", content: "Revisar pedido — MR Força de Vendas" },
-      { property: "og:description", content: "Valide o pedido antes de gerar ou solicitar aprovação." },
+      {
+        property: "og:description",
+        content: "Valide o pedido antes de gerar ou solicitar aprovação.",
+      },
     ],
   }),
   component: RevisarPedido,
@@ -58,9 +61,24 @@ function displayCommercialIssue<T extends { code?: string; label: string; detail
 function RevisarPedido() {
   const sales = useSales();
   const {
-    customer, table, lines, subtotal, discountValue, total, orderDiscountPercent,
-    isBonus, notes, paymentTerm, setItemDiscount, setOrderDiscount, setBonus, setNotes,
-    sellerName, submitting, role,
+    customer,
+    table,
+    lines,
+    subtotal,
+    discountValue,
+    total,
+    orderDiscountPercent,
+    isBonus,
+    notes,
+    paymentTerm,
+    setItemDiscount,
+    setOrderDiscount,
+    setBonus,
+    setNotes,
+    sellerName,
+    submitting,
+    role,
+    hydrated,
   } = sales;
   const navigate = useNavigate();
   const submitLockRef = useRef(false);
@@ -68,11 +86,12 @@ function RevisarPedido() {
   const [nfPercent, setNfPercent] = useState(0);
   const [boletoPercent, setBoletoPercent] = useState(0);
   const [agreementNote, setAgreementNote] = useState("");
-  const financialAgreement = { nfPercent, boletoPercent, note: agreementNote };
-
-  const nonStandardTerms = Boolean(
-    customer && paymentTerm && paymentTerm !== customer.paymentTerm,
+  const financialAgreement = useMemo(
+    () => ({ nfPercent, boletoPercent, note: agreementNote }),
+    [nfPercent, boletoPercent, agreementNote],
   );
+
+  const nonStandardTerms = Boolean(customer && paymentTerm && paymentTerm !== customer.paymentTerm);
 
   const validation = useMemo(
     () =>
@@ -93,8 +112,28 @@ function RevisarPedido() {
         subtotal,
         total,
       }),
-    [customer, table, lines, orderDiscountPercent, isBonus, nonStandardTerms, nfPercent, boletoPercent, agreementNote, subtotal, total],
+    [
+      customer,
+      table,
+      lines,
+      orderDiscountPercent,
+      isBonus,
+      nonStandardTerms,
+      financialAgreement,
+      subtotal,
+      total,
+    ],
   );
+
+  if (!hydrated) {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+    );
+  }
 
   if (!customer || lines.length === 0) {
     return (
@@ -144,8 +183,7 @@ function RevisarPedido() {
         orderDiscountPercent,
         isBonus,
         notes,
-        financialAgreement:
-          nfPercent > 0 || boletoPercent > 0 ? financialAgreement : null,
+        financialAgreement: nfPercent > 0 || boletoPercent > 0 ? financialAgreement : null,
         exceptions: validation.exceptions,
         requiredAuthority: validation.requiredAuthority,
       });
@@ -158,14 +196,13 @@ function RevisarPedido() {
     }
   };
 
-
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <header>
         <h1 className="text-3xl font-bold sm:text-4xl">Revisar pedido</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
-          Rep. {customer.sellerErpCode ?? "—"} ·{" "}
+          Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> · Rep.{" "}
+          {customer.sellerErpCode ?? "—"} ·{" "}
           {showPriceTableDetails && (
             <>
               Tabela {table?.code ?? "—"} · {table?.levelLabel ?? "nível pendente"} ·{" "}
@@ -196,7 +233,10 @@ function RevisarPedido() {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
         <section className="space-y-3">
           {lines.map((line) => (
-            <article key={line.product.id} className="surface-card grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <article
+              key={line.product.id}
+              className="surface-card grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+            >
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{line.product.name}</p>
                 <p className="text-xs text-muted-foreground">
@@ -210,7 +250,10 @@ function RevisarPedido() {
                   <Input
                     value={line.discountPercent}
                     onChange={(e) =>
-                      setItemDiscount(line.product.id, Number(e.target.value.replace(/[^\d.]/g, "")) || 0)
+                      setItemDiscount(
+                        line.product.id,
+                        Number(e.target.value.replace(/[^\d.]/g, "")) || 0,
+                      )
                     }
                     inputMode="decimal"
                     className="h-9 w-16 rounded-lg text-center"
@@ -229,7 +272,9 @@ function RevisarPedido() {
                 <span className="text-muted-foreground">Desconto total do pedido (%)</span>
                 <Input
                   value={orderDiscountPercent}
-                  onChange={(e) => setOrderDiscount(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)}
+                  onChange={(e) =>
+                    setOrderDiscount(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)
+                  }
                   inputMode="decimal"
                   className="mt-1 h-11 rounded-xl"
                 />
@@ -263,8 +308,8 @@ function RevisarPedido() {
             <div>
               <h3 className="text-sm font-semibold">Acordo financeiro</h3>
               <p className="text-xs text-muted-foreground">
-                Percentual concedido na nota fiscal e/ou somente no boleto. Qualquer acordo
-                envia o pedido para <strong>análise do gestor</strong> antes de confirmar.
+                Percentual concedido na nota fiscal e/ou somente no boleto. Qualquer acordo envia o
+                pedido para <strong>análise do gestor</strong> antes de confirmar.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -281,7 +326,9 @@ function RevisarPedido() {
                 <span className="text-muted-foreground">% somente no boleto</span>
                 <Input
                   value={boletoPercent}
-                  onChange={(e) => setBoletoPercent(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)}
+                  onChange={(e) =>
+                    setBoletoPercent(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)
+                  }
                   inputMode="decimal"
                   className="mt-1 h-11 rounded-xl"
                 />
@@ -298,7 +345,8 @@ function RevisarPedido() {
             </label>
             {(nfPercent > 0 || boletoPercent > 0) && (
               <p className="text-xs text-warning">
-                Com acordo financeiro, este pedido vai para análise do gestor (não é confirmado automaticamente).
+                Com acordo financeiro, este pedido vai para análise do gestor (não é confirmado
+                automaticamente).
               </p>
             )}
           </div>

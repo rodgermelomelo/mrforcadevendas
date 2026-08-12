@@ -30,7 +30,8 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 function Catalogo() {
-  const { customer, table, addItem, itemCount, products, role, brandMetadata } = useSales();
+  const { customer, table, addItem, itemCount, products, role, brandMetadata, loading } =
+    useSales();
   const { openCustomerPicker } = useCustomerPicker();
   const isAdmin = role === "administrador";
   const showPriceTableDetails = canViewPriceTableDetails(role);
@@ -41,6 +42,7 @@ function Catalogo() {
 
   const inStockCount = useMemo(() => products.filter((p) => p.stock > 0).length, [products]);
   const tableBlocked = Boolean(customer) && (!table || table.mappedLevel === null);
+  const catalogLoading = loading && products.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-6">
@@ -61,9 +63,10 @@ function Catalogo() {
             </p>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
-              {products.length.toLocaleString("pt-BR")} produtos ·{" "}
-              {inStockCount.toLocaleString("pt-BR")} com estoque. Selecione um cliente para ver
-              preços e montar um pedido.
+              {catalogLoading
+                ? "Carregando produtos, preços e estoque..."
+                : `${products.length.toLocaleString("pt-BR")} produtos · ${inStockCount.toLocaleString("pt-BR")} com estoque.`}{" "}
+              Selecione um cliente para ver preços e montar um pedido.
             </p>
           )}
         </div>
@@ -129,7 +132,13 @@ function Catalogo() {
         resultCount={filters.filtered.length}
       />
 
-      {filters.filtered.length === 0 ? (
+      {catalogLoading ? (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <ProductCardSkeleton key={`catalog-loading-${index}`} />
+          ))}
+        </div>
+      ) : filters.filtered.length === 0 ? (
         <div className="surface-card flex min-h-[40vh] flex-col items-center justify-center p-12 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Search className="h-8 w-8 text-muted-foreground/50" />
@@ -170,7 +179,9 @@ function Catalogo() {
             ))}
 
             {filters.loading &&
-              Array.from({ length: 5 }).map((_, i) => <ProductCardSkeleton key={`skeleton-${i}`} />)}
+              Array.from({ length: 5 }).map((_, i) => (
+                <ProductCardSkeleton key={`skeleton-${i}`} />
+              ))}
           </div>
 
           {filters.hasMore && !filters.loading && (
