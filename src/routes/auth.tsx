@@ -38,7 +38,9 @@ function AuthPage() {
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void navigate({ to: "/", replace: true });
+      if (data.session) {
+        void navigate({ to: "/catalogo", replace: true });
+      }
     });
   }, [navigate]);
 
