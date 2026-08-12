@@ -374,6 +374,10 @@ export const decideOrder = createServerFn({ method: "POST" })
   .inputValidator((input: { orderId: string; decision: "approve" | "reject" | "changes"; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: isApprover, error: approverError } = await supabase.rpc("is_approver", { _user_id: userId });
+    if (approverError) throw new Error(approverError.message);
+    if (isApprover !== true) throw new Error("Apenas aprovadores podem decidir pedidos.");
+
     if (data.decision !== "approve" && data.reason.trim().length < 5) {
       throw new Error("Informe o motivo/orientação para o vendedor.");
     }
@@ -387,7 +391,10 @@ export const decideOrder = createServerFn({ method: "POST" })
         integration_status: data.decision === "approve" ? "awaiting_erp_integration" : "not_ready",
         confirmed_at: data.decision === "approve" ? new Date().toISOString() : null,
       })
-      .eq("id", data.orderId);
+      .eq("id", data.orderId)
+      .eq("status", "pending_approval")
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
 
     await supabase
