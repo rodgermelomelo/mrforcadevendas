@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle } from "lucide-react";
+import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ interface ProductDetailDialogProps {
 export function ProductDetailDialog({ product, open, onOpenChange }: ProductDetailDialogProps) {
   const { customer, table, addItem } = useSales();
   const [qty, setQty] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (!product) return null;
 
@@ -38,24 +39,74 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl overflow-hidden rounded-2xl p-0">
         <div className="flex flex-col md:flex-row">
-          {/* Imagem */}
-          <div className="relative aspect-square w-full bg-muted md:w-1/2">
-            {productImage(product.imageUrl) ? (
-              <img
-                src={productImage(product.imageUrl) ?? ""}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="grid h-full place-items-center bg-brand-gradient p-8 text-center text-lg font-bold text-primary-foreground">
-                {product.name}
+          {/* Imagem e Galeria */}
+          <div className="relative aspect-square w-full bg-muted md:w-1/2 flex flex-col">
+            <div className="relative flex-1 bg-muted">
+              {productImage(product.imageUrl) ? (
+                <img
+                  src={productImage(product.imageUrl) ?? ""}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-full place-items-center bg-brand-gradient p-8 text-center text-lg font-bold text-primary-foreground">
+                  {product.name}
+                </div>
+              )}
+              {product.isLaunch && (
+                <Badge className="absolute left-4 top-4 bg-brand-gradient px-3 py-1 text-xs font-bold uppercase tracking-wider text-white border-none z-10">
+                  Lançamento
+                </Badge>
+              )}
+              
+              {/* Navegação da Galeria (Simulada com a mesma imagem para demonstração de UI) */}
+              <div className="absolute inset-y-0 left-0 flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 ml-2"
+                  onClick={() => setCurrentImageIndex(prev => prev === 0 ? 2 : prev - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
               </div>
-            )}
-            {product.isLaunch && (
-              <Badge className="absolute left-4 top-4 bg-brand-gradient px-3 py-1 text-xs font-bold uppercase tracking-wider text-white border-none">
-                Lançamento
-              </Badge>
-            )}
+              <div className="absolute inset-y-0 right-0 flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 mr-2"
+                  onClick={() => setCurrentImageIndex(prev => prev === 2 ? 0 : prev + 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Miniaturas da Galeria */}
+            <div className="flex gap-2 p-3 bg-white/50 backdrop-blur-sm border-t border-border/50">
+              {[0, 1, 2].map((i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentImageIndex(i)}
+                  className={cn(
+                    "relative h-12 w-12 rounded-lg overflow-hidden border-2 transition-all",
+                    currentImageIndex === i ? "border-primary shadow-sm" : "border-transparent opacity-60 hover:opacity-100"
+                  )}
+                >
+                  {productImage(product.imageUrl) ? (
+                    <img
+                      src={productImage(product.imageUrl) ?? ""}
+                      alt={`${product.name} thumbnail ${i}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-brand-gradient flex items-center justify-center text-[10px] font-bold text-white">
+                      {i + 1}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Conteúdo */}
