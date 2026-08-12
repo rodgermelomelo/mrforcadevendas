@@ -144,18 +144,6 @@ export function CatalogFilterBar({
                 </button>
               </Badge>
             ))}
-            {selectedSegments.map((s) => (
-              <Badge
-                key={s}
-                variant="secondary"
-                className="flex items-center gap-1.5 rounded-full border-primary/10 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary shadow-sm"
-              >
-                {s}
-                <button onClick={() => onToggleSegment(s)} className="rounded-full p-0.5 hover:bg-primary/20 transition-colors">
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </Badge>
-            ))}
             {onlyInStock && (
               <Badge
                 variant="secondary"
