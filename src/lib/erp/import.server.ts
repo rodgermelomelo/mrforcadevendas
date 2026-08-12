@@ -304,6 +304,15 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["price_tables"] = await upsertAll(sb, "price_tables", e.price_tables, "code");
   done["erp_sellers"] = await upsertAll(sb, "erp_sellers", e.erp_sellers, "erp_code");
   done["products"] = await upsertAll(sb, "products", e.products, "erp_code");
+  
+  // Garantir que as marcas detectadas existam na tabela brands para não quebrar o catálogo
+  const distinctBrands = [...new Set(e.products.map(p => p['brand'] as string))].filter(Boolean);
+  if (distinctBrands.length > 0) {
+    const brandRows = distinctBrands.map(name => ({ name, active: true }));
+    // Upsert na tabela brands ignorando se já existir
+    await sb.from("brands").upsert(brandRows, { onConflict: "name", ignoreDuplicates: true });
+  }
+
   done["product_prices"] = await upsertAll(sb, "product_prices", e.product_prices, "product_erp_code,price_table_code");
   done["inventory_snapshots"] = await upsertAll(sb, "inventory_snapshots", e.inventory_snapshots, "product_erp_code");
   done["catalog_review"] = await upsertAll(sb, "catalog_review", e.catalog_review, "erp_code");

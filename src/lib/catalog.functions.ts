@@ -114,6 +114,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
 
     const products: Product[] = (productsRes.data ?? [])
       .filter((p) => {
+        if (activeBrands.size === 0) return true;
         const brand = p.brand || (groupName.get(p.group_code ?? "") ?? p.group_code ?? "Outros").split(" ")[0];
         return activeBrands.has(brand);
       })
