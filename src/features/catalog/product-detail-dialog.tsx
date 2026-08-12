@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { X, Minus, Plus, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle } from "lucide-react";
+import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle } from "lucide-react";
+import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,26 +124,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                 <div className="pt-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold">Quantidade</span>
-                    <div className="flex items-center rounded-xl border border-border bg-card shadow-sm">
-                      <button
-                        className="grid h-10 w-10 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                        onClick={() => setQty((q) => Math.max(1, q - 1))}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <input
-                        value={qty}
-                        onChange={(e) => setQty(Math.max(1, Number(e.target.value.replace(/\D/g, "")) || 1))}
-                        inputMode="numeric"
-                        className="w-12 bg-transparent text-center text-base font-bold outline-none"
-                      />
-                      <button
-                        className="grid h-10 w-10 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                        onClick={() => setQty((q) => q + 1)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <QuantityStepper value={qty} onChange={setQty} size="md" />
                   </div>
                   
                   <div className="flex gap-2">
