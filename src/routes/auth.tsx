@@ -270,7 +270,7 @@ function AuthPage() {
               </div>
 
               <div className="pt-2 border-t border-border/30 mt-4 text-[10px] opacity-50 italic">
-                vamos lá, Luciano é Gerente e gerencia uma equipe, Edmilson também, ambos Gerenciam uma equipe
+                melhorar a pagina de gerenciar usuários, perfis e permissões do sistema.
               </div>
             </div>
           </div>
