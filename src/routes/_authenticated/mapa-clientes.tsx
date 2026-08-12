@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Building2,
   CircleDot,
+  Layers,
   LocateFixed,
   Map as MapIcon,
   MapPin,
@@ -21,12 +22,12 @@ import {
 } from "@/components/ui/select";
 import { cn, normalizeSearchText } from "@/lib/utils";
 import { useSales } from "@/lib/state/sales-store";
+import { buildCustomerMapData, type CustomerCityCluster } from "@/lib/customer-map";
 import {
-  buildCustomerMapData,
-  getMapBounds,
-  projectCoordinate,
-  type CustomerCityCluster,
-} from "@/lib/customer-map";
+  CustomerTileMap,
+  CUSTOMER_TILE_PROVIDERS,
+  type CustomerTileProviderId,
+} from "@/features/customers/customer-tile-map";
 
 export const Route = createFileRoute("/_authenticated/mapa-clientes")({
   head: () => ({
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/mapa-clientes")({
       { title: "Mapa de clientes · MR Força de Vendas" },
       {
         name: "description",
-        content: "Visualize a carteira comercial em um mapa aproximado com um ponto por cliente.",
+        content: "Visualize a carteira comercial em mapa real com um ponto por cliente.",
       },
     ],
   }),
@@ -49,6 +50,8 @@ function CustomerMapPage() {
   const [term, setTerm] = useState("");
   const [sellerFilter, setSellerFilter] = useState(ALL_SELLERS);
   const [selectedCityKey, setSelectedCityKey] = useState<string | null>(null);
+  const [tileProvider, setTileProvider] = useState<CustomerTileProviderId>("carto-voyager");
+  const [usedFallback, setUsedFallback] = useState(false);
 
   const filteredCustomers = useMemo(() => {
     const q = normalizeSearchText(term.trim());
@@ -72,7 +75,6 @@ function CustomerMapPage() {
   }, [customers, sellerFilter, term]);
 
   const mapData = useMemo(() => buildCustomerMapData(filteredCustomers), [filteredCustomers]);
-  const bounds = useMemo(() => getMapBounds(mapData.points), [mapData.points]);
 
   const selectedCluster = useMemo(
     () => mapData.clusters.find((cluster) => cluster.key === selectedCityKey) ?? null,
@@ -85,9 +87,13 @@ function CustomerMapPage() {
   const cityCoverage = mapData.clusters.length
     ? Math.round((mapData.knownCityCount / mapData.clusters.length) * 100)
     : 0;
+  const handleProviderFallback = useCallback((providerId: CustomerTileProviderId) => {
+    setTileProvider(providerId);
+    setUsedFallback(true);
+  }, []);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6">
       <header className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
@@ -95,8 +101,8 @@ function CustomerMapPage() {
           </p>
           <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Mapa de clientes</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Cada ponto representa um cliente. A posição usa cidade/UF do cadastro atual; quando
-            vários clientes estão na mesma cidade, os pontos são espalhados ao redor dela.
+            Mapa real com tiles CARTO e um pin por cliente. A posição usa cidade/UF do cadastro;
+            quando vários clientes estão na mesma cidade, os pins são espalhados ao redor do centro.
           </p>
         </div>
         <Button asChild variant="outline" className="rounded-xl">
@@ -134,7 +140,7 @@ function CustomerMapPage() {
       </section>
 
       <section className="surface-card p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_18rem_25rem]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -167,6 +173,31 @@ function CustomerMapPage() {
               ))}
             </SelectContent>
           </Select>
+          <div className="rounded-xl border border-border bg-card p-1">
+            <div className="grid grid-cols-3 gap-1">
+              {CUSTOMER_TILE_PROVIDERS.map((provider) => (
+                <button
+                  key={provider.id}
+                  type="button"
+                  onClick={() => {
+                    setTileProvider(provider.id);
+                    setUsedFallback(false);
+                  }}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-left text-xs transition-colors",
+                    tileProvider === provider.id
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <Layers className="h-3.5 w-3.5" /> {provider.name.replace("CARTO ", "")}
+                  </span>
+                  <span className="mt-0.5 block opacity-80">{provider.detail}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -178,8 +209,7 @@ function CustomerMapPage() {
                 <MapIcon className="h-5 w-5 text-primary" /> Distribuição visual
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Visualização aproximada por cidade, útil para cobertura comercial e concentração da
-                carteira.
+                Pan, zoom e popups por cliente. Bolhas maiores indicam concentração por cidade.
               </p>
             </div>
             {selectedCluster && (
@@ -193,135 +223,26 @@ function CustomerMapPage() {
             )}
           </div>
 
-          <div className="bg-muted/30 p-3 sm:p-5">
-            <svg
-              viewBox="0 0 100 100"
-              role="img"
-              aria-label="Mapa visual com pontos de clientes por cidade"
-              className="h-[32rem] w-full rounded-2xl border border-border bg-card shadow-inner"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <pattern
-                  id="customer-map-grid"
-                  width="10"
-                  height="10"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M 10 0 L 0 0 0 10"
-                    className="stroke-border/60"
-                    fill="none"
-                    strokeWidth="0.12"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100" height="100" className="fill-background" />
-              <rect width="100" height="100" fill="url(#customer-map-grid)" />
-              <path
-                d="M12 78 C22 64 27 56 35 50 C43 44 51 44 60 37 C70 30 79 20 88 17"
-                className="fill-none stroke-muted-foreground/20"
-                strokeWidth="0.7"
-              />
-              <path
-                d="M18 84 C28 72 35 66 44 61 C54 56 63 52 72 43 C80 35 86 27 92 20"
-                className="fill-none stroke-primary/10"
-                strokeWidth="2.2"
-              />
-
-              {mapData.clusters.slice(0, 12).map((cluster) => {
-                const projected = projectCoordinate(cluster.coordinate, bounds);
-                const selected = cluster.key === selectedCluster?.key;
-                return (
-                  <text
-                    key={cluster.key}
-                    x={projected.x}
-                    y={Math.max(projected.y - 2.2, 3)}
-                    textAnchor="middle"
-                    className={cn(
-                      "pointer-events-none select-none fill-muted-foreground text-[2.4px] font-semibold uppercase",
-                      selected && "fill-primary",
-                    )}
-                  >
-                    {cluster.city}
-                  </text>
-                );
-              })}
-
-              {focusedCluster && (
-                <circle
-                  cx={projectCoordinate(focusedCluster.coordinate, bounds).x}
-                  cy={projectCoordinate(focusedCluster.coordinate, bounds).y}
-                  r="4.8"
-                  className="fill-primary/10 stroke-primary/35"
-                  strokeWidth="0.35"
-                />
-              )}
-
-              {mapData.points.map((point) => {
-                const projected = projectCoordinate(point.coordinate, bounds);
-                const selected = point.cityKey === selectedCluster?.key;
-                const muted = Boolean(selectedCluster && !selected);
-                const radius = selected ? 0.82 : mapData.points.length > 2500 ? 0.38 : 0.52;
-
-                return (
-                  <g
-                    key={point.id}
-                    role="button"
-                    tabIndex={0}
-                    className={cn(
-                      "cursor-pointer outline-none transition-opacity",
-                      muted && "opacity-20",
-                    )}
-                    onClick={() => setSelectedCityKey(selected ? null : point.cityKey)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setSelectedCityKey(selected ? null : point.cityKey);
-                      }
-                    }}
-                  >
-                    <title>
-                      {point.tradeName} · {point.city}/{point.uf} · Rep.{" "}
-                      {point.sellerErpCode ?? "—"}
-                    </title>
-                    <circle
-                      cx={projected.x}
-                      cy={projected.y}
-                      r={radius + 0.25}
-                      className={cn("fill-background/80", selected && "fill-primary/20")}
-                    />
-                    <circle
-                      cx={projected.x}
-                      cy={projected.y}
-                      r={radius}
-                      className={cn(
-                        "fill-primary/75 stroke-background",
-                        !point.knownCoordinate && "fill-sky-500/70",
-                        selected && "fill-emerald-500",
-                      )}
-                      strokeWidth="0.18"
-                    />
-                  </g>
-                );
-              })}
-
-              {!loading && mapData.points.length === 0 && (
-                <text
-                  x="50"
-                  y="50"
-                  textAnchor="middle"
-                  className="fill-muted-foreground text-[3px] font-semibold"
-                >
-                  Nenhum cliente encontrado para os filtros atuais
-                </text>
-              )}
-            </svg>
+          <div className="space-y-3 bg-muted/30 p-3 sm:p-5">
+            <CustomerTileMap
+              points={mapData.points}
+              clusters={mapData.clusters}
+              selectedCityKey={selectedCityKey}
+              providerId={tileProvider}
+              loading={loading}
+              onSelectCity={setSelectedCityKey}
+              onProviderFallback={handleProviderFallback}
+            />
 
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <LegendDot className="bg-primary" label="Cidade conhecida" />
+              <LegendDot className="bg-primary" label="Cliente por representante" />
               <LegendDot className="bg-sky-500" label="Estimado pela UF" />
               <LegendDot className="bg-emerald-500" label="Cidade selecionada" />
+              {usedFallback && (
+                <span className="rounded-full border border-warning/25 bg-warning/10 px-2 py-1 font-medium text-warning">
+                  Fallback ativado para Esri Street
+                </span>
+              )}
             </div>
           </div>
         </section>
