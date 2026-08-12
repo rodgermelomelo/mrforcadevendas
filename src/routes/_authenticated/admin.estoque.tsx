@@ -2,17 +2,30 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { 
-  ImageOff, Loader2, Search, Package, Bookmark, 
-  Tag, Box, Plus, Trash2, ArrowRight, AlertCircle, X
+import {
+  ImageOff,
+  Loader2,
+  Search,
+  Package,
+  Bookmark,
+  Tag,
+  Box,
+  Plus,
+  Trash2,
+  ArrowRight,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPage, Pager } from "@/components/admin/admin-page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductDetailDialog, HealthBadge } from "@/components/admin/product-detail-dialog";
-import { 
-  listProducts, listRegistries, updateRegistry, 
-  bulkUpdateProductBrand, type CodeLabelRow 
+import {
+  listProducts,
+  listRegistries,
+  updateRegistry,
+  bulkUpdateProductBrand,
+  type CodeLabelRow,
 } from "@/lib/admin-data.functions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -26,6 +39,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoriesAdminView } from "@/components/admin/categories-admin-view";
+import { resolveProductImage } from "@/lib/product-images";
 
 export const Route = createFileRoute("/_authenticated/admin/estoque")({
   component: UnifiedEstoquePage,
@@ -34,7 +48,8 @@ export const Route = createFileRoute("/_authenticated/admin/estoque")({
       { title: "Estoque e Produtos · MR Força de Vendas" },
       {
         name: "description",
-        content: "Gestão unificada de catálogo, estoque, preços e classificação de marcas e categorias.",
+        content:
+          "Gestão unificada de catálogo, estoque, preços e classificação de marcas e categorias.",
       },
       { property: "og:title", content: "Estoque e Produtos · MR Força de Vendas" },
       { property: "og:type", content: "website" },
@@ -60,7 +75,7 @@ function UnifiedEstoquePage() {
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [newBrand, setNewBrand] = useState("");
-  
+
   // States from admin.marcas
   const [viewingBrandProducts, setViewingBrandProducts] = useState<string | null>(null);
   const [viewingBrandCategories, setViewingBrandCategories] = useState<string | null>(null);
@@ -70,15 +85,20 @@ function UnifiedEstoquePage() {
     queryFn: () => loadProducts({ data: { term: productTerm, page } }),
     enabled: activeTab === "produtos",
   });
-  
-  const registriesQuery = useQuery({ 
-    queryKey: ["admin", "registries"], 
-    queryFn: () => loadRegistries() 
+
+  const registriesQuery = useQuery({
+    queryKey: ["admin", "registries"],
+    queryFn: () => loadRegistries(),
   });
 
   const registryMutation = useMutation({
-    mutationFn: (input: { kind: "brands"; code: string; label: string; active: boolean; metadata?: any }) => 
-      saveRegistry({ data: input }),
+    mutationFn: (input: {
+      kind: "brands";
+      code: string;
+      label: string;
+      active: boolean;
+      metadata?: Record<string, unknown> | undefined;
+    }) => saveRegistry({ data: input }),
     onSuccess: async () => {
       toast.success("Marca atualizada.");
       await queryClient.invalidateQueries({ queryKey: ["admin", "registries"] });
@@ -99,10 +119,13 @@ function UnifiedEstoquePage() {
     onError: (err) => toast.error(err.message),
   });
 
-  const groups = (registriesQuery.data?.groups ?? []).map((g) => ({ code: g.code, label: `${g.code} · ${g.label}` }));
+  const groups = (registriesQuery.data?.groups ?? []).map((g) => ({
+    code: g.code,
+    label: `${g.code} · ${g.label}`,
+  }));
   const brands = registriesQuery.data?.brands ?? [];
-  const mainBrands = brands.filter(b => !b.metadata?.isCategory);
-  const categories = brands.filter(b => b.metadata?.isCategory);
+  const mainBrands = brands.filter((b) => !b.metadata?.isCategory);
+  const categories = brands.filter((b) => b.metadata?.isCategory);
 
   const filteredBrands = mainBrands
     .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
@@ -116,10 +139,16 @@ function UnifiedEstoquePage() {
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted p-1">
-          <TabsTrigger value="produtos" className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger
+            value="produtos"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
             <Package className="h-4 w-4" /> Produtos e Estoque
           </TabsTrigger>
-          <TabsTrigger value="marcas" className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger
+            value="marcas"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
             <Bookmark className="h-4 w-4" /> Marcas e Categorias
           </TabsTrigger>
         </TabsList>
@@ -130,16 +159,23 @@ function UnifiedEstoquePage() {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={productTerm}
-                onChange={(e) => { setProductTerm(e.target.value); setPage(0); }}
+                onChange={(e) => {
+                  setProductTerm(e.target.value);
+                  setPage(0);
+                }}
                 placeholder="Buscar produtos por código ou nome..."
                 className="pl-10 rounded-2xl border-border bg-card shadow-sm transition-all focus:border-primary"
               />
             </div>
-            <Button asChild variant="outline" className="rounded-xl border-primary/20 text-primary hover:bg-primary/5">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+            >
               <Link to="/catalogo">Ver no catálogo</Link>
             </Button>
           </div>
-          
+
           {productsQuery.isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -154,42 +190,82 @@ function UnifiedEstoquePage() {
             <div className="space-y-2">
               <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
                 <Checkbox
-                  checked={selectedCodes.length > 0 && selectedCodes.length === (productsQuery.data?.rows?.length ?? 0)}
+                  checked={
+                    selectedCodes.length > 0 &&
+                    selectedCodes.length === (productsQuery.data?.rows?.length ?? 0)
+                  }
                   onCheckedChange={() => {
-                    if (selectedCodes.length === (productsQuery.data?.rows?.length ?? 0)) setSelectedCodes([]);
-                    else setSelectedCodes(productsQuery.data?.rows?.map(r => r.erpCode) ?? []);
+                    if (selectedCodes.length === (productsQuery.data?.rows?.length ?? 0))
+                      setSelectedCodes([]);
+                    else setSelectedCodes(productsQuery.data?.rows?.map((r) => r.erpCode) ?? []);
                   }}
                 />
-                <span className="text-sm font-medium text-muted-foreground">Selecionar todos nesta página</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Selecionar todos nesta página
+                </span>
               </div>
 
-              {(productsQuery.data?.rows ?? []).map(product => (
-                <div key={product.erpCode} className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md">
+              {(productsQuery.data?.rows ?? []).map((product) => (
+                <div
+                  key={product.erpCode}
+                  className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
+                >
                   <div className="flex h-full items-center pr-1">
-                    <Checkbox 
+                    <Checkbox
                       checked={selectedCodes.includes(product.erpCode)}
-                      onCheckedChange={() => setSelectedCodes(prev => prev.includes(product.erpCode) ? prev.filter(c => c !== product.erpCode) : [...prev, product.erpCode])}
+                      onCheckedChange={() =>
+                        setSelectedCodes((prev) =>
+                          prev.includes(product.erpCode)
+                            ? prev.filter((c) => c !== product.erpCode)
+                            : [...prev, product.erpCode],
+                        )
+                      }
                     />
                   </div>
-                  <button className="flex flex-1 items-center gap-3 text-left" onClick={() => setOpenProductCode(product.erpCode)}>
+                  <button
+                    className="flex flex-1 items-center gap-3 text-left"
+                    onClick={() => setOpenProductCode(product.erpCode)}
+                  >
                     <div className="h-12 w-12 shrink-0 rounded-xl bg-muted flex items-center justify-center overflow-hidden">
-                      {product.imageUrl ? <img src={product.imageUrl} className="h-full w-full object-cover" /> : <ImageOff className="h-4 w-4 text-muted-foreground" />}
+                      {resolveProductImage(product) ? (
+                        <img
+                          src={resolveProductImage(product) ?? ""}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <ImageOff className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold truncate">{product.displayName || product.name}</p>
+                      <p className="font-semibold truncate">
+                        {product.displayName || product.name}
+                      </p>
                       <p className="text-xs text-muted-foreground truncate">
                         {product.erpCode} · {product.unit}
                         {product.brand ? ` · ${product.brand}` : ""}
                       </p>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        <HealthBadge tone={product.stock > 0 ? "ok" : product.stock < 0 ? "bad" : "muted"} label={`Estoque ${product.stock.toLocaleString("pt-BR")}`} />
-                        <HealthBadge tone={!product.hasPrice ? "bad" : product.hasUnmappedTable ? "warn" : "ok"} label={!product.hasPrice ? "Sem preço" : `${product.priceTables} tabelas`} />
+                        <HealthBadge
+                          tone={product.stock > 0 ? "ok" : product.stock < 0 ? "bad" : "muted"}
+                          label={`Estoque ${product.stock.toLocaleString("pt-BR")}`}
+                        />
+                        <HealthBadge
+                          tone={
+                            !product.hasPrice ? "bad" : product.hasUnmappedTable ? "warn" : "ok"
+                          }
+                          label={!product.hasPrice ? "Sem preço" : `${product.priceTables} tabelas`}
+                        />
                       </div>
                     </div>
                   </button>
                 </div>
               ))}
-              <Pager page={page} total={productsQuery.data?.total ?? 0} size={SIZE} onChange={setPage} />
+              <Pager
+                page={page}
+                total={productsQuery.data?.total ?? 0}
+                size={SIZE}
+                onChange={setPage}
+              />
             </div>
           )}
         </TabsContent>
@@ -212,11 +288,13 @@ function UnifiedEstoquePage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filteredBrands.map((brand) => (
-                <div 
+                <div
                   key={brand.code}
                   onClick={() => setViewingBrandProducts(brand.code)}
                   className={`group flex flex-col gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md cursor-pointer ${
-                    brand.active ? "border-border bg-card" : "border-border/50 bg-muted/30 opacity-75"
+                    brand.active
+                      ? "border-border bg-card"
+                      : "border-border/50 bg-muted/30 opacity-75"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -224,57 +302,71 @@ function UnifiedEstoquePage() {
                       <h3 className="truncate font-semibold text-foreground">{brand.code}</h3>
                       <p className="text-xs text-muted-foreground">{brand.productCount} produtos</p>
                     </div>
-                    <div className="flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full bg-border p-1 transition-colors data-[active=true]:bg-primary"
-                         data-active={brand.active}
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           registryMutation.mutate({
-                             kind: "brands",
-                             code: brand.code,
-                             label: brand.code,
-                             active: !brand.active,
-                             metadata: brand.metadata
-                           });
-                         }}
+                    <div
+                      className="flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full bg-border p-1 transition-colors data-[active=true]:bg-primary"
+                      data-active={brand.active}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        registryMutation.mutate({
+                          kind: "brands",
+                          code: brand.code,
+                          label: brand.code,
+                          active: !brand.active,
+                          metadata: brand.metadata,
+                        });
+                      }}
                     >
-                      <div className={`h-4 w-4 rounded-full bg-white transition-transform ${brand.active ? "translate-x-4" : "translate-x-0"}`} />
+                      <div
+                        className={`h-4 w-4 rounded-full bg-white transition-transform ${brand.active ? "translate-x-4" : "translate-x-0"}`}
+                      />
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Categorias Vinculadas</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Categorias Vinculadas
+                        </label>
                         <span className="text-[10px] font-medium text-primary">
-                          {categories.filter(c => c.metadata?.parentBrand === brand.code).length}
+                          {categories.filter((c) => c.metadata?.parentBrand === brand.code).length}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {categories.filter(c => c.metadata?.parentBrand === brand.code).map(cat => (
-                          <div key={cat.code} className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground">
-                            <Tag className="h-2.5 w-2.5 text-primary/70" />
-                            {cat.code}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                registryMutation.mutate({
-                                  kind: "brands",
-                                  code: cat.code,
-                                  label: cat.code,
-                                  active: cat.active ?? true,
-                                  metadata: { ...cat.metadata, parentBrand: null, isCategory: false }
-                                });
-                              }}
-                              className="ml-1 text-muted-foreground hover:text-destructive"
+                        {categories
+                          .filter((c) => c.metadata?.parentBrand === brand.code)
+                          .map((cat) => (
+                            <div
+                              key={cat.code}
+                              className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground"
                             >
-                              ×
-                            </button>
-                          </div>
-                        ))}
+                              <Tag className="h-2.5 w-2.5 text-primary/70" />
+                              {cat.code}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  registryMutation.mutate({
+                                    kind: "brands",
+                                    code: cat.code,
+                                    label: cat.code,
+                                    active: cat.active ?? true,
+                                    metadata: {
+                                      ...cat.metadata,
+                                      parentBrand: null,
+                                      isCategory: false,
+                                    },
+                                  });
+                                }}
+                                className="ml-1 text-muted-foreground hover:text-destructive"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between border-t border-border/50 pt-3">
                     <button
                       type="button"
@@ -286,7 +378,9 @@ function UnifiedEstoquePage() {
                     >
                       <Tag className="h-3.5 w-3.5" /> Gerenciar Categorias
                     </button>
-                    <span className={`text-[11px] font-bold uppercase tracking-wider ${brand.active ? "text-emerald-600" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-[11px] font-bold uppercase tracking-wider ${brand.active ? "text-emerald-600" : "text-muted-foreground"}`}
+                    >
                       {brand.active ? "Ativa" : "Inativa"}
                     </span>
                   </div>
@@ -304,7 +398,9 @@ function UnifiedEstoquePage() {
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
               {selectedCodes.length}
             </span>
-            <span className="hidden text-sm font-medium text-foreground md:inline">selecionados</span>
+            <span className="hidden text-sm font-medium text-foreground md:inline">
+              selecionados
+            </span>
           </div>
           <div className="h-8 w-px bg-border" />
           <Button
@@ -353,7 +449,13 @@ function UnifiedEstoquePage() {
             </div>
           </div>
           <DialogFooter className="gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setBulkDialogOpen(false)} className="rounded-xl">Cancelar</Button>
+            <Button
+              variant="outline"
+              onClick={() => setBulkDialogOpen(false)}
+              className="rounded-xl"
+            >
+              Cancelar
+            </Button>
             <Button
               onClick={() => bulkMutation.mutate(newBrand)}
               disabled={bulkMutation.isPending}
@@ -365,8 +467,8 @@ function UnifiedEstoquePage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog 
-        open={!!viewingBrandCategories} 
+      <Dialog
+        open={!!viewingBrandCategories}
         onOpenChange={(open) => !open && setViewingBrandCategories(null)}
       >
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col rounded-2xl">
@@ -379,21 +481,21 @@ function UnifiedEstoquePage() {
         </DialogContent>
       </Dialog>
 
-      <BrandProductsDialog 
-        brandName={viewingBrandProducts} 
-        onOpenChange={(open) => !open && setViewingBrandProducts(null)} 
+      <BrandProductsDialog
+        brandName={viewingBrandProducts}
+        onOpenChange={(open) => !open && setViewingBrandProducts(null)}
         onOpenProduct={setOpenProductCode}
       />
     </AdminPage>
   );
 }
 
-function BrandProductsDialog({ 
-  brandName, 
+function BrandProductsDialog({
+  brandName,
   onOpenChange,
-  onOpenProduct
-}: { 
-  brandName: string | null; 
+  onOpenProduct,
+}: {
+  brandName: string | null;
   onOpenChange: (open: boolean) => void;
   onOpenProduct: (code: string) => void;
 }) {
@@ -404,7 +506,9 @@ function BrandProductsDialog({
     enabled: !!brandName,
   });
 
-  const products = (query.data?.rows ?? []).filter(p => p.brand === brandName || p.erpCode === brandName);
+  const products = (query.data?.rows ?? []).filter(
+    (p) => p.brand === brandName || p.erpCode === brandName,
+  );
 
   return (
     <Dialog open={!!brandName} onOpenChange={onOpenChange}>
@@ -414,9 +518,13 @@ function BrandProductsDialog({
         </DialogHeader>
         <div className="flex-1 overflow-y-auto pr-2 pt-4">
           {query.isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">Nenhum produto encontrado.</div>
+            <div className="text-center py-12 text-muted-foreground">
+              Nenhum produto encontrado.
+            </div>
           ) : (
             <div className="grid gap-2">
               {products.map((product) => (
@@ -426,11 +534,22 @@ function BrandProductsDialog({
                   className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
                 >
                   <div className="h-10 w-10 shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                    {product.imageUrl ? <img src={product.imageUrl} className="h-full w-full object-cover" /> : <Box className="h-5 w-5 text-muted-foreground" />}
+                    {resolveProductImage(product) ? (
+                      <img
+                        src={resolveProductImage(product) ?? ""}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Box className="h-5 w-5 text-muted-foreground" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{product.displayName || product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.erpCode} · {product.unit}</p>
+                    <p className="text-sm font-medium truncate">
+                      {product.displayName || product.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {product.erpCode} · {product.unit}
+                    </p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-xs font-semibold">{product.stock} em estoque</p>

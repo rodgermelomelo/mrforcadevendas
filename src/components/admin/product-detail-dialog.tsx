@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProductDetail, updateProduct, type ProductDetail } from "@/lib/admin-data.functions";
 import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
+import { resolveProductImage } from "@/lib/product-images";
 
 export function ProductDetailDialog({
   erpCode,
@@ -26,6 +27,7 @@ export function ProductDetailDialog({
   });
 
   const detail = query.data;
+  const image = detail ? resolveProductImage(detail.product) : null;
 
   return (
     <Dialog open={Boolean(erpCode)} onOpenChange={onOpenChange}>
@@ -42,9 +44,9 @@ export function ProductDetailDialog({
           <div className="space-y-5">
             <header className="flex items-start gap-4">
               <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-muted">
-                {detail.product.imageUrl ? (
+                {image ? (
                   <img
-                    src={detail.product.imageUrl}
+                    src={image}
                     alt={detail.product.displayName || detail.product.name}
                     className="h-full w-full object-cover"
                   />
@@ -62,11 +64,19 @@ export function ProductDetailDialog({
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <HealthBadge
-                    tone={detail.product.stock > 0 ? "ok" : detail.product.stock < 0 ? "bad" : "muted"}
+                    tone={
+                      detail.product.stock > 0 ? "ok" : detail.product.stock < 0 ? "bad" : "muted"
+                    }
                     label={`Estoque ${detail.product.stock.toLocaleString("pt-BR")}`}
                   />
                   <HealthBadge
-                    tone={!detail.product.hasPrice ? "bad" : detail.product.hasUnmappedTable ? "warn" : "ok"}
+                    tone={
+                      !detail.product.hasPrice
+                        ? "bad"
+                        : detail.product.hasUnmappedTable
+                          ? "warn"
+                          : "ok"
+                    }
                     label={
                       !detail.product.hasPrice
                         ? "Sem preço"
@@ -107,7 +117,10 @@ export function ProductDetailDialog({
                   <Info label="Sugestão ERP de marca" value={detail.product.erpBrandSuggestion} />
                 )}
                 {detail.product.erpCategorySuggestion && (
-                  <Info label="Sugestão ERP de categoria" value={detail.product.erpCategorySuggestion} />
+                  <Info
+                    label="Sugestão ERP de categoria"
+                    value={detail.product.erpCategorySuggestion}
+                  />
                 )}
                 <Info label="Unidade" value={detail.product.unit} />
                 <Info
@@ -128,7 +141,9 @@ export function ProductDetailDialog({
 
               <TabsContent value="estoque" className="space-y-3 pt-4 text-sm">
                 <div className="rounded-2xl border border-border p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Quantidade disponível</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Quantidade disponível
+                  </p>
                   <p
                     className={`text-3xl font-semibold ${
                       detail.product.stock < 0
@@ -147,14 +162,16 @@ export function ProductDetailDialog({
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  O estoque é somente leitura: vem do ERP pelo registro tipo 27 na Central de Importações.
+                  O estoque é somente leitura: vem do ERP pelo registro tipo 27 na Central de
+                  Importações.
                 </p>
               </TabsContent>
 
               <TabsContent value="precos" className="space-y-2 pt-4">
                 {detail.prices.length === 0 ? (
                   <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                    Nenhum preço para este produto (registro tipo 28). O produto não pode ser vendido.
+                    Nenhum preço para este produto (registro tipo 28). O produto não pode ser
+                    vendido.
                   </p>
                 ) : (
                   detail.prices.map((row) => (
@@ -241,7 +258,9 @@ export function HealthBadge({
           : tone === "brand"
             ? "bg-brand-gradient text-primary-foreground"
             : "bg-muted text-muted-foreground";
-  return <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cls}`}>{label}</span>;
+  return (
+    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cls}`}>{label}</span>
+  );
 }
 
 function ProductForm({
@@ -347,7 +366,11 @@ function ProductForm({
         </label>
         <label className="space-y-1">
           <span className={labelCls}>Unidade</span>
-          <input className={field} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+          <input
+            className={field}
+            value={form.unit}
+            onChange={(e) => setForm({ ...form, unit: e.target.value })}
+          />
         </label>
       </div>
 
@@ -387,8 +410,12 @@ function ProductForm({
         onClick={() => mutation.mutate()}
         className="inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
       >
-        {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar
-        produto
+        {mutation.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Save className="h-4 w-4" />
+        )}{" "}
+        Salvar produto
       </button>
     </div>
   );

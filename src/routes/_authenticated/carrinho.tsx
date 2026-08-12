@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { productImage } from "@/lib/product-images";
+import { resolveProductImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ export const Route = createFileRoute("/_authenticated/carrinho")({
       { title: "Carrinho do pedido — MR Força de Vendas" },
       {
         name: "description",
-        content: "Itens do pedido em montagem, sempre com o cliente atendido, tabela e condição visíveis.",
+        content:
+          "Itens do pedido em montagem, sempre com o cliente atendido, tabela e condição visíveis.",
       },
       { property: "og:title", content: "Carrinho do pedido — MR Força de Vendas" },
       { property: "og:description", content: "Revise os itens antes do checkout comercial." },
@@ -23,7 +24,8 @@ export const Route = createFileRoute("/_authenticated/carrinho")({
 });
 
 function Carrinho() {
-  const { customer, table, lines, subtotal, setQuantity, removeItem, clearCart, hydrated, role } = useSales();
+  const { customer, table, lines, subtotal, setQuantity, removeItem, clearCart, hydrated, role } =
+    useSales();
   const showPriceTableDetails = canViewPriceTableDetails(role);
   const updateQuantity = (productId: string, quantity: number) => {
     const result = setQuantity(productId, quantity);
@@ -59,8 +61,8 @@ function Carrinho() {
       <header>
         <h1 className="text-3xl font-bold sm:text-4xl">Carrinho</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> ·{" "}
-          Rep. {customer.sellerErpCode ?? "—"} ·{" "}
+          Comprando para: <strong className="text-foreground">{customer.tradeName}</strong> · Rep.{" "}
+          {customer.sellerErpCode ?? "—"} ·{" "}
           {showPriceTableDetails && (
             <>
               {table ? `Tabela ${table.code}` : "sem tabela"} ·{" "}
@@ -82,11 +84,14 @@ function Carrinho() {
         <>
           <ul className="space-y-3">
             {lines.map((line) => (
-              <li key={line.product.id} className="surface-card grid gap-3 p-4 sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center">
+              <li
+                key={line.product.id}
+                className="surface-card grid gap-3 p-4 sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center"
+              >
                 <div className="hidden h-16 w-16 overflow-hidden rounded-xl bg-muted sm:block">
-                  {productImage(line.product.imageUrl) && (
+                  {resolveProductImage(line.product) && (
                     <img
-                      src={productImage(line.product.imageUrl) ?? ""}
+                      src={resolveProductImage(line.product) ?? ""}
                       alt={line.product.name}
                       loading="lazy"
                       width={800}
@@ -99,7 +104,9 @@ function Carrinho() {
                   <p className="truncate text-sm font-semibold">{line.product.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {line.product.erpCode} ·{" "}
-                    {line.unitPrice !== null ? `${formatBRL(line.unitPrice)} / un.` : line.priceError}
+                    {line.unitPrice !== null
+                      ? `${formatBRL(line.unitPrice)} / un.`
+                      : line.priceError}
                   </p>
                   {line.quantity > line.product.stock && (
                     <p className="mt-1 text-xs text-warning">

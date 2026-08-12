@@ -1,11 +1,22 @@
 import { useState } from "react";
-import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
+import {
+  X,
+  ShoppingCart,
+  Package,
+  Tag,
+  Building2,
+  Sparkles,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  LayoutList,
+} from "lucide-react";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, resolvePrice } from "@/lib/pricing";
-import { productImage } from "@/lib/product-images";
+import { resolveProductImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
@@ -39,6 +50,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
   const maxQty = product.stock > 0 ? Math.floor(product.stock) : 1;
   const clamp = (n: number) => Math.min(maxQty, Math.max(1, n));
   const subtotal = price.ok ? price.value * qty : 0;
+  const image = resolveProductImage(product);
 
   const handleAdd = () => {
     const result = addItem(product.id, qty);
@@ -57,12 +69,8 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
           {/* Imagem e Galeria */}
           <div className="relative flex min-h-[420px] flex-col bg-muted md:h-[calc(100vh-2rem)] md:max-h-[760px] md:min-h-0">
             <div className="relative min-h-0 flex-1 bg-muted">
-              {productImage(product.imageUrl) ? (
-                <img
-                  src={productImage(product.imageUrl) ?? ""}
-                  alt={product.name}
-                  className="h-full w-full object-contain"
-                />
+              {image ? (
+                <img src={image} alt={product.name} className="h-full w-full object-contain" />
               ) : (
                 <div className="grid h-full place-items-center bg-brand-gradient p-8 text-center text-lg font-bold text-primary-foreground">
                   {product.name}
@@ -73,24 +81,24 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   Lançamento
                 </Badge>
               )}
-              
+
               {/* Navegação da Galeria (Simulada com a mesma imagem para demonstração de UI) */}
               <div className="absolute inset-y-0 left-0 flex items-center">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 ml-2"
-                  onClick={() => setCurrentImageIndex(prev => prev === 0 ? 2 : prev - 1)}
+                  onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? 2 : prev - 1))}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 mr-2"
-                  onClick={() => setCurrentImageIndex(prev => prev === 2 ? 0 : prev + 1)}
+                  onClick={() => setCurrentImageIndex((prev) => (prev === 2 ? 0 : prev + 1))}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -105,12 +113,14 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   onClick={() => setCurrentImageIndex(i)}
                   className={cn(
                     "relative h-12 w-12 rounded-lg overflow-hidden border-2 transition-all",
-                    currentImageIndex === i ? "border-primary shadow-sm" : "border-transparent opacity-60 hover:opacity-100"
+                    currentImageIndex === i
+                      ? "border-primary shadow-sm"
+                      : "border-transparent opacity-60 hover:opacity-100",
                   )}
                 >
-                  {productImage(product.imageUrl) ? (
+                  {image ? (
                     <img
-                      src={productImage(product.imageUrl) ?? ""}
+                      src={image}
                       alt={`${product.name} thumbnail ${i}`}
                       className="h-full w-full object-cover"
                     />
@@ -128,17 +138,22 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
           <div className="min-w-0 p-5 md:max-h-[calc(100vh-2rem)] md:overflow-y-auto lg:p-7">
             <DialogHeader className="text-left">
               <div className="mb-2 flex flex-wrap gap-2 pr-10">
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] uppercase font-bold px-2 py-0.5">
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary border-primary/20 text-[10px] uppercase font-bold px-2 py-0.5"
+                >
                   <Building2 className="mr-1 h-3 w-3" /> {product.brand}
                 </Badge>
                 <Badge variant="outline" className="text-[10px] uppercase font-bold px-2 py-0.5">
-                  <Tag className="mr-1 h-3 w-3" /> {(product as any).category || product.group}
+                  <Tag className="mr-1 h-3 w-3" /> {product.category || product.group}
                 </Badge>
               </div>
               <DialogTitle className="min-w-0 break-words pr-10 text-2xl font-bold leading-tight">
                 {product.name}
               </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1 font-mono">Código: {product.erpCode}</p>
+              <p className="text-sm text-muted-foreground mt-1 font-mono">
+                Código: {product.erpCode}
+              </p>
             </DialogHeader>
 
             <div className="mt-6 space-y-6">
@@ -147,7 +162,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                 {!hasCustomer ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Preço sob consulta</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Preço sob consulta
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         Selecione um cliente para visualizar o preço aplicável.
                       </p>
@@ -156,7 +173,12 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                       <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Disponibilidade
                       </p>
-                      <div className={cn("inline-flex items-center gap-1.5 font-semibold", outOfStock ? "text-destructive" : "text-success")}>
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1.5 font-semibold",
+                          outOfStock ? "text-destructive" : "text-success",
+                        )}
+                      >
                         <Package className="h-4 w-4" />
                         {product.stock.toLocaleString("pt-BR")} {product.unit}
                       </div>
@@ -165,15 +187,26 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                 ) : price.ok ? (
                   <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Valor Unitário</p>
-                      <p className="text-3xl font-black tracking-tight text-foreground">{formatBRL(price.value)}</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                        Valor Unitário
+                      </p>
+                      <p className="text-3xl font-black tracking-tight text-foreground">
+                        {formatBRL(price.value)}
+                      </p>
                       {showPriceTableDetails && (
                         <p className="text-xs font-medium text-primary mt-1">{price.levelLabel}</p>
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Disponibilidade</p>
-                      <div className={cn("flex items-center gap-1.5 font-semibold", outOfStock ? "text-destructive" : "text-success")}>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                        Disponibilidade
+                      </p>
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 font-semibold",
+                          outOfStock ? "text-destructive" : "text-success",
+                        )}
+                      >
                         <Package className="h-4 w-4" />
                         {product.stock.toLocaleString("pt-BR")} {product.unit}
                       </div>
@@ -184,14 +217,21 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                     <div className="flex min-w-0 items-start gap-2 text-warning">
                       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
                       <p className="min-w-0 break-words text-sm font-semibold">
-                        {showPriceTableDetails ? price.message : "Preço pendente para este cliente."}
+                        {showPriceTableDetails
+                          ? price.message
+                          : "Preço pendente para este cliente."}
                       </p>
                     </div>
                     <div className="sm:text-right">
                       <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Disponibilidade
                       </p>
-                      <div className={cn("inline-flex items-center gap-1.5 font-semibold", outOfStock ? "text-destructive" : "text-success")}>
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1.5 font-semibold",
+                          outOfStock ? "text-destructive" : "text-success",
+                        )}
+                      >
                         <Package className="h-4 w-4" />
                         {product.stock.toLocaleString("pt-BR")} {product.unit}
                       </div>
@@ -202,7 +242,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
 
               {/* Informações Adicionais */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Detalhes</h4>
+                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                  Detalhes
+                </h4>
                 <div className="grid gap-4 text-sm sm:grid-cols-2">
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Unidade</p>
@@ -253,7 +295,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                     <span className="text-lg font-bold">{formatBRL(subtotal)}</span>
                   </div>
 
-                  <Button 
+                  <Button
                     className="w-full h-12 rounded-xl bg-brand-gradient text-lg font-bold shadow-lift"
                     onClick={handleAdd}
                   >
@@ -281,24 +323,28 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                 <div className="space-y-3 rounded-2xl border border-border/50 bg-muted/30 p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <LayoutList className="h-4 w-4 text-muted-foreground" />
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tabela de Preços ({customer?.priceTableCode})</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Tabela de Preços ({customer?.priceTableCode})
+                    </h4>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {[1, 2, 3, 4, 5, 6].map((level, idx) => {
                       const levelValue = product.prices[customer?.priceTableCode || ""]?.[idx];
                       const isCurrent = table?.mappedLevel === idx;
-                      
+
                       return (
-                        <div 
-                          key={level} 
+                        <div
+                          key={level}
                           className={cn(
                             "flex items-center justify-between px-3 py-2 rounded-xl border text-xs transition-all",
-                            isCurrent 
-                              ? "border-primary bg-primary/5 font-bold" 
-                              : "border-border/40 bg-white/50"
+                            isCurrent
+                              ? "border-primary bg-primary/5 font-bold"
+                              : "border-border/40 bg-white/50",
                           )}
                         >
-                          <span className={cn(isCurrent ? "text-primary" : "text-muted-foreground")}>
+                          <span
+                            className={cn(isCurrent ? "text-primary" : "text-muted-foreground")}
+                          >
                             Nível {level}
                           </span>
                           <span className={cn(isCurrent ? "text-primary" : "font-medium")}>
@@ -310,11 +356,12 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   </div>
                 </div>
               )}
-              
+
               {!hasCustomer && (
                 <div className="rounded-xl bg-info/10 border border-info/20 p-4 text-center">
                   <p className="text-sm font-medium text-info">
-                    Para visualizar preços e realizar pedidos, selecione um cliente na tela de catálogo.
+                    Para visualizar preços e realizar pedidos, selecione um cliente na tela de
+                    catálogo.
                   </p>
                 </div>
               )}

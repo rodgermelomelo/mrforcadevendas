@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "analyze:erp": "tsx scripts/analyze-erp.ts",
-    "import:erp": "tsx scripts/import-erp.ts"
+    "import:erp": "tsx scripts/import-erp.ts",
+    "enrich:images": "tsx scripts/enrich-product-images.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

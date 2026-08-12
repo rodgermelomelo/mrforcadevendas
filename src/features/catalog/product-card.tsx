@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { formatBRL, resolvePrice } from "@/lib/pricing";
-import { productImage } from "@/lib/product-images";
+import { resolveProductImage } from "@/lib/product-images";
 import { useSales } from "@/lib/state/sales-store";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/domain/types";
@@ -32,6 +32,7 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
   const blocked = hasCustomer && (outOfStock || !price.ok);
   const dimmed = hasCustomer ? blocked : outOfStock;
   const category = product.category || product.group;
+  const image = resolveProductImage(product);
 
   return (
     <article
@@ -54,9 +55,9 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
       </div>
 
       <div className="relative aspect-square cursor-pointer bg-muted" onClick={onOpenDetail}>
-        {productImage(product.imageUrl) ? (
+        {image ? (
           <img
-            src={productImage(product.imageUrl) ?? ""}
+            src={image}
             alt={product.name}
             loading="lazy"
             width={800}
@@ -95,7 +96,8 @@ export function ProductCard({ product, hasCustomer, onAdd, onOpenDetail }: Produ
         <div className="mt-2">
           {!hasCustomer ? (
             <p className="text-[11px] text-muted-foreground">
-              Estoque {product.stock.toLocaleString("pt-BR")} {product.unit} · selecione um cliente para o preço
+              Estoque {product.stock.toLocaleString("pt-BR")} {product.unit} · selecione um cliente
+              para o preço
             </p>
           ) : price.ok ? (
             <>

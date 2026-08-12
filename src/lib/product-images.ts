@@ -2,6 +2,7 @@ import batom from "@/assets/prod-batom.jpg";
 import esmalte from "@/assets/prod-esmalte.jpg";
 import base from "@/assets/prod-base.jpg";
 import skincare from "@/assets/prod-skincare.jpg";
+import { catalogProductImageRef, type ProductImageCandidate } from "./product-image-catalog";
 
 const assets: Record<string, string> = { batom, esmalte, base, skincare };
 
@@ -13,4 +14,8 @@ export function productImage(imageUrl: string | null | undefined): string | null
   if (!imageUrl) return null;
   if (imageUrl.startsWith("asset:")) return assets[imageUrl.slice(6)] ?? null;
   return imageUrl;
+}
+
+export function resolveProductImage(product: ProductImageCandidate): string | null {
+  return productImage(catalogProductImageRef(product));
 }
