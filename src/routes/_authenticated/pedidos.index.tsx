@@ -2,17 +2,23 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { CheckCircle2, ExternalLink, Loader2, RotateCcw, XCircle } from "lucide-react";
+import { Ban, CheckCircle2, ExternalLink, Loader2, RotateCcw, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useSales } from "@/lib/state/sales-store";
 import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
 import { integrationLabel, statusLabel, statusTone } from "@/lib/orders/status";
-import { decideOrder } from "@/lib/orders.functions";
+import { cancelOrder, decideOrder, deleteOrder } from "@/lib/orders.functions";
 import type { Order } from "@/lib/domain/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsApprover } from "@/components/use-is-approver";
 import { cn } from "@/lib/utils";
+
+type OrderActionDraft = {
+  orderId: string;
+  action: "reject" | "changes" | "cancel" | "delete";
+  reason: string;
+};
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({
@@ -30,21 +36,20 @@ export const Route = createFileRoute("/_authenticated/pedidos/")({
 });
 
 function Pedidos() {
-  const { orders, hydrated } = useSales();
+  const { orders, hydrated, role } = useSales();
   const { data: isApprover } = useIsApprover();
   const queryClient = useQueryClient();
   const decide = useServerFn(decideOrder);
-  const [decisionDraft, setDecisionDraft] = useState<{
-    orderId: string;
-    decision: "reject" | "changes";
-    reason: string;
-  } | null>(null);
+  const cancel = useServerFn(cancelOrder);
+  const remove = useServerFn(deleteOrder);
+  const [actionDraft, setActionDraft] = useState<OrderActionDraft | null>(null);
+  const isAdmin = role === "administrador";
 
   const decisionMutation = useMutation({
     mutationFn: (input: { orderId: string; decision: "approve" | "reject" | "changes"; reason: string }) =>
       decide({ data: input }),
     onSuccess: async (_res, input) => {
-      setDecisionDraft(null);
+      setActionDraft(null);
       toast.success(
         input.decision === "approve"
           ? "Pedido aprovado."
@@ -58,9 +63,44 @@ function Pedidos() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: (input: { orderId: string; reason: string }) => cancel({ data: input }),
+    onSuccess: async () => {
+      setActionDraft(null);
+      toast.success("Pedido cancelado.");
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["team-overview"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (input: { orderId: string }) => remove({ data: input }),
+    onSuccess: async () => {
+      setActionDraft(null);
+      toast.success("Pedido apagado.");
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["team-overview"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const submitDecision = (orderId: string, decision: "approve" | "reject" | "changes", reason = "") => {
     if (decisionMutation.isPending) return;
     decisionMutation.mutate({ orderId, decision, reason: reason.trim() });
+  };
+
+  const submitAction = (draft: OrderActionDraft | null) => {
+    if (!draft || decisionMutation.isPending || cancelMutation.isPending || deleteMutation.isPending) return;
+    if (draft.action === "reject" || draft.action === "changes") {
+      submitDecision(draft.orderId, draft.action, draft.reason);
+      return;
+    }
+    if (draft.action === "cancel") {
+      cancelMutation.mutate({ orderId: draft.orderId, reason: draft.reason.trim() });
+      return;
+    }
+    deleteMutation.mutate({ orderId: draft.orderId });
   };
 
   return (
@@ -92,18 +132,21 @@ function Pedidos() {
               key={o.id}
               order={o}
               canDecide={Boolean(isApprover) && o.status === "pending_approval"}
-              decisionDraft={decisionDraft?.orderId === o.id ? decisionDraft : null}
-              isDeciding={decisionMutation.isPending && decisionMutation.variables?.orderId === o.id}
-              onApprove={() => submitDecision(o.id, "approve")}
-              onOpenDecision={(decision) => setDecisionDraft({ orderId: o.id, decision, reason: "" })}
-              onChangeReason={(reason) =>
-                setDecisionDraft((draft) => (draft?.orderId === o.id ? { ...draft, reason } : draft))
+              canCancel={Boolean(isApprover) && o.status !== "cancelled"}
+              canDelete={isAdmin}
+              actionDraft={actionDraft?.orderId === o.id ? actionDraft : null}
+              isProcessing={
+                (decisionMutation.isPending && decisionMutation.variables?.orderId === o.id) ||
+                (cancelMutation.isPending && cancelMutation.variables?.orderId === o.id) ||
+                (deleteMutation.isPending && deleteMutation.variables?.orderId === o.id)
               }
-              onCancelDecision={() => setDecisionDraft(null)}
-              onSubmitDecision={() => {
-                if (!decisionDraft || decisionDraft.orderId !== o.id) return;
-                submitDecision(o.id, decisionDraft.decision, decisionDraft.reason);
-              }}
+              onApprove={() => submitDecision(o.id, "approve")}
+              onOpenAction={(action) => setActionDraft({ orderId: o.id, action, reason: "" })}
+              onChangeReason={(reason) =>
+                setActionDraft((draft) => (draft?.orderId === o.id ? { ...draft, reason } : draft))
+              }
+              onCancelAction={() => setActionDraft(null)}
+              onSubmitAction={() => submitAction(actionDraft?.orderId === o.id ? actionDraft : null)}
             />
           ))}
         </ul>
@@ -115,25 +158,30 @@ function Pedidos() {
 function OrderRow({
   order,
   canDecide,
-  decisionDraft,
-  isDeciding,
+  canCancel,
+  canDelete,
+  actionDraft,
+  isProcessing,
   onApprove,
-  onOpenDecision,
+  onOpenAction,
   onChangeReason,
-  onCancelDecision,
-  onSubmitDecision,
+  onCancelAction,
+  onSubmitAction,
 }: {
   order: Order;
   canDecide: boolean;
-  decisionDraft: { orderId: string; decision: "reject" | "changes"; reason: string } | null;
-  isDeciding: boolean;
+  canCancel: boolean;
+  canDelete: boolean;
+  actionDraft: OrderActionDraft | null;
+  isProcessing: boolean;
   onApprove: () => void;
-  onOpenDecision: (decision: "reject" | "changes") => void;
+  onOpenAction: (action: OrderActionDraft["action"]) => void;
   onChangeReason: (reason: string) => void;
-  onCancelDecision: () => void;
-  onSubmitDecision: () => void;
+  onCancelAction: () => void;
+  onSubmitAction: () => void;
 }) {
-  const draftKind = decisionDraft?.decision;
+  const draftKind = actionDraft?.action;
+  const needsReason = draftKind === "reject" || draftKind === "changes" || draftKind === "cancel";
 
   return (
     <li>
@@ -187,18 +235,18 @@ function OrderRow({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={isDeciding}
+                  disabled={isProcessing}
                   onClick={onApprove}
                   className="rounded-xl border-0 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
                 >
-                  {isDeciding ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
+                  {isProcessing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
                   Aprovar
                 </Button>
                 <Button
                   type="button"
                   size="sm"
-                  disabled={isDeciding}
-                  onClick={() => onOpenDecision("reject")}
+                  disabled={isProcessing}
+                  onClick={() => onOpenAction("reject")}
                   className="rounded-xl border-0 bg-rose-600 text-white shadow-sm hover:bg-rose-700"
                 >
                   <XCircle className="mr-1 h-4 w-4" />
@@ -207,8 +255,8 @@ function OrderRow({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={isDeciding}
-                  onClick={() => onOpenDecision("changes")}
+                  disabled={isProcessing}
+                  onClick={() => onOpenAction("changes")}
                   className="rounded-xl border-0 bg-amber-500 text-white shadow-sm hover:bg-amber-600"
                 >
                   <RotateCcw className="mr-1 h-4 w-4" />
@@ -216,53 +264,113 @@ function OrderRow({
                 </Button>
               </div>
             )}
+
+            {(canCancel || canDelete) && (
+              <div className="flex flex-wrap gap-2 md:justify-end">
+                {canCancel && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => onOpenAction("cancel")}
+                    className="rounded-xl border-0 bg-sky-600 text-white shadow-sm hover:bg-sky-700"
+                  >
+                    <Ban className="mr-1 h-4 w-4" />
+                    Cancelar
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => onOpenAction("delete")}
+                    className="rounded-xl border-0 bg-zinc-900 text-white shadow-sm hover:bg-black"
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    Apagar
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {decisionDraft && (
+        {actionDraft && (
           <div
             className={cn(
               "border-t p-4",
               draftKind === "reject"
                 ? "border-rose-200 bg-rose-50 text-rose-950"
-                : "border-amber-200 bg-amber-50 text-amber-950",
+                : draftKind === "changes"
+                  ? "border-amber-200 bg-amber-50 text-amber-950"
+                  : draftKind === "cancel"
+                    ? "border-sky-200 bg-sky-50 text-sky-950"
+                    : "border-zinc-300 bg-zinc-100 text-zinc-950",
             )}
           >
-            <label className="block text-sm font-semibold">
-              {draftKind === "reject" ? "Motivo para negar o pedido" : "Orientação para devolver ao vendedor"}
-              <Textarea
-                value={decisionDraft.reason}
-                onChange={(event) => onChangeReason(event.target.value)}
-                rows={3}
-                placeholder={
-                  draftKind === "reject"
-                    ? "Ex.: limite comercial incompatível, cliente com restrição..."
-                    : "Ex.: ajustar condição, remover desconto, revisar itens..."
-                }
-                className="mt-2 border-white/70 bg-white text-foreground"
-              />
-            </label>
+            {needsReason ? (
+              <label className="block text-sm font-semibold">
+                {draftKind === "reject"
+                  ? "Motivo para negar o pedido"
+                  : draftKind === "changes"
+                    ? "Orientação para devolver ao vendedor"
+                    : "Motivo do cancelamento"}
+                <Textarea
+                  value={actionDraft.reason}
+                  onChange={(event) => onChangeReason(event.target.value)}
+                  rows={3}
+                  placeholder={
+                    draftKind === "reject"
+                      ? "Ex.: limite comercial incompatível, cliente com restrição..."
+                      : draftKind === "changes"
+                        ? "Ex.: ajustar condição, remover desconto, revisar itens..."
+                        : "Ex.: cliente desistiu, pedido lançado por engano..."
+                  }
+                  className="mt-2 border-white/70 bg-white text-foreground"
+                />
+              </label>
+            ) : (
+              <div>
+                <p className="text-sm font-semibold">Apagar pedido definitivamente?</p>
+                <p className="mt-1 text-xs">
+                  Esta ação remove o pedido, itens, exceções e histórico relacionado. Use apenas para limpeza administrativa.
+                </p>
+              </div>
+            )}
             <div className="mt-3 flex flex-wrap justify-end gap-2">
               <Button
                 type="button"
                 variant="ghost"
                 className="rounded-xl"
-                disabled={isDeciding}
-                onClick={onCancelDecision}
+                disabled={isProcessing}
+                onClick={onCancelAction}
               >
-                Cancelar
+                Voltar
               </Button>
               <Button
                 type="button"
-                disabled={isDeciding}
-                onClick={onSubmitDecision}
+                disabled={isProcessing}
+                onClick={onSubmitAction}
                 className={cn(
                   "rounded-xl border-0 text-white",
-                  draftKind === "reject" ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-500 hover:bg-amber-600",
+                  draftKind === "reject"
+                    ? "bg-rose-600 hover:bg-rose-700"
+                    : draftKind === "changes"
+                      ? "bg-amber-500 hover:bg-amber-600"
+                      : draftKind === "cancel"
+                        ? "bg-sky-600 hover:bg-sky-700"
+                        : "bg-zinc-900 hover:bg-black",
                 )}
               >
-                {isDeciding && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-                {draftKind === "reject" ? "Confirmar negativa" : "Confirmar devolução"}
+                {isProcessing && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                {draftKind === "reject"
+                  ? "Confirmar negativa"
+                  : draftKind === "changes"
+                    ? "Confirmar devolução"
+                    : draftKind === "cancel"
+                      ? "Confirmar cancelamento"
+                      : "Apagar definitivamente"}
               </Button>
             </div>
           </div>

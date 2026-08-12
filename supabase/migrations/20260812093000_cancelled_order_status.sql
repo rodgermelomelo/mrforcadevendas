@@ -1,0 +1,1 @@
+ALTER TYPE public.commercial_status ADD VALUE IF NOT EXISTS 'cancelled';

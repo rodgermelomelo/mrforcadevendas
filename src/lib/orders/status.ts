@@ -9,6 +9,7 @@ export const statusLabel: Record<CommercialStatus, string> = {
   auto_approved: "Auto-aprovado",
   approved: "Aprovado",
   confirmed: "Confirmado",
+  cancelled: "Cancelado",
 };
 
 export const integrationLabel: Record<IntegrationStatus, string> = {
@@ -32,6 +33,8 @@ export function statusTone(status: CommercialStatus): string {
       return "bg-destructive/10 text-destructive border-destructive/20";
     case "changes_requested":
       return "bg-brand-alt/10 text-brand-alt border-brand-alt/20";
+    case "cancelled":
+      return "bg-zinc-900/10 text-zinc-700 border-zinc-300";
     default:
       return "bg-muted text-muted-foreground border-border";
   }

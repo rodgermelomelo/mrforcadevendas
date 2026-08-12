@@ -423,6 +423,70 @@ export const decideOrder = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Cancelamento gerencial: preserva o pedido e registra histórico. */
+export const cancelOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orderId: string; reason: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const reason = data.reason.trim();
+    if (reason.length < 5) throw new Error("Informe o motivo do cancelamento.");
+
+    const { data: isApprover, error: approverError } = await supabase.rpc("is_approver", { _user_id: userId });
+    if (approverError) throw new Error(approverError.message);
+    if (isApprover !== true) throw new Error("Apenas gestores podem cancelar pedidos.");
+
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "cancelled" as CommercialStatus,
+        integration_status: "not_ready",
+        confirmed_at: null,
+      })
+      .eq("id", data.orderId)
+      .neq("status", "cancelled")
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    await supabase
+      .from("approval_requests")
+      .update({
+        status: "cancelled",
+        decided_by: userId,
+        decided_at: new Date().toISOString(),
+        reason,
+      })
+      .eq("order_id", data.orderId)
+      .eq("status", "pending");
+
+    await supabase.from("approval_events").insert({
+      order_id: data.orderId,
+      actor_id: userId,
+      action: "Cancelado",
+      detail: reason,
+    });
+
+    return { ok: true };
+  });
+
+/** Exclusão administrativa: remove o pedido e seus relacionamentos em cascade. */
+export const deleteOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orderId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isAdmin, error: adminError } = await supabase.rpc("is_admin", { _user_id: userId });
+    if (adminError) throw new Error(adminError.message);
+    if (isAdmin !== true) throw new Error("Apenas administradores podem apagar pedidos.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("orders").delete().eq("id", data.orderId);
+    if (error) throw new Error(error.message);
+
+    return { ok: true };
+  });
+
 /** Pedidos que aguardam decisão e estão dentro da visibilidade do aprovador. */
 export const listApprovals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

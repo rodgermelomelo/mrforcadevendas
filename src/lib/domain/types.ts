@@ -8,7 +8,8 @@ export type CommercialStatus =
   | "rejected"
   | "auto_approved"
   | "approved"
-  | "confirmed";
+  | "confirmed"
+  | "cancelled";
 
 export type IntegrationStatus =
   | "not_ready"
