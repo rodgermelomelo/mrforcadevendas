@@ -1,14 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: async ({ context }) => {
-    // Se estiver logado, vai direto para o catálogo que é a página principal de vendas
-    if ((context as any).auth?.session) {
-      throw redirect({ to: "/catalogo" });
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      throw redirect({ to: "/catalogo", replace: true });
     }
-    // Senão, vai para o login
-    throw redirect({ to: "/auth" });
+    throw redirect({ to: "/auth", replace: true });
   },
   component: () => null,
 });
-
