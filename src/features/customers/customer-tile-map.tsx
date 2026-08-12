@@ -179,6 +179,8 @@ export function CustomerTileMap({
         preferCanvas: true,
         zoomControl: false,
         worldCopyJump: true,
+        minZoom: 3,
+        maxZoom: 19,
       }).setView(BRAZIL_CENTER, 4);
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
