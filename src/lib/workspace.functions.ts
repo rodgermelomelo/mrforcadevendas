@@ -543,7 +543,8 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
         const brand =
           text(product, "brand") ||
           (group ? group.split(" ")[0]?.toUpperCase() || "OUTROS" : "OUTROS");
-        const category = text(product, "category") || "DIVERSOS";
+        const category = text(product, "category") || text(product, "erp_category_suggestion") || "DIVERSOS";
+        const segment = text(product, "segment") || text(product, "erp_segment_suggestion") || "GERAL";
         const erpCode = text(product, "erp_code");
 
         return {
