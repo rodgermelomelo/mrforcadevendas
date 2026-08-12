@@ -218,9 +218,14 @@ export function CatalogFilterBar({
         />
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {resultCount.toLocaleString("pt-BR")} produtos exibidos
-      </p>
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+          Resultados encontrados
+        </p>
+        <p className="text-[10px] font-black text-muted-foreground/60">
+          {resultCount.toLocaleString("pt-BR")} PRODUTOS
+        </p>
+      </div>
     </div>
   );
 }
