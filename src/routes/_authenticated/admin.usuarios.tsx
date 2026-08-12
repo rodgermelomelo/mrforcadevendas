@@ -136,6 +136,10 @@ function UsersPage() {
           )}
         </TabsContent>
 
+        <TabsContent value="matriz">
+          <PermissionMatrix />
+        </TabsContent>
+
         <TabsContent value="provisionar">
           <ProvisionarView />
         </TabsContent>
