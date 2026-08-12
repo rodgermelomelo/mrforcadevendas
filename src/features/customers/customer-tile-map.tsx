@@ -164,8 +164,12 @@ export function CustomerTileMap({
     async function bootMap() {
       if (!containerRef.current || mapRef.current) return;
 
-      const L = await import("leaflet");
+      const leafletModule = await import("leaflet");
+      const L = ((leafletModule as unknown as { default?: typeof leafletModule }).default ??
+        leafletModule) as typeof leafletModule;
+      (globalThis as unknown as { L?: unknown }).L = L;
       await import("leaflet.markercluster");
+
       
       if (cancelled || !containerRef.current) return;
 
