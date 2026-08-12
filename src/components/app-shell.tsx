@@ -113,7 +113,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
             </span>
           </Link>
           <div className="mt-4 hidden lg:flex px-2 group-data-[collapsible=icon]:px-0">
-            <SidebarTrigger className="bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background h-10 w-full group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:p-0 justify-center" />
+            <SidebarTrigger className="bg-background/80 backdrop-blur shadow-sm border border-border/50 hover:bg-background h-10 w-full group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:p-0 flex justify-center items-center [&>svg]:h-5 [&>svg]:w-5" />
           </div>
           <div className="mt-4 px-2 group-data-[collapsible=icon]:px-0">
             <button
