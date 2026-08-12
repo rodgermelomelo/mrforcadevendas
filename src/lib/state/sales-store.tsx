@@ -54,7 +54,7 @@ interface SalesContextValue extends DraftState {
   total: number;
   itemCount: number;
   sellerName: string;
-  sellers: { code: string; name: string; customerCount: number; monthlyGoal?: number }[];
+  sellers: { code: string; name: string; customerCount: number; monthlyGoal?: number | undefined }[];
   role: string | null;
   selectCustomer: (id: string) => void;
   clearCustomer: () => void;
