@@ -58,9 +58,90 @@ export function CatalogFilterBar({
   onClearFilters,
   resultCount,
 }: CatalogFilterBarProps) {
+  const isMobile = useIsMobile();
+  const activeCount =
+    selectedBrands.length + selectedGroups.length + (onlyInStock ? 1 : 0) + (onlyLaunch ? 1 : 0);
+
+  const panel = (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Filtros</h3>
+        {hasActiveFilters && (
+          <button
+            onClick={onClearFilters}
+            className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground transition-colors hover:text-destructive"
+          >
+            Limpar tudo
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <button
+            onClick={onToggleInStock}
+            className={cn(
+              "flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border text-[11px] font-semibold transition-all",
+              onlyInStock
+                ? "border-transparent bg-success text-white shadow-md"
+                : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30",
+            )}
+          >
+            <PackageCheck className="h-3.5 w-3.5" /> Estoque
+          </button>
+          <button
+            onClick={onToggleLaunch}
+            className={cn(
+              "flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border text-[11px] font-semibold transition-all",
+              onlyLaunch
+                ? "border-transparent bg-brand-gradient text-white shadow-md"
+                : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30",
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Lançamentos
+          </button>
+        </div>
+
+        <FilterChipRow
+          label="Empresa"
+          icon={<Building2 className="h-3 w-3" />}
+          options={brands}
+          selected={selectedBrands}
+          onToggle={onToggleGroup}
+        />
+
+        <FilterChipRow
+          label="Categoria"
+          icon={<Tag className="h-3 w-3" />}
+          options={groups}
+          selected={selectedGroups}
+          onToggle={onToggleBrand}
+        />
+      </div>
+    </div>
+  );
+
+  const filterTrigger = (
+    <Button
+      variant="ghost"
+      className={cn(
+        "h-11 flex-1 rounded-2xl border-none bg-card px-4 shadow-soft transition-all hover:bg-muted sm:flex-none",
+        hasActiveFilters && "text-primary ring-2 ring-primary/20",
+      )}
+    >
+      <SlidersHorizontal className="mr-2 h-4 w-4" />
+      <span className="text-xs font-semibold">Filtros</span>
+      {hasActiveFilters && (
+        <Badge className="ml-2 h-5 min-w-5 justify-center rounded-full bg-primary p-0 text-[10px] font-bold text-primary-foreground">
+          {activeCount}
+        </Badge>
+      )}
+    </Button>
+  );
+
   return (
-    <div className="sticky top-0 z-10 space-y-3 bg-background/80 pb-4 backdrop-blur-md">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="sticky top-14 z-20 -mx-4 space-y-3 border-b border-border/50 bg-background/90 px-4 pb-3 pt-2 backdrop-blur-md sm:mx-0 sm:border-none sm:px-0 lg:top-0 lg:pb-4">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
         {/* Busca */}
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -71,7 +152,7 @@ export function CatalogFilterBar({
             className="h-11 rounded-2xl border-none bg-card px-11 text-sm shadow-soft ring-primary/5 transition-all focus-visible:ring-2"
           />
           {term && (
-            <button 
+            <button
               onClick={() => onTermChange("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
             >
@@ -83,9 +164,9 @@ export function CatalogFilterBar({
         <div className="flex items-center gap-2">
           {/* Ordenação */}
           <Select value={sortBy} onValueChange={(v) => onSortChange(v as CatalogSort)}>
-            <SelectTrigger className="h-11 w-[140px] rounded-2xl border-none bg-card px-4 text-xs font-medium shadow-soft">
+            <SelectTrigger className="h-11 flex-1 rounded-2xl border-none bg-card px-4 text-xs font-medium shadow-soft sm:w-[140px] sm:flex-none">
               <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <ArrowUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <SelectValue placeholder="Ordenar" />
               </div>
             </SelectTrigger>
@@ -97,86 +178,31 @@ export function CatalogFilterBar({
             </SelectContent>
           </Select>
 
-          {/* Filtros Avançados */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className={cn(
-                  "h-11 rounded-2xl border-none bg-card px-4 shadow-soft hover:bg-muted transition-all",
-                  hasActiveFilters && "ring-2 ring-primary/20 text-primary"
-                )}
+          {/* Filtros avançados: folha inferior no mobile, popover no desktop */}
+          {isMobile ? (
+            <Sheet>
+              <SheetTrigger asChild>{filterTrigger}</SheetTrigger>
+              <SheetContent
+                side="bottom"
+                className="max-h-[85svh] overflow-y-auto rounded-t-3xl border-none pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
               >
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                <span className="text-xs font-semibold">Filtros</span>
-                {hasActiveFilters && (
-                  <Badge className="ml-2 h-5 min-w-5 justify-center rounded-full bg-primary p-0 text-[10px] font-bold text-primary-foreground">
-                    {selectedBrands.length + selectedGroups.length + (onlyInStock ? 1 : 0) + (onlyLaunch ? 1 : 0)}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[320px] rounded-3xl border-none p-5 shadow-2xl" align="end">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Filtros</h3>
-                  {hasActiveFilters && (
-                    <button 
-                      onClick={onClearFilters}
-                      className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      Limpar tudo
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={onToggleInStock}
-                      className={cn(
-                        "flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-[11px] font-semibold transition-all",
-                        onlyInStock
-                          ? "border-transparent bg-success text-white shadow-md"
-                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30",
-                      )}
-                    >
-                      <PackageCheck className="h-3.5 w-3.5" /> Estoque
-                    </button>
-                    <button
-                      onClick={onToggleLaunch}
-                      className={cn(
-                        "flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-[11px] font-semibold transition-all",
-                        onlyLaunch
-                          ? "border-transparent bg-brand-gradient text-white shadow-md"
-                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30",
-                      )}
-                    >
-                      <Sparkles className="h-3.5 w-3.5" /> Lançamentos
-                    </button>
-                  </div>
-
-                  <FilterChipRow
-                    label="Empresa"
-                    icon={<Building2 className="h-3 w-3" />}
-                    options={brands}
-                    selected={selectedBrands}
-                    onToggle={onToggleGroup}
-                  />
-
-                  <FilterChipRow
-                    label="Categoria"
-                    icon={<Tag className="h-3 w-3" />}
-                    options={groups}
-                    selected={selectedGroups}
-                    onToggle={onToggleBrand}
-                  />
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Filtros</SheetTitle>
+                </SheetHeader>
+                <div className="pt-2">{panel}</div>
+              </SheetContent>
+            </Sheet>
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>{filterTrigger}</PopoverTrigger>
+              <PopoverContent className="w-[320px] rounded-3xl border-none p-5 shadow-2xl" align="end">
+                {panel}
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
+
 
       {/* Chips de filtros ativos (linha única e discreta) */}
       {hasActiveFilters && (
