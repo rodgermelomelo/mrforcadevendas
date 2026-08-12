@@ -5,17 +5,25 @@ import { supabase } from "./client";
 /** Cookie usada para levar o access token ao servidor (SSR e serverFns). */
 export const SUPABASE_AUTH_COOKIE = "sb-access-token";
 
+function attributes() {
+  // Em https (inclui a prévia dentro de iframe) usamos SameSite=None + Partitioned
+  // para que a cookie seja aceita em contexto de terceiros (CHIPS).
+  return window.location.protocol === "https:"
+    ? "; SameSite=None; Secure; Partitioned"
+    : "; SameSite=Lax";
+}
+
 function writeCookie(token: string, maxAgeSeconds: number) {
-  const secure = window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${SUPABASE_AUTH_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${Math.max(
     0,
     Math.floor(maxAgeSeconds),
-  )}; SameSite=Lax${secure}`;
+  )}${attributes()}`;
 }
 
 function eraseCookie() {
-  document.cookie = `${SUPABASE_AUTH_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${SUPABASE_AUTH_COOKIE}=; Path=/; Max-Age=0${attributes()}`;
 }
+
 
 /** Lê o access token da cookie no browser. */
 export function readAuthCookie(): string | undefined {
