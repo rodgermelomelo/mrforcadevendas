@@ -1677,3 +1677,15 @@ export const listSegmentImportAudit = createServerFn({ method: "GET" })
       pageSize: SEGMENT_AUDIT_PAGE,
     };
   });
+
+export const listSegments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ code: string; name: string }[]> => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("segments")
+      .select("code, name")
+      .order("name");
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((s: any) => ({ code: s.code, name: s.name }));
+  });
