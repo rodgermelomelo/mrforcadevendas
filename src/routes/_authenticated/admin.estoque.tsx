@@ -110,7 +110,6 @@ function UnifiedEstoquePage() {
     .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
     .sort((a, b) => a.code.localeCompare(b.code))
     .slice(0, 100);
-    .slice(0, 100);
 
   return (
     <AdminPage
