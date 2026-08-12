@@ -42,6 +42,9 @@ function Catalogo() {
   const [sortBy, setSortBy] = useState<"relevance" | "code" | "price-asc" | "price-desc">("relevance");
   const isAdmin = role === "administrador";
   
+  // Detalhe do Produto
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
   // Pagination & Loading state
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -445,6 +448,7 @@ function Catalogo() {
                   addItem(p.id, qty);
                   toast.success(`${qty} un. de ${p.name} no carrinho`);
                 }}
+                onClick={() => setSelectedProduct(p)}
               />
             ))}
             
@@ -468,6 +472,12 @@ function Catalogo() {
           )}
         </>
       )}
+
+      <ProductDetailDialog 
+        product={selectedProduct} 
+        open={!!selectedProduct} 
+        onOpenChange={(open) => !open && setSelectedProduct(null)} 
+      />
     </div>
   );
 }
@@ -493,10 +503,12 @@ function ProductCard({
   product,
   hasCustomer,
   onAdd,
+  onClick,
 }: {
   product: Product;
   hasCustomer: boolean;
   onAdd: (qty: number) => void;
+  onClick: () => void;
 }) {
   const { table } = useSales();
   const [qty, setQty] = useState(1);
@@ -523,7 +535,10 @@ function ProductCard({
           {(product as any).category || product.group}
         </Badge>
       </div>
-      <div className="relative aspect-square bg-muted">
+      <div 
+        className="relative aspect-square bg-muted cursor-pointer"
+        onClick={onClick}
+      >
         {productImage(product.imageUrl) ? (
           <img
             src={productImage(product.imageUrl) ?? ""}
@@ -555,7 +570,12 @@ function ProductCard({
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
           {(product as any).category || product.group} · {product.erpCode}
         </p>
-        <h3 className="mt-1 line-clamp-2 text-sm font-semibold">{product.name}</h3>
+        <h3 
+          className="mt-1 line-clamp-2 text-sm font-semibold cursor-pointer hover:text-primary transition-colors"
+          onClick={onClick}
+        >
+          {product.name}
+        </h3>
 
         <div className="mt-2">
           {!hasCustomer ? (
