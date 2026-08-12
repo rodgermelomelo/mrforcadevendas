@@ -43,6 +43,24 @@ async function fetchAllRows(
   return { data: rows, error: null };
 }
 
+/**
+ * Pequenas diferenças de relógio entre o app e o banco fazem o token ser
+ * recusado com "JWT issued at future". Nesses casos, tentamos de novo.
+ */
+function isClockSkewError(error: any): boolean {
+  const message = String(error?.message ?? "").toLowerCase();
+  return message.includes("issued at future") || message.includes("jwt not yet valid");
+}
+
+async function runQuery(fn: () => Promise<any>): Promise<any> {
+  let result = await fn();
+  for (let attempt = 0; attempt < 3 && isClockSkewError(result?.error); attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    result = await fn();
+  }
+  return result;
+}
+
 /** Carrega carteira + catálogo do usuário autenticado (RLS limita a carteira visível). */
 export const getWorkspace = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -69,23 +87,25 @@ export const getWorkspace = createServerFn({ method: "GET" })
       brandsRes,
       goalsRes,
     ] = await Promise.all([
-      fetchAllRows(db, "customers", "*", (q) => q.eq("active", true).order("trade_name")),
-      fetchAllRows(db, "products", "*", (q) => q.eq("active", true).order("erp_code")),
-      fetchAllRows(db, "product_prices", "*", (q) => q.order("product_erp_code").order("price_table_code")),
-      fetchAllRows(db, "price_tables", "*", (q) => q.order("code")),
-      fetchAllRows(db, "product_groups", "*", (q) => q.order("code")),
-      fetchAllRows(db, "inventory_snapshots", "*", (q) => q.order("product_erp_code")),
-      fetchAllRows(db, "product_enrichments", "*", (q) => q.order("product_erp_code")),
-      fetchAllRows(db, "customer_seller_links", "*", (q) =>
-        q.eq("active", true).order("seller_erp_code").order("customer_erp_code"),
+      runQuery(() => fetchAllRows(db, "customers", "*", (q) => q.eq("active", true).order("trade_name"))),
+      runQuery(() => fetchAllRows(db, "products", "*", (q) => q.eq("active", true).order("erp_code"))),
+      runQuery(() => fetchAllRows(db, "product_prices", "*", (q) => q.order("product_erp_code").order("price_table_code"))),
+      runQuery(() => fetchAllRows(db, "price_tables", "*", (q) => q.order("code"))),
+      runQuery(() => fetchAllRows(db, "product_groups", "*", (q) => q.order("code"))),
+      runQuery(() => fetchAllRows(db, "inventory_snapshots", "*", (q) => q.order("product_erp_code"))),
+      runQuery(() => fetchAllRows(db, "product_enrichments", "*", (q) => q.order("product_erp_code"))),
+      runQuery(() =>
+        fetchAllRows(db, "customer_seller_links", "*", (q) =>
+          q.eq("active", true).order("seller_erp_code").order("customer_erp_code"),
+        ),
       ),
-      db.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId),
-      db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
-      db.from("approval_rules").select("*").eq("active", true),
-      db.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-      db.from("erp_sellers").select("erp_code, name").order("erp_code"),
-      db.from("brands").select("name, active, metadata").eq("active", true),
-      db.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01"),
+      runQuery(() => db.from("user_erp_seller_links").select("seller_erp_code").eq("user_id", userId)),
+      runQuery(() => db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle()),
+      runQuery(() => db.from("approval_rules").select("*").eq("active", true)),
+      runQuery(() => db.from("user_roles").select("role").eq("user_id", userId).maybeSingle()),
+      runQuery(() => db.from("erp_sellers").select("erp_code, name").order("erp_code")),
+      runQuery(() => db.from("brands").select("name, active, metadata").eq("active", true)),
+      runQuery(() => db.from("seller_goals").select("*").eq("month", new Date().toISOString().slice(0, 7) + "-01")),
     ]);
 
     const customerLinksMissing =
