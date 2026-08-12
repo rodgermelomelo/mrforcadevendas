@@ -137,7 +137,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
                 <Link
                   to={item.to}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive(item.to, item.exact)
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
@@ -147,11 +147,14 @@ function AppShellInner({ children }: { children: ReactNode }) {
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span className="truncate group-data-[collapsible=icon]:hidden">{item.label}</span>
                   {item.to === "/carrinho" && itemCount > 0 && (
-                    <span className={cn(
-                      "ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground",
-                      "group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:top-1 group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:min-w-4 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:text-[10px] group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
-                    )}>
-                      {itemCount}
+                    <span
+                      aria-label={`${itemCount} itens no carrinho`}
+                      className={cn(
+                        "ml-auto min-w-5 rounded-full bg-primary px-2 py-0.5 text-center text-xs font-semibold tabular-nums text-primary-foreground",
+                        "group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:-right-0.5 group-data-[collapsible=icon]:-top-0.5 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:grid group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:min-w-4 group-data-[collapsible=icon]:place-items-center group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:text-[10px] group-data-[collapsible=icon]:border-2 group-data-[collapsible=icon]:border-sidebar"
+                      )}
+                    >
+                      {itemCount > 99 ? "99+" : itemCount}
                     </span>
                   )}
                 </Link>
