@@ -81,13 +81,13 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
           db,
           "customers",
           "id, erp_code, legal_name, trade_name, tax_id, city, uf, segment_code, price_table_code, payment_term, restricted, restriction_reason, credit_limit, open_balance, min_order_value, last_order_at, seller_erp_code",
-          (query) => query.eq("active", true).order("trade_name"),
+          (query) => query.eq("active", true).order("trade_name").limit(10000),
         ),
       ),
       runQuery(() => fetchAllRows(db, "price_tables", "*", (query) => query.order("code"))),
       runQuery(() =>
         fetchAllRows(db, "customer_seller_links", "*", (query) =>
-          query.eq("active", true).order("seller_erp_code").order("customer_erp_code"),
+          query.eq("active", true).order("seller_erp_code").order("customer_erp_code").limit(10000),
         ),
       ),
       runQuery(() =>
@@ -116,7 +116,8 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
           .from("inventory_snapshots")
           .select("captured_at")
           .order("captured_at", { ascending: false })
-          .limit(1),
+          .limit(1)
+          .range(0, 0),
       ),
     ]);
 
@@ -156,7 +157,7 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
         .map((link) => text(link, "seller_erp_code"))
         .filter(Boolean),
       sellers: mapSellerSummary(customers, rows(sellersRes), rows(goalsRes)),
-      lastUpdate: nullableText(rows(lastInventoryRes)[0], "captured_at"),
+      lastUpdate: nullableText(rows(lastInventoryRes as any)[0], "captured_at"),
       approvalRules: mapApprovalRules(rows(rulesRes)),
       role,
       brandMetadata: mapBrandMetadata(rows(brandsRes)),
@@ -229,9 +230,10 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
       ? await runQuery(() =>
           fetchAllRows(db, "product_prices", "*", (query) => {
             const ordered = query.order("product_erp_code").order("price_table_code");
-            return shouldFetchAllPrices
+            return (shouldFetchAllPrices
               ? ordered
-              : ordered.in("price_table_code", Array.from(visiblePriceTables));
+              : ordered.in("price_table_code", Array.from(visiblePriceTables))
+            ).limit(10000);
           }),
         )
       : { data: [], error: null };

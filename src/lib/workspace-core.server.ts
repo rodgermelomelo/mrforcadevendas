@@ -13,7 +13,7 @@ export interface QueryBuilder {
   in(column: string, values: unknown[]): QueryBuilder;
   order(column: string, options?: { ascending?: boolean }): QueryBuilder;
   range(from: number, to: number): QueryResult<DbRow[]>;
-  limit(count: number): QueryResult<DbRow[]>;
+  limit(count: number): QueryBuilder;
   maybeSingle(): QueryResult<DbRow>;
 }
 
@@ -203,8 +203,26 @@ export function mapCustomers(customerRows: DbRow[], linkRows: DbRow[], customerL
     },
   }));
 
-  const contexts =
-    !customerLinksMissing && linkedContexts.length > 0 ? linkedContexts : legacyContexts;
+  // Combinar ambas as fontes para garantir que nenhum cliente seja perdido.
+  // Priorizar dados da tabela de links quando houver duplicata por erpCode + sellerErpCode
+  const seen = new Set<string>();
+  const contexts: { customer: DbRow; link: DbRow }[] = [];
+
+  for (const ctx of linkedContexts) {
+    const key = `${text(ctx.customer, "erp_code")}:${text(ctx.link, "seller_erp_code")}`;
+    contexts.push(ctx);
+    seen.add(key);
+  }
+
+  if (customerLinksMissing || contexts.length === 0 || customerRows.length > linkedContexts.length) {
+    for (const ctx of legacyContexts) {
+      const key = `${text(ctx.customer, "erp_code")}:${text(ctx.link, "seller_erp_code")}`;
+      if (!seen.has(key)) {
+        contexts.push(ctx);
+        seen.add(key);
+      }
+    }
+  }
 
   return contexts.map(({ customer, link }): Customer => {
     const sellerErpCode = text(link, "seller_erp_code");
