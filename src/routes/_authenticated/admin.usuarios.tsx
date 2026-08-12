@@ -33,6 +33,7 @@ import {
   type AdminUser,
 } from "@/lib/admin-data.functions";
 import { ProvisionarView } from "./admin.provisionar";
+import { PermissionMatrix } from "@/features/admin/permission-matrix";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
   component: UsersPage,
