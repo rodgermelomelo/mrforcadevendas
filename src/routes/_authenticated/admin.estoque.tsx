@@ -103,6 +103,9 @@ function UnifiedEstoquePage() {
   const brands: CodeLabelRow[] = registriesQuery.data?.brands ?? [];
   const mainBrands = brands.filter(b => !b.metadata?.isCategory);
   const categories = brands.filter(b => b.metadata?.isCategory);
+  
+  console.log("UnifiedEstoquePage - Brands:", brands.length, "Main:", mainBrands.length, "Cats:", categories.length);
+
   const filteredBrands = mainBrands
     .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
     .slice(0, 100);
