@@ -32,7 +32,7 @@ export function useCatalogFilters({
   const [term, setTerm] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+  
   const [onlyLaunch, setOnlyLaunch] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState<CatalogSort>("relevance");
