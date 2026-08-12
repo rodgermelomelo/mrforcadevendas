@@ -278,15 +278,18 @@ function AppShellInner({ children }: { children: ReactNode }) {
               <span className="min-w-0">
                 <span className="block truncate text-xs font-semibold">Força de Vendas</span>
                 <span className="block truncate text-[10px] text-muted-foreground">
-                  {customer ? customer.tradeName : "Nenhum cliente"}
+                  {customer ? customer.tradeName : "Atendimento"}
                 </span>
               </span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 pointer-events-auto">
             {customer && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur px-3 py-1.5 rounded-full border border-border/50 shadow-sm pointer-events-auto">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur px-3 py-1.5 rounded-full border border-border/50 shadow-sm max-w-[180px] sm:max-w-[250px] lg:max-w-none">
                 <Users className="h-3 w-3 flex-shrink-0" />
-                <span className="font-medium text-foreground">{customer.tradeName}</span>
-                <span className="text-[10px] opacity-60">({customer.erpCode})</span>
+                <span className="font-medium text-foreground truncate">{customer.tradeName}</span>
+                <span className="text-[10px] opacity-60 hidden sm:inline">({customer.erpCode})</span>
               </div>
             )}
           </div>
