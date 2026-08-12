@@ -81,13 +81,13 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
           db,
           "customers",
           "id, erp_code, legal_name, trade_name, tax_id, city, uf, segment_code, price_table_code, payment_term, restricted, restriction_reason, credit_limit, open_balance, min_order_value, last_order_at, seller_erp_code",
-          (query) => query.eq("active", true).order("trade_name"),
+          (query) => query.eq("active", true).order("trade_name").limit(10000),
         ),
       ),
       runQuery(() => fetchAllRows(db, "price_tables", "*", (query) => query.order("code"))),
       runQuery(() =>
         fetchAllRows(db, "customer_seller_links", "*", (query) =>
-          query.eq("active", true).order("seller_erp_code").order("customer_erp_code"),
+          query.eq("active", true).order("seller_erp_code").order("customer_erp_code").limit(10000),
         ),
       ),
       runQuery(() =>

@@ -124,7 +124,7 @@ function CustomerMapPage() {
       <header className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-            Carteira geográfica
+            Distribuição Geográfica de Clientes
           </p>
           <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Mapa de clientes</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
@@ -176,7 +176,7 @@ function CustomerMapPage() {
                 setTerm(event.target.value);
                 setSelectedCityKey(null);
               }}
-              placeholder="Buscar cliente, CNPJ, código, cidade ou representante"
+              placeholder="Buscar cidade (ex: Sorocaba), cliente, CNPJ ou representante"
               className="h-12 rounded-xl bg-card pl-11 text-base"
             />
           </div>
