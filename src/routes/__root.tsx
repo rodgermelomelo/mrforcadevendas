@@ -132,8 +132,15 @@ function RootComponent() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_OUT") {
+        // Sem sessão, revalidar a rota dispararia loaders protegidos sem token.
+        void queryClient.cancelQueries();
+        queryClient.clear();
+        void router.navigate({ to: "/auth", replace: true });
+        return;
+      }
       void router.invalidate();
-      if (event !== "SIGNED_OUT") void queryClient.invalidateQueries();
+      void queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
