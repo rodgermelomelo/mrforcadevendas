@@ -96,30 +96,30 @@ export function CatalogFilterBar({
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {/* Filtros rápidos */}
-        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-0.5">
           <button
             onClick={onToggleInStock}
             className={cn(
-              "flex shrink-0 items-center gap-1 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95",
               onlyInStock
-                ? "border-transparent bg-success text-white"
-                : "border-border bg-card text-muted-foreground hover:text-foreground",
+                ? "border-transparent bg-success text-white shadow-md shadow-success/20"
+                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground shadow-soft",
             )}
           >
-            <PackageCheck className="h-3 w-3" /> Com estoque
+            <PackageCheck className="h-3.5 w-3.5" /> Com estoque
           </button>
           <button
             onClick={onToggleLaunch}
             className={cn(
-              "flex shrink-0 items-center gap-1 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-semibold transition-all active:scale-95",
               onlyLaunch
-                ? "border-transparent bg-brand-gradient text-primary-foreground"
-                : "border-border bg-card text-muted-foreground hover:text-foreground",
+                ? "border-transparent bg-brand-gradient text-primary-foreground shadow-md shadow-primary/20"
+                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground shadow-soft",
             )}
           >
-            <Sparkles className="h-3 w-3" /> Lançamentos
+            <Sparkles className="h-3.5 w-3.5" /> Lançamentos
           </button>
         </div>
 
