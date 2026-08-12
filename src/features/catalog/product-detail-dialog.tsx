@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ShoppingCart, Package, Tag, Building2, Sparkles, AlertCircle, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -208,6 +208,41 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                       ? "Este produto está sem saldo em estoque e não pode ser adicionado ao pedido."
                       : "Tabela de preço do cliente sem nível configurado para este item."}
                   </p>
+                </div>
+              )}
+
+              {/* Tabela de Preços por Nível */}
+              {hasCustomer && (
+                <div className="space-y-3 rounded-2xl border border-border/50 bg-muted/30 p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <LayoutList className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tabela de Preços ({customer?.priceTableCode})</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[1, 2, 3, 4, 5, 6].map((level, idx) => {
+                      const levelValue = product.prices[customer?.priceTableCode || ""]?.[idx];
+                      const isCurrent = table?.mappedLevel === idx;
+                      
+                      return (
+                        <div 
+                          key={level} 
+                          className={cn(
+                            "flex items-center justify-between px-3 py-2 rounded-xl border text-xs transition-all",
+                            isCurrent 
+                              ? "border-primary bg-primary/5 font-bold" 
+                              : "border-border/40 bg-white/50"
+                          )}
+                        >
+                          <span className={cn(isCurrent ? "text-primary" : "text-muted-foreground")}>
+                            Nível {level}
+                          </span>
+                          <span className={cn(isCurrent ? "text-primary" : "font-medium")}>
+                            {levelValue ? formatBRL(levelValue) : "—"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               

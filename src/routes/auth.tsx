@@ -270,7 +270,7 @@ function AuthPage() {
               </div>
 
               <div className="pt-2 border-t border-border/30 mt-4 text-[10px] opacity-50 italic">
-                Adicione uma galeria de imagens no modal do produto para eu navegar entre várias fotos do item.
+                Inclua no modal do produto uma tabela com meus preços por nível para eu comparar as faixas antes de adicionar ao pedido.
               </div>
             </div>
           </div>
