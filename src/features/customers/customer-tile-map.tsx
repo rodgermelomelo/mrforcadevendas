@@ -184,7 +184,10 @@ export function CustomerTileMap({
     const tileLayer = L.tileLayer(provider.url, {
       attribution: provider.attribution,
       maxZoom: 19,
-      subdomains: "subdomains" in provider ? provider.subdomains : undefined,
+      subdomains:
+        "subdomains" in provider && provider.subdomains
+          ? provider.subdomains
+          : "abc",
       detectRetina: true,
     }).addTo(mapRef.current);
 
