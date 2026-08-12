@@ -68,7 +68,7 @@ function Carteira() {
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold sm:text-4xl">Minha carteira</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">Minha carteira</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Selecionar um cliente é o ponto de partida do pedido — os preços são calculados pelo
             cadastro comercial dele.

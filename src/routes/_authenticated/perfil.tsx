@@ -71,7 +71,7 @@ function ProfilePage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <header>
-        <h1 className="text-3xl font-bold">Meu <span className="text-brand-gradient">Perfil</span></h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Meu <span className="text-brand-gradient">Perfil</span></h1>
         <p className="text-muted-foreground">Gerencie sua conta e acompanhe seu desempenho.</p>
       </header>
 
