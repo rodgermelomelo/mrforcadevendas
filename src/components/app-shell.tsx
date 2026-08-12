@@ -294,29 +294,27 @@ function AppShellInner({ children }: { children: ReactNode }) {
             )}
           </div>
           
-          <div className="flex items-center gap-3 pointer-events-auto">
-            <div className="lg:hidden flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => openCustomerPicker({ startNewOrder: true })}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
-                aria-label="Novo pedido"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-              <Link
-                to="/carrinho"
-                className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/50 bg-background/80 backdrop-blur shadow-sm hover:bg-background transition-colors"
-                aria-label="Abrir carrinho"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {itemCount > 0 && (
-                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground border-2 border-background">
-                    {itemCount}
-                  </span>
-                )}
-              </Link>
-            </div>
+          <div className="flex items-center gap-3 pointer-events-auto lg:hidden">
+            <button
+              type="button"
+              onClick={() => openCustomerPicker({ startNewOrder: true })}
+              className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-lift"
+              aria-label="Novo pedido"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <Link
+              to="/carrinho"
+              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/50 bg-background/80 backdrop-blur shadow-sm hover:bg-background transition-colors"
+              aria-label="Abrir carrinho"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground border-2 border-background">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
           </div>
         </header>
 
