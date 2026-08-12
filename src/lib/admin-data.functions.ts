@@ -15,10 +15,9 @@ async function audit(
   context: { supabase: any; userId: string },
   entity: string,
   entityId: string,
-  audit,
-  audit as auditSafe,
+  action: string,
+  detail: Record<string, unknown>,
 ) {
-  // Use typed insert when possible, or as any for new tables
   await context.supabase.from("audit_logs" as any).insert({
     actor_id: context.userId,
     entity,
