@@ -316,7 +316,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 pb-28 pt-2 sm:px-6 lg:px-10 lg:pb-12 lg:pt-4 overflow-y-auto -mt-14 lg:-mt-16">
+        <main className="flex-1 px-4 pb-28 pt-2 sm:px-6 lg:px-10 lg:pb-12 lg:pt-1 overflow-y-auto -mt-14 lg:-mt-16">
           {children}
         </main>
 
