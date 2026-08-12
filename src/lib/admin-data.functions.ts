@@ -968,7 +968,7 @@ export const listRegistries = createServerFn({ method: "GET" })
         label: r.description,
         extra: r.is_standard,
       })),
-      brands: finalBrands,
+      brands: finalBrands as CodeLabelRow[],
     };
   });
 
