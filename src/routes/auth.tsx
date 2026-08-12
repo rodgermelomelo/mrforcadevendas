@@ -38,7 +38,9 @@ function AuthPage() {
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void navigate({ to: "/", replace: true });
+      if (data.session) {
+        void navigate({ to: "/catalogo", replace: true });
+      }
     });
   }, [navigate]);
 
@@ -49,7 +51,8 @@ function AuthPage() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        void navigate({ to: "/", replace: true });
+        // Navega diretamente para o catálogo para garantir que o redirecionamento ocorra
+        void navigate({ to: "/catalogo", replace: true });
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email,
