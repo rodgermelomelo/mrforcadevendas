@@ -930,14 +930,34 @@ export const listRegistries = createServerFn({ method: "GET" })
       context.supabase.from("brands").select("*"),
     ]);
 
-    const brandsMap = new Map<string, number>();
+    const productCounts = new Map<string, number>();
     for (const p of products.data ?? []) {
       if (p.brand) {
-        brandsMap.set(p.brand, (brandsMap.get(p.brand) ?? 0) + 1);
+        productCounts.set(p.brand, (productCounts.get(p.brand) ?? 0) + 1);
       }
     }
 
-    const brandsData = new Map((brands.data ?? []).map((b: any) => [b.name, { active: b.active, metadata: b.metadata }]));
+    const brandsTableData = brands.data ?? [];
+    const brandsTableNames = new Set(brandsTableData.map((b: any) => b.name));
+    
+    // Unificar marcas da tabela com marcas encontradas nos produtos
+    const allBrandNames = new Set([
+      ...brandsTableNames,
+      ...productCounts.keys()
+    ]);
+
+    const finalBrands = [...allBrandNames]
+      .sort((a, b) => a.localeCompare(b))
+      .map(name => {
+        const tableRow = brandsTableData.find((b: any) => b.name === name);
+        return {
+          code: name,
+          label: name,
+          productCount: productCounts.get(name) ?? 0,
+          active: tableRow?.active ?? true,
+          metadata: tableRow?.metadata || {},
+        };
+      });
 
     return {
       groups: (groups.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
@@ -948,15 +968,7 @@ export const listRegistries = createServerFn({ method: "GET" })
         label: r.description,
         extra: r.is_standard,
       })),
-      brands: [...brandsMap.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([brand, count]) => ({
-          code: brand,
-          label: brand,
-          productCount: count,
-          active: brandsData.get(brand)?.active ?? true,
-          metadata: brandsData.get(brand)?.metadata || {},
-        })),
+      brands: finalBrands,
     };
   });
 
