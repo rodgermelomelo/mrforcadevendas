@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
-  ArrowUpRight,
   ClipboardList,
   Loader2,
   ShieldAlert,
@@ -12,12 +11,9 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -28,11 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { SellerGoalsHistory } from "@/components/admin/seller-goals-history";
 import { useIsApprover } from "@/components/use-is-approver";
-import { getTeamOverview, type TeamOrderRow, type TeamOverview } from "@/lib/team.functions";
-import { statusLabel, statusTone } from "@/lib/orders/status";
-import type { CommercialStatus } from "@/lib/domain/types";
-import { formatBRL, formatDateTimeBR } from "@/lib/pricing";
-import { cn } from "@/lib/utils";
+import { MetricCard } from "@/components/shared/metric-card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { TeamSellerCard } from "@/features/team/team-seller-card";
+import { TeamOrderList } from "@/features/team/team-order-list";
+import { getTeamOverview } from "@/lib/team.functions";
+import { formatBRL } from "@/lib/pricing";
 
 export const Route = createFileRoute("/_authenticated/equipe")({
   head: () => ({
