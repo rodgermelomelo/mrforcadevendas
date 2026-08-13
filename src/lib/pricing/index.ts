@@ -2,7 +2,11 @@ import type { PriceTable, Product } from "@/lib/domain/types";
 
 export type PriceResolution =
   | { ok: true; value: number; levelLabel: string }
-  | { ok: false; reason: "table_unmapped" | "no_price"; message: string };
+  | {
+      ok: false;
+      reason: "table_unmapped" | "no_price" | "no_table_on_product" | "zero_price";
+      message: string;
+    };
 
 /**
  * Preço = product_prices[tabela do cliente].value[nível mapeado].
@@ -17,12 +21,20 @@ export function resolvePrice(product: Product, table: PriceTable | undefined): P
     };
   }
   const values = product.prices[table.code];
-  const value = values?.[table.mappedLevel];
-  if (!values || value === undefined || value <= 0) {
+  if (!values) {
     return {
       ok: false,
-      reason: "no_price",
-      message: `Produto sem preço válido na tabela ${table.code}.`,
+      reason: "no_table_on_product",
+      message: `Tabela ${table.code} não encontrada no cadastro do produto.`,
+    };
+  }
+
+  const value = values[table.mappedLevel];
+  if (value === undefined || value <= 0) {
+    return {
+      ok: false,
+      reason: "zero_price",
+      message: `Preço zero ou nulo para o nível ${table.levelLabel} na tabela ${table.code}.`,
     };
   }
   return { ok: true, value, levelLabel: table.levelLabel };
