@@ -51,6 +51,16 @@ const CATEGORY_ALIASES: Record<string, string> = {
   MANTEIGA: "MANTEIGA",
   TOALHA: "TOALHA",
   LAPISEIRA: "LAPISEIRA",
+  BABADO: "BABADO",
+};
+
+/**
+ * Mapeamento manual de categorias para marcas (Curadoria Admin).
+ * Quando uma categoria deve SEMPRE pertencer a uma marca específica.
+ */
+const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
+  AMACIANTE: "ACEMAR",
+  BABADO: "DAILUS",
 };
 
 function normalizeTaxonomyText(value: string) {
@@ -91,15 +101,20 @@ function categoryFromGroupLabel(groupLabel: string | undefined, brand: string | 
 
 export function inferProductTaxonomy(product: ProductRecord, groupLabel: string | undefined): ProductTaxonomySuggestion {
   const description = product.officialDescription || "";
-  const brandFromDescription = firstKnownBrand(description);
-  const brandFromGroup = firstKnownBrand(groupLabel ?? "");
-  const brand = brandFromDescription ?? brandFromGroup ?? "OUTROS";
-
-  const category =
+  
+  const category = normalizeTaxonomyText(
     firstKnownCategory(description) ??
     firstKnownCategory(groupLabel ?? "") ??
-    categoryFromGroupLabel(groupLabel, brand) ??
-    "DIVERSOS";
+    categoryFromGroupLabel(groupLabel, null) ??
+    "DIVERSOS"
+  );
+
+  // Se a categoria tem um override de marca, use-o.
+  const forcedBrand = CATEGORY_TO_BRAND_OVERRIDE[category];
+  
+  const brandFromDescription = firstKnownBrand(description);
+  const brandFromGroup = firstKnownBrand(groupLabel ?? "");
+  const brand = forcedBrand ?? brandFromDescription ?? brandFromGroup ?? "OUTROS";
 
   // Inferência de segmento baseada na descrição e histórico do ERP
   let segment = "GERAL";
@@ -114,7 +129,7 @@ export function inferProductTaxonomy(product: ProductRecord, groupLabel: string 
 
   return {
     brand,
-    category: normalizeTaxonomyText(category),
+    category,
     segment,
   };
 }
