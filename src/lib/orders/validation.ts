@@ -167,16 +167,25 @@ export function validateOrder(input: ValidationInput): ValidationResult {
   }
 
   if (input.orderDiscountPercent > 0) {
-    exceptions.push({
-      type: "discount_order",
-      label: "Desconto no pedido",
-      detail: `${input.orderDiscountPercent}% sobre o total.`,
-      authority: resolveAuthority("discount_order", {
-        percent: input.orderDiscountPercent,
-        amount: input.total,
-      }),
-    });
+    const fa = input.financialAgreement;
+    const hasFinancialAgreement = fa && (fa.nfPercent > 0 || fa.boletoPercent > 0);
+
+    // Se houver acordo financeiro OU for bonificação, o desconto no pedido gera exceção.
+    // Caso contrário (apenas desconto no pedido sem bonificação/acordo), não gera exceção automática aqui,
+    // permitindo "Gerar pedido" direto se não houver outras exceções.
+    if (input.isBonus || hasFinancialAgreement) {
+      exceptions.push({
+        type: "discount_order",
+        label: "Desconto no pedido",
+        detail: `${input.orderDiscountPercent}% sobre o total.`,
+        authority: resolveAuthority("discount_order", {
+          percent: input.orderDiscountPercent,
+          amount: input.total,
+        }),
+      });
+    }
   }
+
   if (input.isBonus) {
     exceptions.push({
       type: "bonus_order",
