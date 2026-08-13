@@ -84,6 +84,10 @@ const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
   TOALHA: "ACEMAR",
   BABADO: "DAILUS",
   EFEITO: "DAILUS",
+  "DIVINA FLORA": "DIVINA FLORA",
+  MELANCIA: "DIVINA FLORA",
+  BABOSA: "DIVINA FLORA",
+  "PODEROSO SEGREDO": "DIVINA FLORA",
 };
 
 function normalizeTaxonomyText(value: string) {

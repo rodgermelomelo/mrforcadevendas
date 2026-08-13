@@ -89,6 +89,11 @@ export const KNOWN_EXTERNAL_PRODUCT_IMAGE_URLS: Record<string, string> = {
   "004750": ACEMAR_GOTA_SECANTE,
   "005029": ACEMAR_SPRAY_SECANTE,
   "005030": ACEMAR_GOTA_SECANTE,
+  "005315": "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Condicionador-Hidratante-Divina-Flora-250ml-Magia-da-Melancia-DKA-1200x1200-1-324x324.png",
+  "005316": "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Shampoo-Divina-Flora-250ml-Chiquita-Bacana-DKA-1200x1200-1-324x324.png",
+  "005317": "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/10/Mascara-capilar-Divina-Flora-300g-Por-que-choras-babosa-DKA-1200x1200-1-324x324.png",
+  "005318": "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Divina-Flora-Perfume-Capilar-Melancia-324x324.png",
+  "005319": "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/10/tonico-poderoso-segredo-50c3b234fb3ab5d4de17424331989558-1024-1024-324x324.webp",
 };
 
 const KNOWN_PRODUCT_ASSET_KEYS: Record<string, CatalogAssetKey> = {
@@ -167,6 +172,22 @@ export function knownExternalProductImageUrl(product: ProductImageCandidate): st
     if (text.includes("NEUTRO")) return ACEMAR_SEM_ACETONA_NEUTRO;
     if (text.includes("500")) return ACEMAR_ACETONA_500;
     if (text.includes("ACETONA") || text.includes("REMOVEDOR")) return ACEMAR_ACETONA_100;
+  }
+
+  if (normalizeCatalogText(product.brand) === "DIVINA FLORA" || text.includes("DIVINA FLORA")) {
+    if (text.includes("MELANCIA")) {
+      if (text.includes("CONDICIONADOR")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Condicionador-Hidratante-Divina-Flora-250ml-Magia-da-Melancia-DKA-1200x1200-1-324x324.png";
+      if (text.includes("CREME") || text.includes("PENTEAR")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Creme-de-pentear-Divina-Flora-250ml-Magia-da-Melancia-DKA-1200x1200-1-324x324.png";
+      if (text.includes("PERFUME")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Divina-Flora-Perfume-Capilar-Melancia-324x324.png";
+    }
+    if (text.includes("BABOSA")) {
+      if (text.includes("MASCARA")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/10/Mascara-capilar-Divina-Flora-300g-Por-que-choras-babosa-DKA-1200x1200-1-324x324.png";
+      if (text.includes("LEAVE")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/10/Leave-in-Divina-Flora-250ml-Babosa-DKA-1200x1200-1-324x324.png";
+    }
+    if (text.includes("PODEROSO SEGREDO")) {
+      if (text.includes("TONICO")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/10/tonico-poderoso-segredo-50c3b234fb3ab5d4de17424331989558-1024-1024-324x324.webp";
+      if (text.includes("SHAMPOO")) return "https://divinafloracosmeticos.com.br/wp-content/uploads/2025/11/Shampoo-Divina-Flora-250ml-Chiquita-Bacana-DKA-1200x1200-1-324x324.png"; // Fallback logic
+    }
   }
 
   return null;
