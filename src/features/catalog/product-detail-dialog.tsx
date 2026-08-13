@@ -147,6 +147,11 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                 <Badge variant="outline" className="text-[10px] uppercase font-bold px-2 py-0.5">
                   <Tag className="mr-1 h-3 w-3" /> {product.category || product.group}
                 </Badge>
+                {product.category === "AMACIANTE" && (
+                  <Badge variant="secondary" className="bg-success/10 text-success border-success/20 text-[10px] uppercase font-bold px-2 py-0.5">
+                    TAG AMACIANTE
+                  </Badge>
+                )}
               </div>
               <DialogTitle className="min-w-0 break-words pr-10 text-2xl font-bold leading-tight">
                 {product.name}

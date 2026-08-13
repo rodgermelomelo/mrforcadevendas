@@ -85,7 +85,8 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
       <div className="flex flex-1 flex-col p-3">
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
-          {category} · {product.erpCode}
+          {product.category && product.category !== product.brand ? `${product.category} · ` : ""}
+          {product.erpCode}
         </p>
         <h3
           className="mt-1 line-clamp-2 cursor-pointer text-sm font-semibold transition-colors hover:text-primary"
