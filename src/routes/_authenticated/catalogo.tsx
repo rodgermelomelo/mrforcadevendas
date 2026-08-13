@@ -80,12 +80,14 @@ function Catalogo() {
       groups[brand].push(p);
     });
 
-    return Object.entries(groups)
+    const result = Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([brand, items]) => ({
         brand,
-        items: items ? items.sort((a, b) => a.name.localeCompare(b.name)) : [],
+        items: items.sort((a, b) => a.name.localeCompare(b.name)),
       }));
+
+    return result;
   }, [filters.filtered]);
 
   const activeAccordionValues = useMemo(() => {
