@@ -51,31 +51,31 @@ const BRAZIL_BOUNDS: MapBounds = {
 
 const STATE_COORDS: Record<string, Coordinate> = {
   AC: { lat: -9.98, lng: -67.81 },
-  AL: { lat: -9.66, lng: -35.73 },
+  AL: { lat: -9.66, lng: -36.2 }, // Puxado mais para o interior
   AM: { lat: -3.1, lng: -60.02 },
-  AP: { lat: 0.04, lng: -51.07 },
-  BA: { lat: -12.97, lng: -38.5 },
-  CE: { lat: -3.73, lng: -38.52 },
+  AP: { lat: 0.04, lng: -51.5 }, // Interior
+  BA: { lat: -12.5, lng: -40.5 }, // Centralizado mais no interior da Bahia
+  CE: { lat: -4.5, lng: -39.5 }, // Sul de Fortaleza para evitar mar
   DF: { lat: -15.78, lng: -47.93 },
-  ES: { lat: -20.32, lng: -40.34 },
+  ES: { lat: -19.8, lng: -40.8 }, // Interior
   GO: { lat: -16.68, lng: -49.25 },
-  MA: { lat: -2.53, lng: -44.3 },
-  MG: { lat: -19.92, lng: -43.94 },
+  MA: { lat: -4.5, lng: -45.0 }, // Centro do estado
+  MG: { lat: -18.5, lng: -44.5 }, // Centro de Minas
   MS: { lat: -20.45, lng: -54.62 },
   MT: { lat: -15.6, lng: -56.1 },
-  PA: { lat: -1.45, lng: -48.5 },
-  PB: { lat: -7.12, lng: -34.86 },
-  PE: { lat: -8.05, lng: -34.9 },
-  PI: { lat: -5.09, lng: -42.8 },
-  PR: { lat: -25.43, lng: -49.27 },
-  RJ: { lat: -22.91, lng: -43.17 },
-  RN: { lat: -5.79, lng: -35.21 },
-  RO: { lat: -8.76, lng: -63.9 },
-  RR: { lat: 2.82, lng: -60.67 },
-  RS: { lat: -30.03, lng: -51.23 },
-  SC: { lat: -27.59, lng: -48.55 },
-  SE: { lat: -10.91, lng: -37.07 },
-  SP: { lat: -23.55, lng: -46.63 }, // Centralizado na capital para evitar spread para o oceano
+  PA: { lat: -4.0, lng: -52.0 }, // Centro do Pará
+  PB: { lat: -7.2, lng: -36.5 }, // Interior
+  PE: { lat: -8.3, lng: -36.8 }, // Interior
+  PI: { lat: -7.5, lng: -43.0 }, // Centro
+  PR: { lat: -24.8, lng: -51.5 }, // Centro do PR
+  RJ: { lat: -22.3, lng: -43.0 }, // Puxado para o interior (norte/oeste da capital)
+  RN: { lat: -5.8, lng: -36.5 }, // Interior
+  RO: { lat: -11.0, lng: -63.0 }, // Centro
+  RR: { lat: 2.0, lng: -61.5 }, // Centro
+  RS: { lat: -29.5, lng: -53.5 }, // Centro do RS
+  SC: { lat: -27.2, lng: -50.5 }, // Interior
+  SE: { lat: -10.6, lng: -37.4 }, // Interior
+  SP: { lat: -22.5, lng: -48.5 }, // Bem no centro de SP (perto de Bauru) para evitar o litoral
   TO: { lat: -10.18, lng: -48.33 },
 };
 
