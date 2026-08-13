@@ -127,10 +127,12 @@ function UnifiedEstoquePage() {
   const mainBrands = brands.filter((b) => !b.metadata?.isCategory);
   const categories = brands.filter((b) => b.metadata?.isCategory);
 
-  const filteredBrands = mainBrands
-    .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
-    .sort((a, b) => a.code.localeCompare(b.code))
-    .slice(0, 100);
+  const filteredBrands = useMemo(() => {
+    return mainBrands
+      .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
+      .sort((a, b) => a.code.localeCompare(b.code))
+      .slice(0, 100);
+  }, [mainBrands, brandTerm]);
 
   return (
     <AdminPage
