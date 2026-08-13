@@ -186,6 +186,30 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_taxonomy_overrides: {
+        Row: {
+          category_name: string
+          created_at: string | null
+          id: string
+          target_brand_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_name: string
+          created_at?: string | null
+          id?: string
+          target_brand_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_name?: string
+          created_at?: string | null
+          id?: string
+          target_brand_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           active: boolean
