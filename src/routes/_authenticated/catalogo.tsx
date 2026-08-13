@@ -82,7 +82,7 @@ function Catalogo() {
       ];
 
       let brand = p.brand || "Sem Marca";
-      if (ACEMAR_CATEGORIES.includes(p.category)) {
+      if (ACEMAR_CATEGORIES.includes(p.category || "")) {
         brand = "ACEMAR";
       }
       
