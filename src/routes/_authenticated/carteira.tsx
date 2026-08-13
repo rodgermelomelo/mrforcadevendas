@@ -294,3 +294,140 @@ function Carteira() {
     </div>
   );
 }
+
+interface CustomerCardProps {
+  c: Customer;
+  priceTables: any[];
+  customer: Customer | null;
+  itemCount: number;
+  showPriceTableDetails: boolean;
+  onStart: () => void;
+  onInfo: () => void;
+}
+
+function CustomerCard({
+  c,
+  priceTables,
+  customer,
+  itemCount,
+  showPriceTableDetails,
+  onStart,
+  onInfo,
+}: CustomerCardProps) {
+  const table = priceTables.find((t) => t.code === c.priceTableCode);
+  const selected = customer?.id === c.id;
+  const hasOtherCart = itemCount > 0 && Boolean(customer) && !selected;
+
+  return (
+    <article
+      className={cn(
+        "surface-card flex flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        selected && "border-primary/50 ring-1 ring-primary/30",
+      )}
+    >
+      <div
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 cursor-pointer"
+        onClick={onStart}
+      >
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold">{c.tradeName}</h2>
+          <p className="truncate text-xs text-muted-foreground">{c.legalName}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+            {c.erpCode}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onInfo();
+            }}
+          >
+            <Info className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div
+        className="mt-4 space-y-1.5 text-xs text-muted-foreground cursor-pointer"
+        onClick={onStart}
+      >
+        <div className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">
+            {c.city}/{c.uf}
+          </span>
+        </div>
+        <div className="truncate">CNPJ {maskTaxId(c.taxId)}</div>
+        <div className="truncate">
+          Rep. {c.sellerErpCode ?? "—"} · Segmento {c.segment} · Condição {c.paymentTerm}
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2 cursor-pointer" onClick={onStart}>
+        {showPriceTableDetails && (
+          <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
+            {table ? `${table.code} · ${table.name}` : "Sem tabela"}
+          </span>
+        )}
+        {table?.mappedLevel === null && (
+          <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning">
+            Preço pendente de configuração
+          </span>
+        )}
+        {c.restricted && (
+          <span className="flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2 py-1 text-[11px] font-medium text-destructive">
+            <ShieldAlert className="h-3 w-3" /> Restrição
+          </span>
+        )}
+      </div>
+
+      <div className="mt-5 grid gap-2">
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onStart();
+          }}
+          className="w-full rounded-xl"
+          variant={selected ? "outline" : "default"}
+        >
+          {selected
+            ? itemCount > 0
+              ? `Continuar atendimento (${itemCount})`
+              : "Continuar atendimento"
+            : hasOtherCart
+              ? "Trocar cliente"
+              : "Atender este cliente"}
+        </Button>
+        {selected && itemCount > 0 && (
+          <Button
+            asChild
+            variant="ghost"
+            className="w-full rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Link to="/carrinho">Ver carrinho</Link>
+          </Button>
+        )}
+        {!selected && hasOtherCart && (
+          <p className="text-[11px] text-muted-foreground">
+            O carrinho atual de {customer?.tradeName} será descartado.
+          </p>
+        )}
+        {table?.mappedLevel === null && (
+          <p className="text-[11px] text-warning">
+            Preço pendente de configuração — o pedido ficará bloqueado.
+          </p>
+        )}
+        {c.restricted && (
+          <p className="text-[11px] text-muted-foreground">
+            Cliente com restrição — o pedido irá para aprovação.
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
