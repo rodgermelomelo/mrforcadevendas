@@ -10,6 +10,8 @@ import {
   X,
   Users,
   Info,
+  LayoutGrid,
+  FolderOpen,
 } from "lucide-react";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
