@@ -1,7 +1,17 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Plus, ShoppingCart, Sparkles, UserPlus, ChevronDown } from "lucide-react";
+import {
+  Search,
+  Plus,
+  ShoppingCart,
+  Sparkles,
+  UserPlus,
+  ChevronDown,
+  LayoutGrid,
+  FolderOpen,
+  Tag,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useSales } from "@/lib/state/sales-store";
 import { Button } from "@/components/ui/button";
@@ -13,6 +23,14 @@ import { ProductCardSkeleton } from "@/features/catalog/product-card-skeleton";
 import { CatalogFilterBar } from "@/features/catalog/catalog-filter-bar";
 import { useCatalogFilters } from "@/features/catalog/use-catalog-filters";
 import { canViewPriceTableDetails } from "@/lib/domain/roles";
+import { cn } from "@/lib/utils";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ProductCard } from "@/features/catalog/product-card";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
@@ -41,12 +59,36 @@ function Catalogo() {
   const { openCustomerPicker } = useCustomerPicker();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "brand">("brand");
 
   const filters = useCatalogFilters({ products, brandMetadata, table });
 
   const inStockCount = useMemo(() => products.filter((p) => p.stock > 0).length, [products]);
   const tableBlocked = Boolean(customer) && (!table || table.mappedLevel === null);
   const catalogLoading = loading && products.length === 0;
+
+  const groupedByBrand = useMemo(() => {
+    const groups: Record<string, Product[]> = {};
+    filters.filtered.forEach((p) => {
+      const brand = p.brand || "Sem Marca";
+      if (!groups[brand]) groups[brand] = [];
+      groups[brand].push(p);
+    });
+
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([brand, items]) => ({
+        brand,
+        items: items.sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+  }, [filters.filtered]);
+
+  const activeAccordionValues = useMemo(() => {
+    if (filters.term) {
+      return groupedByBrand.map((g) => g.brand);
+    }
+    return groupedByBrand.length === 1 ? [groupedByBrand[0]?.brand ?? ""] : [];
+  }, [filters.term, groupedByBrand]);
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 sm:space-y-6">
@@ -115,25 +157,52 @@ function Catalogo() {
         </div>
       )}
 
-      <CatalogFilterBar
-        term={filters.term}
-        onTermChange={filters.setTerm}
-        sortBy={filters.sortBy}
-        onSortChange={filters.setSortBy}
-        onlyInStock={filters.onlyInStock}
-        onToggleInStock={() => filters.setOnlyInStock((v) => !v)}
-        onlyLaunch={filters.onlyLaunch}
-        onToggleLaunch={() => filters.setOnlyLaunch((v) => !v)}
-        brands={filters.brands}
-        groups={filters.groups}
-        selectedBrands={filters.selectedBrands}
-        selectedGroups={filters.selectedGroups}
-        onToggleBrand={filters.toggleBrand}
-        onToggleGroup={filters.toggleGroup}
-        hasActiveFilters={filters.hasActiveFilters}
-        onClearFilters={filters.clearFilters}
-        resultCount={filters.filtered.length}
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <CatalogFilterBar
+          term={filters.term}
+          onTermChange={filters.setTerm}
+          sortBy={filters.sortBy}
+          onSortChange={filters.setSortBy}
+          onlyInStock={filters.onlyInStock}
+          onToggleInStock={() => filters.setOnlyInStock((v) => !v)}
+          onlyLaunch={filters.onlyLaunch}
+          onToggleLaunch={() => filters.setOnlyLaunch((v) => !v)}
+          brands={filters.brands}
+          groups={filters.groups}
+          selectedBrands={filters.selectedBrands}
+          selectedGroups={filters.selectedGroups}
+          onToggleBrand={filters.toggleBrand}
+          onToggleGroup={filters.toggleGroup}
+          hasActiveFilters={filters.hasActiveFilters}
+          onClearFilters={filters.clearFilters}
+          resultCount={filters.filtered.length}
+        />
+
+        <div className="flex w-full shrink-0 rounded-lg border bg-muted p-0.5 sm:w-auto">
+          <button
+            onClick={() => setViewMode("brand")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all sm:flex-initial",
+              viewMode === "brand"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <FolderOpen className="h-3.5 w-3.5" /> Por Marcas
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all sm:flex-initial",
+              viewMode === "list"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Todos
+          </button>
+        </div>
+      </div>
 
       {catalogLoading ? (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -161,6 +230,46 @@ function Catalogo() {
             Limpar todos os filtros
           </Button>
         </div>
+      ) : viewMode === "brand" ? (
+        <Accordion type="multiple" defaultValue={activeAccordionValues} className="space-y-3">
+          {groupedByBrand.map(({ brand, items }) => (
+            <AccordionItem key={brand} value={brand} className="surface-card border-none px-0">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Tag className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-base font-bold text-foreground leading-tight">{brand}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {items.length} {items.length === 1 ? "produto" : "produtos"}
+                    </p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-5 pb-5">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {items.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      hasCustomer={Boolean(customer)}
+                      onAdd={(qty) => {
+                        const result = addItem(p.id, qty);
+                        if (!result.ok) {
+                          toast.error(result.message);
+                          return;
+                        }
+                        toast.success(`${qty} un. de ${p.name} no carrinho`);
+                      }}
+                      onOpenDetail={() => setSelectedProduct(p)}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       ) : (
         <>
           <VirtualizedProductGrid
