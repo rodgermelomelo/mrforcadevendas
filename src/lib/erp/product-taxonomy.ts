@@ -60,6 +60,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
  */
 const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
   AMACIANTE: "ACEMAR",
+  AMOLECEDOR: "ACEMAR",
   BABADO: "DAILUS",
 };
 

@@ -54,7 +54,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
           variant="outline" 
           className={cn(
             "h-4 bg-background/80 px-1 text-[9px] backdrop-blur-sm",
-            product.category === "AMACIANTE" && "border-success/50 text-success"
+            (product.category === "AMACIANTE" || product.category === "AMOLECEDOR") && "border-success/50 text-success"
           )}
         >
           {category}
@@ -92,7 +92,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
           {product.category && product.category !== product.brand && (
-            <span className={cn(product.category === "AMACIANTE" && "text-success font-semibold")}>
+            <span className={cn((product.category === "AMACIANTE" || product.category === "AMOLECEDOR") && "text-success font-semibold")}>
               {product.category} ·{" "}
             </span>
           )}
