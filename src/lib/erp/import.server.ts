@@ -152,7 +152,9 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       uf: c.uf || "",
       price_table_code: c.priceTableCode || "000",
       seller_erp_code: c.erpSellerCode,
-      credit_limit: c.creditLimit ?? 0,
+      // null = arquivo não trouxe o limite → preserva o valor já cadastrado
+      // (ver upsertCustomersPreservingCredit).
+      credit_limit: c.creditLimit ?? null,
       restricted: false,
       active: true,
     });
@@ -365,6 +367,27 @@ async function upsertProductsPreservingCatalog(sb: AdminClient, rows: Record<str
   return upsertAll(sb, "products", protectedRows, "erp_code");
 }
 
+/**
+ * Clientes: quando o arquivo do ERP não traz limite de crédito (null), mantém o
+ * valor já cadastrado (que pode ter sido ajustado manualmente por um admin).
+ * Nunca zera um limite existente por ausência de dado no arquivo.
+ */
+async function upsertCustomersPreservingCredit(
+  sb: AdminClient,
+  rows: Record<string, unknown>[],
+): Promise<number> {
+  const existingRows = await fetchAllRows(sb, "customers", "erp_code, credit_limit");
+  const existingByCode = new Map(
+    existingRows.map((row: any) => [String(row.erp_code), Number(row.credit_limit ?? 0)]),
+  );
+  const merged = rows.map((row) => {
+    const incoming = row["credit_limit"];
+    if (incoming !== null && incoming !== undefined && Number(incoming) > 0) return row;
+    return { ...row, credit_limit: existingByCode.get(String(row["erp_code"])) ?? 0 };
+  });
+  return upsertAll(sb, "customers", merged, "erp_code");
+}
+
 /** Publica todas as entidades (ordem de dependência). */
 export async function publishEntities(sb: AdminClient, e: ImportEntities): Promise<Record<string, number>> {
   const done: Record<string, number> = {};
@@ -378,7 +401,7 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["product_prices"] = await upsertAll(sb, "product_prices", e.product_prices, "product_erp_code,price_table_code");
   done["inventory_snapshots"] = await upsertAll(sb, "inventory_snapshots", e.inventory_snapshots, "product_erp_code");
   done["catalog_review"] = await upsertAll(sb, "catalog_review", e.catalog_review, "erp_code");
-  done["customers"] = await upsertAll(sb, "customers", e.customers, "erp_code");
+  done["customers"] = await upsertCustomersPreservingCredit(sb, e.customers);
   done["customer_seller_links"] = await upsertAll(
     sb,
     "customer_seller_links",

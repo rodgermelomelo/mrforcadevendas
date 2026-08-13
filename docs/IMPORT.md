@@ -61,3 +61,16 @@ internos do cliente (razão social, nome fantasia, CNPJ, cidade, UF, tabela) for
 de crédito** e o **mapeamento do nível de preço** (qual dos 6 valores) permanecem
 pendentes de confirmação (Q1/Q6) — o limite entra conservador e o nível usa a
 configuração provisória por tabela.
+
+## Limite de crédito (agosto/2026)
+
+O leitor procura o padrão `999999999.99` primeiro na janela `[330,349)` do registro
+de cliente (tipo 10) e, se não encontrar, varre toda a cauda a partir do offset 291.
+Quando nenhum valor é encontrado, o campo fica `null` = **limite não informado**:
+
+- a importação **não zera** um limite já cadastrado (ajuste manual do admin é preservado);
+- na validação de pedido, a exceção "Limite de crédito excedido" só é avaliada para
+  clientes com limite maior que zero — sem limite cadastrado o pedido segue liberado.
+
+Na base atual nenhum cliente veio com limite no arquivo, então todos estão como
+"não informado" até que o campo seja confirmado com o responsável pelo ERP (Q6).
