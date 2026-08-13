@@ -34,7 +34,7 @@ Siga obrigatoriamente estas regras:
 
 Prioridade: *interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.*
 
-em /catalogo ainda esta aparecendo AMOLECEDOR, GOTA, MANTEIGA, OLEO, SECANTE, SOLUCAO e TOALHA, como se fossem marcas, os produtos desses locais precisam ficar dentro de ACEMAR
+PERFEITO, AGORA QUERO QUE VOCÊ COLOQUE TAG NOS PRODUTOS BABADO, E ADCIONE ESSES PRODUTOS DENTRO DA DAILUS, ASSIM COMO, BASE, BATOM, BLUSH, BODY, CANETA, CHOCO, CONTORNO...
         </div>
       </div>
     </div>

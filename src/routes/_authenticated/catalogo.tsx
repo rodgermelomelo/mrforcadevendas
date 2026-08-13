@@ -69,26 +69,37 @@ function Catalogo() {
   const groupedByBrand = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     filters.filtered.forEach((p) => {
-      // Regra de agrupamento: produtos de categorias específicas vão para a pasta "ACEMAR"
+      // Regra de agrupamento: produtos de categorias específicas vão para a pasta correspondente
       const ACEMAR_CATEGORIES = [
         "AMACIANTE",
         "AMOLECEDOR",
         "GOTA",
         "MANTEIGA",
         "OLEO",
+        "ÓLEO",
         "SECANTE",
         "SOLUCAO",
+        "SOLUÇÃO",
         "TOALHA",
       ];
 
+      const DAILUS_CATEGORIES = [
+        "BABADO",
+        "BASE",
+        "BATOM",
+        "BLUSH",
+        "BODY",
+        "CANETA",
+        "CHOCO",
+        "CONTORNO",
+      ];
+
       let brand = p.brand || "Sem Marca";
-      if (ACEMAR_CATEGORIES.includes(p.category || "")) {
-        brand = "ACEMAR";
-      }
       
-      // Se a marca atual for uma dessas categorias (erro de importação), move para ACEMAR
-      if (ACEMAR_CATEGORIES.includes(brand)) {
+      if (ACEMAR_CATEGORIES.includes(p.category || "") || ACEMAR_CATEGORIES.includes(brand)) {
         brand = "ACEMAR";
+      } else if (DAILUS_CATEGORIES.includes(p.category || "") || DAILUS_CATEGORIES.includes(brand)) {
+        brand = "DAILUS";
       }
       
       if (!groups[brand]) groups[brand] = [];
