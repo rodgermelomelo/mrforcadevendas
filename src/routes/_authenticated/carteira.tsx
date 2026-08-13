@@ -57,6 +57,7 @@ export const Route = createFileRoute("/_authenticated/carteira")({
 function Carteira() {
   const [term, setTerm] = useState("");
   const [sellerFilter, setSellerFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"list" | "city">("city");
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
   const { customer, customers, priceTables, sellers, itemCount, clearCustomer, role } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
