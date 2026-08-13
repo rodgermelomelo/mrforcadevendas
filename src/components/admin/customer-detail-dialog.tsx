@@ -90,8 +90,14 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase font-bold">Limite de Crédito</p>
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                    {formatBRL(customer.creditLimit)}
+                  <p
+                    className={
+                      customer.creditLimit > 0
+                        ? "text-sm font-medium text-green-600 dark:text-green-400"
+                        : "text-sm font-medium text-muted-foreground"
+                    }
+                  >
+                    {customer.creditLimit > 0 ? formatBRL(customer.creditLimit) : "Não informado"}
                   </p>
                 </div>
                 {customer.restricted && (
@@ -106,12 +112,18 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: CustomerD
                   {formatBRL(customer.openBalance || 0)}
                 </p>
               </div>
-               <div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold">Crédito Disponível</p>
-                <p className="text-sm font-bold">
-                  {formatBRL(Math.max(0, customer.creditLimit - (customer.openBalance || 0)))}
+              {customer.creditLimit > 0 ? (
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Crédito Disponível</p>
+                  <p className="text-sm font-bold">
+                    {formatBRL(Math.max(0, customer.creditLimit - (customer.openBalance || 0)))}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  Sem limite cadastrado — pedidos não são bloqueados por crédito.
                 </p>
-              </div>
+              )}
             </div>
           </section>
 
