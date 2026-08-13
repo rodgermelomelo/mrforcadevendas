@@ -70,7 +70,12 @@ function Catalogo() {
   const groupedByBrand = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     filters.filtered.forEach((p) => {
-      const brand = p.brand || "Sem Marca";
+      // Regra de agrupamento: produtos da categoria "AMACIANTE" vão para a pasta "ACEMAR"
+      let brand = p.brand || "Sem Marca";
+      if (p.category === "AMACIANTE") {
+        brand = "ACEMAR";
+      }
+      
       if (!groups[brand]) groups[brand] = [];
       groups[brand].push(p);
     });
