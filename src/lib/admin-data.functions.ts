@@ -1096,7 +1096,7 @@ export const listRegistries = createServerFn({ method: "GET" })
       context.supabase.from("segments").select("*").order("code"),
       context.supabase.from("billing_methods").select("*").order("code"),
       context.supabase.from("payment_terms").select("*").order("code"),
-      context.supabase.from("products").select("brand, erp_code"),
+      context.supabase.from("products").select("brand, category, erp_code"),
       context.supabase.from("brands").select("*"),
     ]);
 
@@ -1130,6 +1130,28 @@ export const listRegistries = createServerFn({ method: "GET" })
         };
       });
 
+    // Categorias derivadas de products.category, aninhadas na marca-pai (products.brand).
+    // Assim o admin reflete a organização sem depender de linhas isCategory na tabela brands.
+    const categoryCounts = new Map<string, { parent: string; category: string; count: number }>();
+    for (const p of products.data ?? []) {
+      if (!p.brand || !(p as any).category) continue;
+      const parent = p.brand.toUpperCase();
+      const category = String((p as any).category);
+      const key = `${parent}${category}`;
+      const entry = categoryCounts.get(key) ?? { parent, category, count: 0 };
+      entry.count += 1;
+      categoryCounts.set(key, entry);
+    }
+    const categoryRows: CodeLabelRow[] = [...categoryCounts.values()]
+      .sort((a, b) => a.parent.localeCompare(b.parent) || b.count - a.count)
+      .map(({ parent, category, count }) => ({
+        code: category,
+        label: category,
+        productCount: count,
+        active: true,
+        metadata: { isCategory: true, parentBrand: parent },
+      }));
+
     return {
       groups: (groups.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
       segments: (segments.data ?? []).map((r: any) => ({ code: r.code, label: r.name })),
@@ -1139,7 +1161,7 @@ export const listRegistries = createServerFn({ method: "GET" })
         label: r.description,
         extra: r.is_standard,
       })),
-      brands: finalBrands as CodeLabelRow[],
+      brands: [...finalBrands, ...categoryRows] as CodeLabelRow[],
     };
   });
 
