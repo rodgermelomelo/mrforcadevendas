@@ -231,13 +231,20 @@ export function validateOrder(input: ValidationInput): ValidationResult {
       authority: resolveAuthority("restricted_customer", { amount: input.total }),
     });
   }
-  if (input.customer && input.customer.openBalance + input.total > input.customer.creditLimit) {
-    exceptions.push({
-      type: "credit_limit_exceeded",
-      label: "Limite de crédito excedido",
-      detail: "Saldo em aberto somado ao pedido ultrapassa o limite.",
-      authority: resolveAuthority("credit_limit_exceeded", { amount: input.total }),
-    });
+  // Limite 0/ausente = "não informado" (o ERP não trouxe o dado) → não bloqueia.
+  // A regra só vale para clientes com limite cadastrado.
+  if (input.customer && input.customer.creditLimit > 0) {
+    const openBalance = input.customer.openBalance ?? 0;
+    if (openBalance + input.total > input.customer.creditLimit) {
+      exceptions.push({
+        type: "credit_limit_exceeded",
+        label: "Limite de crédito excedido",
+        detail: `Limite ${formatMoney(input.customer.creditLimit)} · saldo em aberto ${formatMoney(
+          openBalance,
+        )} · pedido ${formatMoney(input.total)}.`,
+        authority: resolveAuthority("credit_limit_exceeded", { amount: input.total }),
+      });
+    }
   }
 
   return { errors, exceptions, requiredAuthority: highestAuthority(exceptions) };
