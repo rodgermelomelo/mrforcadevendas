@@ -60,6 +60,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
   CANETA: "CANETA",
   CHOCO: "CHOCO",
   CONTORNO: "CONTORNO",
+  EFEITO: "EFEITO",
 };
 
 /**
@@ -82,6 +83,7 @@ const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
   SOLUCAO: "ACEMAR",
   TOALHA: "ACEMAR",
   BABADO: "DAILUS",
+  EFEITO: "DAILUS",
 };
 
 function normalizeTaxonomyText(value: string) {
