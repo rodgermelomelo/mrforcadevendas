@@ -97,7 +97,7 @@ function Catalogo() {
       }));
 
     return result;
-  }, [filters.filtered]);
+  }, [filters.filtered, taxonomyOverrides]);
 
   const activeAccordionValues = useMemo(() => {
     if (filters.term) {
