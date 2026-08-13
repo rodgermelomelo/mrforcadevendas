@@ -232,7 +232,7 @@ function Carteira() {
       ) : viewMode === "city" ? (
         <Accordion
           type="multiple"
-          defaultValue={groupedByCity.length === 1 ? [groupedByCity[0].city] : []}
+          defaultValue={groupedByCity.length === 1 ? [groupedByCity[0]?.city ?? ""] : []}
           className="space-y-3"
         >
           {groupedByCity.map(({ city, items }) => (
