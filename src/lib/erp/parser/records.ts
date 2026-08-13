@@ -111,11 +111,28 @@ export function extractSeller(line: string): SellerRecord {
 }
 
 const CREDIT_LIMIT_RE = /(\d{9})\.(\d{2})/;
+const CREDIT_LIMIT_RE_GLOBAL = /(\d{9})\.(\d{2})/g;
+
+/**
+ * Limite de crédito: valor `999999999.99` na cauda do registro de cliente.
+ * A janela [330,349) é a posição observada no layout v4; quando o arquivo não
+ * respeita essa posição, varremos toda a cauda (a partir de 291, após UF) e
+ * usamos a primeira ocorrência do padrão. Retorna `null` quando não há valor
+ * (limite não informado ≠ limite zero).
+ */
+export function extractCreditLimit(line: string): number | null {
+  const windowed = CREDIT_LIMIT_RE.exec(line.slice(330, 349));
+  if (windowed) return Number(`${windowed[1]}.${windowed[2]}`);
+  CREDIT_LIMIT_RE_GLOBAL.lastIndex = 0;
+  const tail = line.slice(291);
+  const m = CREDIT_LIMIT_RE_GLOBAL.exec(tail);
+  if (!m) return null;
+  const value = Number(`${m[1]}.${m[2]}`);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
 
 export function extractCustomer(line: string): CustomerRecord {
-  // limite: exatamente 9 dígitos + ".NN" na cauda (exclui o prefixo de 3 díg anterior)
-  const lm = CREDIT_LIMIT_RE.exec(line.slice(330, 349));
-  const creditLimit = lm ? Number(`${lm[1]}.${lm[2]}`) : null;
+  const creditLimit = extractCreditLimit(line);
   return {
     type: "10",
     erpSellerCode: field(line, 2, 5),
