@@ -176,11 +176,38 @@ function Carteira() {
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")}{" "}
-        clientes
-        {sellerFilter !== "all" && ` · representante ${sellerFilter}`}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")}{" "}
+          clientes
+          {sellerFilter !== "all" && ` · representante ${sellerFilter}`}
+        </p>
+
+        <div className="flex rounded-lg border bg-muted p-0.5">
+          <button
+            onClick={() => setViewMode("city")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all",
+              viewMode === "city"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <FolderOpen className="h-3.5 w-3.5" /> Por Cidades
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all",
+              viewMode === "list"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Todos
+          </button>
+        </div>
+      </div>
 
       {results.length === 0 ? (
         <div className="surface-card flex min-h-[40vh] flex-col items-center justify-center p-12 text-center">
