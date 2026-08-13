@@ -229,129 +229,60 @@ function Carteira() {
             Limpar busca
           </Button>
         </div>
+      ) : viewMode === "city" ? (
+        <Accordion
+          type="multiple"
+          defaultValue={groupedByCity.length === 1 ? [groupedByCity[0].city] : []}
+          className="space-y-3"
+        >
+          {groupedByCity.map(({ city, items }) => (
+            <AccordionItem key={city} value={city} className="surface-card border-none px-0">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-base font-bold text-foreground leading-tight">{city}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {items.length} {items.length === 1 ? "cliente" : "clientes"}
+                    </p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-5 pb-5">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  {items.map((c) => (
+                    <CustomerCard
+                      key={c.id}
+                      c={c}
+                      priceTables={priceTables}
+                      customer={customer}
+                      itemCount={itemCount}
+                      showPriceTableDetails={showPriceTableDetails}
+                      onStart={() => startWithCustomer(c.id)}
+                      onInfo={() => setDetailCustomer(c)}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {results.map((c) => {
-            const table = priceTables.find((t) => t.code === c.priceTableCode);
-            const selected = customer?.id === c.id;
-            const hasOtherCart = itemCount > 0 && Boolean(customer) && !selected;
-            return (
-              <article
-                key={c.id}
-                className={cn(
-                  "surface-card flex flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  selected && "border-primary/50 ring-1 ring-primary/30",
-                )}
-              >
-                <div
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 cursor-pointer"
-                  onClick={() => startWithCustomer(c.id)}
-                >
-                  <div className="min-w-0">
-                    <h2 className="truncate text-base font-semibold">{c.tradeName}</h2>
-                    <p className="truncate text-xs text-muted-foreground">{c.legalName}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                      {c.erpCode}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDetailCustomer(c);
-                      }}
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div
-                  className="mt-4 space-y-1.5 text-xs text-muted-foreground cursor-pointer"
-                  onClick={() => startWithCustomer(c.id)}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">
-                      {c.city}/{c.uf}
-                    </span>
-                  </div>
-                  <div className="truncate">CNPJ {maskTaxId(c.taxId)}</div>
-                  <div className="truncate">
-                    Rep. {c.sellerErpCode ?? "—"} · Segmento {c.segment} · Condição {c.paymentTerm}
-                  </div>
-                </div>
-
-                <div
-                  className="mt-4 flex flex-wrap gap-2 cursor-pointer"
-                  onClick={() => startWithCustomer(c.id)}
-                >
-                  {showPriceTableDetails && (
-                    <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
-                      {table ? `${table.code} · ${table.name}` : "Sem tabela"}
-                    </span>
-                  )}
-                  {table?.mappedLevel === null && (
-                    <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning">
-                      Preço pendente de configuração
-                    </span>
-                  )}
-                  {c.restricted && (
-                    <span className="flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2 py-1 text-[11px] font-medium text-destructive">
-                      <ShieldAlert className="h-3 w-3" /> Restrição
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-5 grid gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startWithCustomer(c.id);
-                    }}
-                    className="w-full rounded-xl"
-                    variant={selected ? "outline" : "default"}
-                  >
-                    {selected
-                      ? itemCount > 0
-                        ? `Continuar atendimento (${itemCount})`
-                        : "Continuar atendimento"
-                      : hasOtherCart
-                        ? "Trocar cliente"
-                        : "Atender este cliente"}
-                  </Button>
-                  {selected && itemCount > 0 && (
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="w-full rounded-xl"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Link to="/carrinho">Ver carrinho</Link>
-                    </Button>
-                  )}
-                  {!selected && hasOtherCart && (
-                    <p className="text-[11px] text-muted-foreground">
-                      O carrinho atual de {customer?.tradeName} será descartado.
-                    </p>
-                  )}
-                  {table?.mappedLevel === null && (
-                    <p className="text-[11px] text-warning">
-                      Preço pendente de configuração — o pedido ficará bloqueado.
-                    </p>
-                  )}
-                  {c.restricted && (
-                    <p className="text-[11px] text-muted-foreground">
-                      Cliente com restrição — o pedido irá para aprovação.
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+          {results.map((c) => (
+            <CustomerCard
+              key={c.id}
+              c={c}
+              priceTables={priceTables}
+              customer={customer}
+              itemCount={itemCount}
+              showPriceTableDetails={showPriceTableDetails}
+              onStart={() => startWithCustomer(c.id)}
+              onInfo={() => setDetailCustomer(c)}
+            />
+          ))}
         </div>
       )}
 
