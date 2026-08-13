@@ -30,6 +30,13 @@ import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { CustomerDetailDialog } from "@/components/admin/customer-detail-dialog";
 import { Customer } from "@/lib/domain/types";
 import { canViewPriceTableDetails } from "@/lib/domain/roles";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
