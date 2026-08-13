@@ -74,6 +74,21 @@ function Carteira() {
     });
   }, [term, customers, sellerFilter]);
 
+  const groupedByCity = useMemo(() => {
+    const groups: Record<string, Customer[]> = {};
+    results.forEach((c) => {
+      const city = c.city || "Outras Cidades";
+      if (!groups[city]) groups[city] = [];
+      groups[city].push(c);
+    });
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([city, items]) => ({
+        city,
+        items: items.sort((a, b) => a.tradeName.localeCompare(b.tradeName)),
+      }));
+  }, [results]);
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <header className="flex flex-col gap-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-4">
