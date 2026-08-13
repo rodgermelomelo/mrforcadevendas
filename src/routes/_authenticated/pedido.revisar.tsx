@@ -267,18 +267,7 @@ function RevisarPedido() {
           ))}
 
           <div className="surface-card space-y-4 p-5">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">
-                <span className="text-muted-foreground">Desconto total do pedido (%)</span>
-                <Input
-                  value={orderDiscountPercent}
-                  onChange={(e) =>
-                    setOrderDiscount(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)
-                  }
-                  inputMode="decimal"
-                  className="mt-1 h-11 rounded-xl"
-                />
-              </label>
+            <div className="grid gap-3 sm:grid-cols-1">
               <div className="text-sm">
                 <span className="text-muted-foreground">Bonificação</span>
                 <Button
@@ -312,7 +301,18 @@ function RevisarPedido() {
                 pedido para <strong>análise do gestor</strong> antes de confirmar.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="text-sm">
+                <span className="text-muted-foreground">Desconto total (%)</span>
+                <Input
+                  value={orderDiscountPercent}
+                  onChange={(e) =>
+                    setOrderDiscount(Number(e.target.value.replace(/[^\d.]/g, "")) || 0)
+                  }
+                  inputMode="decimal"
+                  className="mt-1 h-11 rounded-xl"
+                />
+              </label>
               <label className="text-sm">
                 <span className="text-muted-foreground">% na nota fiscal</span>
                 <Input
