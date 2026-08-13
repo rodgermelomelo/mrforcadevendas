@@ -401,7 +401,7 @@ export async function publishEntities(sb: AdminClient, e: ImportEntities): Promi
   done["product_prices"] = await upsertAll(sb, "product_prices", e.product_prices, "product_erp_code,price_table_code");
   done["inventory_snapshots"] = await upsertAll(sb, "inventory_snapshots", e.inventory_snapshots, "product_erp_code");
   done["catalog_review"] = await upsertAll(sb, "catalog_review", e.catalog_review, "erp_code");
-  done["customers"] = await upsertAll(sb, "customers", e.customers, "erp_code");
+  done["customers"] = await upsertCustomersPreservingCredit(sb, e.customers);
   done["customer_seller_links"] = await upsertAll(
     sb,
     "customer_seller_links",
