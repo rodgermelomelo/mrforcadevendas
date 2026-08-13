@@ -2,7 +2,11 @@ import type { PriceTable, Product } from "@/lib/domain/types";
 
 export type PriceResolution =
   | { ok: true; value: number; levelLabel: string }
-  | { ok: false; reason: "table_unmapped" | "no_price"; message: string };
+  | {
+      ok: false;
+      reason: "table_unmapped" | "no_price" | "no_table_on_product" | "zero_price";
+      message: string;
+    };
 
 /**
  * Preço = product_prices[tabela do cliente].value[nível mapeado].
