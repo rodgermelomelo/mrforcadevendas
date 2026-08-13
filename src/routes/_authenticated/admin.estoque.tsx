@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -127,10 +127,12 @@ function UnifiedEstoquePage() {
   const mainBrands = brands.filter((b) => !b.metadata?.isCategory);
   const categories = brands.filter((b) => b.metadata?.isCategory);
 
-  const filteredBrands = mainBrands
-    .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
-    .sort((a, b) => a.code.localeCompare(b.code))
-    .slice(0, 100);
+  const filteredBrands = useMemo(() => {
+    return mainBrands
+      .filter((b) => b.code.toLowerCase().includes(brandTerm.trim().toLowerCase()))
+      .sort((a, b) => a.code.localeCompare(b.code))
+      .slice(0, 100);
+  }, [mainBrands, brandTerm]);
 
   return (
     <AdminPage
