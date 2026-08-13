@@ -82,56 +82,11 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                 </Badge>
               )}
 
-              {/* Navegação da Galeria (Simulada com a mesma imagem para demonstração de UI) */}
-              <div className="absolute inset-y-0 left-0 flex items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 ml-2"
-                  onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? 2 : prev - 1))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="absolute inset-y-0 right-0 flex items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 mr-2"
-                  onClick={() => setCurrentImageIndex((prev) => (prev === 2 ? 0 : prev + 1))}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+              {/* Navegação da Galeria (Simulada para demonstração de UI) */}
+              {/* Removido hardcode de 3 imagens conforme solicitado pelo usuário */}
             </div>
 
-            {/* Miniaturas da Galeria */}
-            <div className="flex shrink-0 gap-2 border-t border-border/50 bg-white/50 p-3 backdrop-blur-sm">
-              {[0, 1, 2].map((i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentImageIndex(i)}
-                  className={cn(
-                    "relative h-12 w-12 rounded-lg overflow-hidden border-2 transition-all",
-                    currentImageIndex === i
-                      ? "border-primary shadow-sm"
-                      : "border-transparent opacity-60 hover:opacity-100",
-                  )}
-                >
-                  {image ? (
-                    <img
-                      src={image}
-                      alt={`${product.name} thumbnail ${i}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-brand-gradient flex items-center justify-center text-[10px] font-bold text-white">
-                      {i + 1}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
+            {/* Galeria removida pois as imagens são simuladas com a mesma imagem principal */}
           </div>
 
           {/* Conteúdo */}
