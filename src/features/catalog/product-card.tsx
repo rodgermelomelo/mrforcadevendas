@@ -50,7 +50,13 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
         >
           {product.brand}
         </Badge>
-        <Badge variant="outline" className="h-4 bg-background/80 px-1 text-[9px] backdrop-blur-sm">
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "h-4 bg-background/80 px-1 text-[9px] backdrop-blur-sm",
+            product.category === "AMACIANTE" && "border-success/50 text-success"
+          )}
+        >
           {category}
         </Badge>
       </div>
@@ -85,7 +91,11 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
       <div className="flex flex-1 flex-col p-3">
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
-          {product.category && product.category !== product.brand ? `${product.category} · ` : ""}
+          {product.category && product.category !== product.brand && (
+            <span className={cn(product.category === "AMACIANTE" && "text-success font-semibold")}>
+              {product.category} ·{" "}
+            </span>
+          )}
           {product.erpCode}
         </p>
         <h3

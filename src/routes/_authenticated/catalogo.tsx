@@ -52,7 +52,6 @@ function Catalogo() {
   const { customer, table, addItem, itemCount, products, role, brandMetadata, loading } =
     useSales();
   
-  // Memoize basic flags to prevent unnecessary re-renders
   const isAdmin = useMemo(() => role === "administrador", [role]);
   const showPriceTableDetails = useMemo(() => canViewPriceTableDetails(role), [role]);
   
@@ -70,17 +69,24 @@ function Catalogo() {
   const groupedByBrand = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     filters.filtered.forEach((p) => {
-      const brand = p.brand || "Sem Marca";
+      // Regra de agrupamento: produtos da categoria "AMACIANTE" vão para a pasta "ACEMAR"
+      let brand = p.brand || "Sem Marca";
+      if (p.category === "AMACIANTE") {
+        brand = "ACEMAR";
+      }
+      
       if (!groups[brand]) groups[brand] = [];
-      groups[brand].push(p);
+      groups[brand]!.push(p);
     });
 
-    return Object.entries(groups)
+    const result = Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([brand, items]) => ({
         brand,
-        items: items.sort((a, b) => a.name.localeCompare(b.name)),
+        items: items!.sort((a, b) => a.name.localeCompare(b.name)),
       }));
+
+    return result;
   }, [filters.filtered]);
 
   const activeAccordionValues = useMemo(() => {
