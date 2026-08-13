@@ -152,7 +152,9 @@ export function buildEntities(records: ParsedRecords): ImportEntities {
       uf: c.uf || "",
       price_table_code: c.priceTableCode || "000",
       seller_erp_code: c.erpSellerCode,
-      credit_limit: c.creditLimit ?? 0,
+      // null = arquivo não trouxe o limite → preserva o valor já cadastrado
+      // (ver upsertCustomersPreservingCredit).
+      credit_limit: c.creditLimit ?? null,
       restricted: false,
       active: true,
     });
