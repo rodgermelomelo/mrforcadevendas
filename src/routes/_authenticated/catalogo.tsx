@@ -49,7 +49,7 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 function Catalogo() {
-  const { customer, table, addItem, itemCount, products, role, brandMetadata, loading } =
+  const { customer, table, addItem, itemCount, products, role, brandMetadata, taxonomyOverrides, loading } =
     useSales();
   
   const isAdmin = useMemo(() => role === "administrador", [role]);
@@ -69,37 +69,20 @@ function Catalogo() {
   const groupedByBrand = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     filters.filtered.forEach((p) => {
-      // Regra de agrupamento: produtos de categorias específicas vão para a pasta correspondente
-      const ACEMAR_CATEGORIES = [
-        "AMACIANTE",
-        "AMOLECEDOR",
-        "GOTA",
-        "MANTEIGA",
-        "OLEO",
-        "ÓLEO",
-        "SECANTE",
-        "SOLUCAO",
-        "SOLUÇÃO",
-        "TOALHA",
-      ];
-
-      const DAILUS_CATEGORIES = [
-        "BABADO",
-        "BASE",
-        "BATOM",
-        "BLUSH",
-        "BODY",
-        "CANETA",
-        "CHOCO",
-        "CONTORNO",
-      ];
+      // Mapeamento dinâmico de hierarquia vindo do banco de dados
+      const brandOverrides = new Map(taxonomyOverrides.map(o => [o.categoryName, o.targetBrandName]));
 
       let brand = p.brand || "Sem Marca";
-      
-      if (ACEMAR_CATEGORIES.includes(p.category || "") || ACEMAR_CATEGORIES.includes(brand)) {
-        brand = "ACEMAR";
-      } else if (DAILUS_CATEGORIES.includes(p.category || "") || DAILUS_CATEGORIES.includes(brand)) {
-        brand = "DAILUS";
+      const productCategory = (p.category || "").toUpperCase();
+      const brandUpper = brand.toUpperCase();
+
+      // Prioridade 1: Categoria do produto tem um override direto
+      if (brandOverrides.has(productCategory)) {
+        brand = brandOverrides.get(productCategory)!;
+      } 
+      // Prioridade 2: A própria "marca" vinda do ERP é na verdade uma categoria mapeada
+      else if (brandOverrides.has(brandUpper)) {
+        brand = brandOverrides.get(brandUpper)!;
       }
       
       if (!groups[brand]) groups[brand] = [];
