@@ -20,7 +20,7 @@ export interface ProductCardProps {
 }
 
 function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: ProductCardProps) {
-  const { table, role } = useSales();
+  const { table, role, customer: activeCustomer } = useSales();
   const [qty, setQty] = useState(1);
   const price = resolvePrice(product, table);
   const showPriceTableDetails = canViewPriceTableDetails(role);
@@ -29,7 +29,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
   const clampQty = (value: number) => Math.min(maxQty, Math.max(1, value));
 
   // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço/restrição.
-  const isRestricted = hasCustomer && useSales.getState().customer?.restricted;
+  const isRestricted = hasCustomer && activeCustomer?.restricted;
   const blocked = hasCustomer && (outOfStock || !price.ok || isRestricted);
   const dimmed = hasCustomer ? blocked : outOfStock;
   const category = product.category || product.group;
@@ -110,8 +110,10 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
             </>
           ) : (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-warning">
-                {showPriceTableDetails ? price.message : "Preço pendente para este cliente."}
+              <p className="text-[10px] font-medium leading-tight text-warning">
+                {isRestricted 
+                  ? `Indisponível: ${activeCustomer?.restrictionReason || "Restrição comercial"}`
+                  : showPriceTableDetails ? price.message : "Preço pendente para este cliente."}
               </p>
               <p className="text-[11px] text-muted-foreground">
                 Estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
@@ -142,12 +144,14 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
         )}
 
         {hasCustomer && blocked && (
-          <p className="mt-3 rounded-xl bg-muted p-2.5 text-xs text-muted-foreground">
-            {outOfStock
-              ? "Sem estoque — indisponível para o pedido."
-              : showPriceTableDetails
-                ? "Sem preço válido para a tabela do cliente."
-                : "Sem preço válido para o cliente selecionado."}
+          <p className="mt-3 rounded-xl bg-muted p-2.5 text-[10px] leading-snug text-muted-foreground">
+            {isRestricted
+              ? `Indisponível: ${activeCustomer?.restrictionReason || "Cliente com restrição comercial ativa."}`
+              : outOfStock
+                ? "Sem estoque — indisponível para o pedido."
+                : showPriceTableDetails
+                  ? price.message
+                  : "Sem preço válido para o cliente selecionado."}
           </p>
         )}
       </div>

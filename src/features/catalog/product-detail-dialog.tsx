@@ -307,13 +307,15 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
               {hasCustomer && blocked && (
                 <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-center">
                   <p className="text-sm font-bold text-destructive">
-                    {outOfStock
-                      ? "Este produto está sem saldo em estoque e não pode ser adicionado ao pedido."
-                      : price.ok
-                        ? ""
-                        : showPriceTableDetails
-                          ? price.message
-                          : "Preço pendente para este cliente."}
+                    {customer?.restricted
+                      ? `Indisponível: ${customer?.restrictionReason || "Cliente com restrição comercial ativa no sistema."}`
+                      : outOfStock
+                        ? "Este produto está sem saldo em estoque e não pode ser adicionado ao pedido."
+                        : price.ok
+                          ? ""
+                          : showPriceTableDetails
+                            ? price.message
+                            : "Preço pendente para este cliente."}
                   </p>
                 </div>
               )}
