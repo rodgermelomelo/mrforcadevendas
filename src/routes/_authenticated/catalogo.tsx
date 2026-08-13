@@ -52,7 +52,6 @@ function Catalogo() {
   const { customer, table, addItem, itemCount, products, role, brandMetadata, loading } =
     useSales();
   
-  // Memoize basic flags to prevent unnecessary re-renders
   const isAdmin = useMemo(() => role === "administrador", [role]);
   const showPriceTableDetails = useMemo(() => canViewPriceTableDetails(role), [role]);
   
@@ -77,14 +76,14 @@ function Catalogo() {
       }
       
       if (!groups[brand]) groups[brand] = [];
-      groups[brand].push(p);
+      groups[brand]!.push(p);
     });
 
     const result = Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([brand, items]) => ({
         brand,
-        items: items.sort((a, b) => a.name.localeCompare(b.name)),
+        items: items!.sort((a, b) => a.name.localeCompare(b.name)),
       }));
 
     return result;
