@@ -311,11 +311,9 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                       ? `Indisponível: ${customer?.restrictionReason || "Cliente com restrição comercial ativa no sistema."}`
                       : outOfStock
                         ? "Este produto está sem saldo em estoque e não pode ser adicionado ao pedido."
-                        : price.ok
-                          ? ""
-                          : showPriceTableDetails
-                            ? price.message
-                            : "Preço pendente para este cliente."}
+                      : !price.ok
+                        ? (showPriceTableDetails ? price.message : "Preço pendente para este cliente.")
+                        : ""}
                   </p>
                 </div>
               )}

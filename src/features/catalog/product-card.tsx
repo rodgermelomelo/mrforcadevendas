@@ -113,7 +113,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
               <p className="text-[10px] font-medium leading-tight text-warning">
                 {isRestricted 
                   ? `Indisponível: ${activeCustomer?.restrictionReason || "Restrição comercial"}`
-                  : showPriceTableDetails ? price.message : "Preço pendente para este cliente."}
+                  : !price.ok ? (showPriceTableDetails ? price.message : "Preço pendente para este cliente.") : ""}
               </p>
               <p className="text-[11px] text-muted-foreground">
                 Estoque {product.stock.toLocaleString("pt-BR")} {product.unit}
@@ -149,9 +149,9 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
               ? `Indisponível: ${activeCustomer?.restrictionReason || "Cliente com restrição comercial ativa."}`
               : outOfStock
                 ? "Sem estoque — indisponível para o pedido."
-                : showPriceTableDetails
-                  ? price.message
-                  : "Sem preço válido para o cliente selecionado."}
+                : !price.ok
+                  ? (showPriceTableDetails ? price.message : "Sem preço válido para o cliente selecionado.")
+                  : "Indisponível"}
           </p>
         )}
       </div>
