@@ -1726,13 +1726,15 @@ export const updateTaxonomyOverride = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    const payload: any = {
+      category_name: data.categoryName.toUpperCase(),
+      target_brand_name: data.targetBrandName.toUpperCase(),
+      updated_at: new Date().toISOString(),
+    };
+    if (data.id) payload.id = data.id;
+
     const { error } = await context.supabase.from("brand_taxonomy_overrides").upsert(
-      {
-        id: data.id,
-        category_name: data.categoryName.toUpperCase(),
-        target_brand_name: data.targetBrandName.toUpperCase(),
-        updated_at: new Date().toISOString(),
-      },
+      payload,
       { onConflict: "category_name" },
     );
     if (error) throw new Error(error.message);
