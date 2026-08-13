@@ -69,9 +69,25 @@ function Catalogo() {
   const groupedByBrand = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     filters.filtered.forEach((p) => {
-      // Regra de agrupamento: produtos da categoria "AMACIANTE" vão para a pasta "ACEMAR"
+      // Regra de agrupamento: produtos de categorias específicas vão para a pasta "ACEMAR"
+      const ACEMAR_CATEGORIES = [
+        "AMACIANTE",
+        "AMOLECEDOR",
+        "GOTA",
+        "MANTEIGA",
+        "OLEO",
+        "SECANTE",
+        "SOLUCAO",
+        "TOALHA",
+      ];
+
       let brand = p.brand || "Sem Marca";
-      if (p.category === "AMACIANTE") {
+      if (ACEMAR_CATEGORIES.includes(p.category || "")) {
+        brand = "ACEMAR";
+      }
+      
+      // Se a marca atual for uma dessas categorias (erro de importação), move para ACEMAR
+      if (ACEMAR_CATEGORIES.includes(brand)) {
         brand = "ACEMAR";
       }
       
@@ -83,7 +99,7 @@ function Catalogo() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([brand, items]) => ({
         brand,
-        items: items!.sort((a, b) => a.name.localeCompare(b.name)),
+        items: (items || []).sort((a, b) => a.name.localeCompare(b.name)),
       }));
 
     return result;
