@@ -1689,3 +1689,72 @@ export const listSegments = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []).map((s: any) => ({ code: s.code, name: s.name }));
   });
+
+/* ============================ TAXONOMIA DE MARCAS ========================= */
+
+export interface TaxonomyOverride {
+  id: string;
+  categoryName: string;
+  targetBrandName: string;
+  createdAt: string;
+}
+
+export const listTaxonomyOverrides = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<TaxonomyOverride[]> => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("brand_taxonomy_overrides")
+      .select("*")
+      .order("category_name");
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r: any) => ({
+      id: r.id,
+      categoryName: r.category_name,
+      targetBrandName: r.target_brand_name,
+      createdAt: r.created_at,
+    }));
+  });
+
+export const updateTaxonomyOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { id?: string; categoryName: string; targetBrandName: string }) => {
+      if (!input.categoryName || !input.targetBrandName) throw new Error("Dados incompletos.");
+      return input;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const payload: any = {
+      category_name: data.categoryName.toUpperCase(),
+      target_brand_name: data.targetBrandName.toUpperCase(),
+      updated_at: new Date().toISOString(),
+    };
+    if (data.id) payload.id = data.id;
+
+    const { error } = await context.supabase.from("brand_taxonomy_overrides").upsert(
+      payload,
+      { onConflict: "category_name" },
+    );
+    if (error) throw new Error(error.message);
+    await audit(context, "brand_taxonomy_overrides", data.categoryName, "upsert", data);
+    return { ok: true };
+  });
+
+export const deleteTaxonomyOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => {
+    if (!input.id) throw new Error("ID inválido.");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("brand_taxonomy_overrides")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, "brand_taxonomy_overrides", data.id, "delete", {});
+    return { ok: true };
+  });

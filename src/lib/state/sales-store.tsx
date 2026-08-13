@@ -64,6 +64,7 @@ interface SalesContextValue extends DraftState {
   erpLastUpdate: string | null;
   orders: Order[];
   brandMetadata: Record<string, BrandMetadataEntry>;
+  taxonomyOverrides: { categoryName: string; targetBrandName: string }[];
   customer: Customer | null;
   table: PriceTable | undefined;
   lines: CartLine[];
@@ -264,6 +265,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     sellers: coreQuery.data?.sellers ?? [],
     role: coreQuery.data?.role ?? null,
     brandMetadata: coreQuery.data?.brandMetadata ?? {},
+    taxonomyOverrides: coreQuery.data?.taxonomyOverrides ?? [],
     selectCustomer: (id) =>
       commitState((prev) => ({
         ...prev,

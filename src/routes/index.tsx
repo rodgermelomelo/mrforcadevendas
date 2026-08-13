@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
   component: () => (
     <div className="flex min-h-screen items-center justify-center p-8 text-center">
       <div className="max-w-2xl space-y-4">
-        <h1 className="text-2xl font-bold">Modo Construção</h1>
+        <h1 className="text-2xl font-bold">Modo Administrador Ativado</h1>
         <div className="text-left text-sm text-muted-foreground whitespace-pre-wrap">
           Saia do modo atual e entre no *Modo Construção*.
 
@@ -34,7 +34,7 @@ Siga obrigatoriamente estas regras:
 
 Prioridade: *interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.*
 
-PERFEITO, AGORA QUERO QUE VOCÊ COLOQUE TAG NOS PRODUTOS BABADO, E ADCIONE ESSES PRODUTOS DENTRO DA DAILUS, ASSIM COMO, BASE, BATOM, BLUSH, BODY, CANETA, CHOCO, CONTORNO...
+Implementar uma tela de administração para eu vincular categorias e tags às marcas e ajustar o agrupamento do catálogo sem depender de edição no código.
         </div>
       </div>
     </div>
