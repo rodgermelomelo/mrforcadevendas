@@ -1,3 +1,4 @@
+import { formatBRL as formatMoney } from "@/lib/pricing";
 import type {
   Authority,
   BlockingError,
