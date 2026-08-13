@@ -24,11 +24,13 @@ export interface WorkspaceCoreData {
   approvalRules: ApprovalRule[];
   role: string | null;
   brandMetadata: Record<string, BrandMetadataEntry>;
+  taxonomyOverrides: { categoryName: string; targetBrandName: string }[];
 }
 
 export interface CatalogWorkspaceData {
   products: Product[];
   groups: string[];
+  taxonomyOverrides: { categoryName: string; targetBrandName: string }[];
 }
 
 import {
@@ -73,6 +75,7 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
       brandsRes,
       goalsRes,
       lastInventoryRes,
+      taxonomyRes,
     ] = await Promise.all([
       runQuery(() =>
         fetchAllRows(
@@ -117,6 +120,7 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
           .limit(1)
           .range(0, 0),
       ),
+      runQuery(() => db.from("brand_taxonomy_overrides").select("category_name, target_brand_name").range(0, 999)),
     ]);
 
     const customerLinksMissing =
@@ -136,6 +140,7 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
       ["brands", brandsRes],
       ["seller_goals", goalsRes],
       ["inventory_snapshots", lastInventoryRes],
+      ["brand_taxonomy_overrides", taxonomyRes],
     ]);
 
     const role = nullableText(roleRes.data, "role");
@@ -159,6 +164,10 @@ export const getWorkspaceCore = createServerFn({ method: "GET" })
       approvalRules: mapApprovalRules(rows(rulesRes)),
       role,
       brandMetadata: mapBrandMetadata(rows(brandsRes)),
+      taxonomyOverrides: rows(taxonomyRes).map(r => ({
+        categoryName: text(r, "category_name"),
+        targetBrandName: text(r, "target_brand_name"),
+      })),
     };
   });
 
@@ -176,6 +185,7 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
       customerLinksRes,
       roleRes,
       brandsRes,
+      taxonomyRes,
     ] = await Promise.all([
       runQuery(() =>
         fetchAllRows(db, "products", "*", (query) => query.eq("active", true).order("erp_code")),
@@ -199,6 +209,7 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
       runQuery(() =>
         db.from("brands").select("name, active, metadata").eq("active", true).range(0, 999),
       ),
+      runQuery(() => db.from("brand_taxonomy_overrides").select("category_name, target_brand_name").range(0, 999)),
     ]);
 
     const customerLinksMissing =
@@ -215,6 +226,7 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
         : ([["customer_seller_links", customerLinksRes]] as [string, { error: QueryError }][])),
       ["user_roles", roleRes],
       ["brands", brandsRes],
+      ["brand_taxonomy_overrides", taxonomyRes],
     ]);
 
     const visiblePriceTables = new Set(
@@ -328,5 +340,9 @@ export const getCatalogWorkspace = createServerFn({ method: "GET" })
     return {
       products,
       groups: rows(groupsRes).map((group) => text(group, "name")),
+      taxonomyOverrides: rows(taxonomyRes).map(r => ({
+        categoryName: text(r, "category_name"),
+        targetBrandName: text(r, "target_brand_name"),
+      })),
     };
   });
