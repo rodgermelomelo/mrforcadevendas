@@ -51,31 +51,31 @@ const BRAZIL_BOUNDS: MapBounds = {
 
 const STATE_COORDS: Record<string, Coordinate> = {
   AC: { lat: -9.98, lng: -67.81 },
-  AL: { lat: -9.66, lng: -35.73 },
+  AL: { lat: -9.66, lng: -36.2 }, // Puxado mais para o interior
   AM: { lat: -3.1, lng: -60.02 },
-  AP: { lat: 0.04, lng: -51.07 },
-  BA: { lat: -12.97, lng: -38.5 },
-  CE: { lat: -3.73, lng: -38.52 },
+  AP: { lat: 0.04, lng: -51.5 }, // Interior
+  BA: { lat: -12.5, lng: -40.5 }, // Centralizado mais no interior da Bahia
+  CE: { lat: -4.5, lng: -39.5 }, // Sul de Fortaleza para evitar mar
   DF: { lat: -15.78, lng: -47.93 },
-  ES: { lat: -20.32, lng: -40.34 },
+  ES: { lat: -19.8, lng: -40.8 }, // Interior
   GO: { lat: -16.68, lng: -49.25 },
-  MA: { lat: -2.53, lng: -44.3 },
-  MG: { lat: -19.92, lng: -43.94 },
+  MA: { lat: -4.5, lng: -45.0 }, // Centro do estado
+  MG: { lat: -18.5, lng: -44.5 }, // Centro de Minas
   MS: { lat: -20.45, lng: -54.62 },
   MT: { lat: -15.6, lng: -56.1 },
-  PA: { lat: -1.45, lng: -48.5 },
-  PB: { lat: -7.12, lng: -34.86 },
-  PE: { lat: -8.05, lng: -34.9 },
-  PI: { lat: -5.09, lng: -42.8 },
-  PR: { lat: -25.43, lng: -49.27 },
-  RJ: { lat: -22.91, lng: -43.17 },
-  RN: { lat: -5.79, lng: -35.21 },
-  RO: { lat: -8.76, lng: -63.9 },
-  RR: { lat: 2.82, lng: -60.67 },
-  RS: { lat: -30.03, lng: -51.23 },
-  SC: { lat: -27.59, lng: -48.55 },
-  SE: { lat: -10.91, lng: -37.07 },
-  SP: { lat: -23.55, lng: -46.63 }, // Centralizado na capital para evitar spread para o oceano
+  PA: { lat: -4.0, lng: -52.0 }, // Centro do Pará
+  PB: { lat: -7.2, lng: -36.5 }, // Interior
+  PE: { lat: -8.3, lng: -36.8 }, // Interior
+  PI: { lat: -7.5, lng: -43.0 }, // Centro
+  PR: { lat: -24.8, lng: -51.5 }, // Centro do PR
+  RJ: { lat: -22.3, lng: -43.0 }, // Puxado para o interior (norte/oeste da capital)
+  RN: { lat: -5.8, lng: -36.5 }, // Interior
+  RO: { lat: -11.0, lng: -63.0 }, // Centro
+  RR: { lat: 2.0, lng: -61.5 }, // Centro
+  RS: { lat: -29.5, lng: -53.5 }, // Centro do RS
+  SC: { lat: -27.2, lng: -50.5 }, // Interior
+  SE: { lat: -10.6, lng: -37.4 }, // Interior
+  SP: { lat: -22.5, lng: -48.5 }, // Bem no centro de SP (perto de Bauru) para evitar o litoral
   TO: { lat: -10.18, lng: -48.33 },
 };
 
@@ -223,18 +223,41 @@ function getBaseCoordinate(
   const known = CITY_COORDS[cityKey];
   if (known) return { coordinate: known, known: true };
 
-  const state = STATE_COORDS[normalizeLocationText(uf)] ?? { lat: -14.24, lng: -51.93 };
+  const normalizedUf = normalizeLocationText(uf);
+  const state = STATE_COORDS[normalizedUf] ?? { lat: -14.24, lng: -51.93 };
   const seed = hashString(cityKey);
-  const angle = ((seed % 3600) / 3600) * Math.PI * 2;
-  const distance = 0.45 + ((seed >>> 8) % 1000) / 1000;
   
-  // Ajuste do spread para manter os pontos dentro do território brasileiro (especialmente SP)
-  const stateSpread = normalizeLocationText(uf) === "SP" ? 1.5 : 2.5;
+  // Detecção de litoral para estados específicos
+  // SP, RJ, ES, BA, SE, AL, PE, PB, RN, CE, PI, MA, PA, AP, SC, PR, RS
+  const COASTAL_UFS = ["SP", "RJ", "ES", "BA", "SE", "AL", "PE", "PB", "RN", "CE", "SC", "PR", "RS"];
+  const isCoastal = COASTAL_UFS.includes(normalizedUf);
+
+  let angle = ((seed % 3600) / 3600) * Math.PI * 2;
+  
+  // Se for litorâneo, puxamos o spread majoritariamente para o interior (Oeste)
+  // No Brasil, o oceano está a Leste (0 rad ou 2PI rad)
+  // Interior é para o Oeste (PI rad ou ~3.14)
+  if (isCoastal) {
+    // Restringe o ângulo para ficar entre 90° e 270° (Interior)
+    // Usamos um bias: se o ângulo cair no mar (Leste), jogamos para o interior oposto
+    const eastBias = Math.cos(angle);
+    if (eastBias > 0) {
+      angle += Math.PI; // Inverte para o Oeste
+    }
+  }
+
+  const distance = 0.35 + ((seed >>> 8) % 1000) / 1000;
+  
+  // Spread reduzido para estados menores ou litorâneos
+  let stateSpread = 2.0;
+  if (normalizedUf === "SP" || normalizedUf === "RJ" || normalizedUf === "ES" || normalizedUf === "SE") {
+    stateSpread = 1.0;
+  }
 
   return {
     coordinate: {
       lat: clamp(
-        state.lat + Math.sin(angle) * distance * stateSpread * 0.55,
+        state.lat + Math.sin(angle) * distance * stateSpread * 0.45,
         BRAZIL_BOUNDS.minLat,
         BRAZIL_BOUNDS.maxLat,
       ),
@@ -259,7 +282,7 @@ function spreadCustomer(
   const seed = hashString(`${pointSeed}:${index}`);
   const angle = ((seed % 3600) / 3600) * Math.PI * 2;
   const ring = Math.sqrt((index + 1) / total);
-  const distance = Math.min(0.12, 0.02 + Math.log10(total + 1) * 0.04) * ring;
+  const distance = Math.min(0.08, 0.015 + Math.log10(total + 1) * 0.03) * ring;
 
   return {
     lat: clamp(base.lat + Math.sin(angle) * distance, BRAZIL_BOUNDS.minLat, BRAZIL_BOUNDS.maxLat),
