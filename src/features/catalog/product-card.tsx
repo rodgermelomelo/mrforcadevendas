@@ -32,6 +32,10 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
   const isRestricted = hasCustomer && activeCustomer?.restricted;
   const blocked = hasCustomer && (outOfStock || !price.ok || isRestricted);
   const dimmed = hasCustomer ? blocked : outOfStock;
+  
+  const SPECIAL_ACEMAR_CATEGORIES = ["AMACIANTE", "AMOLECEDOR", "GOTA", "MANTEIGA", "OLEO", "SECANTE", "SOLUCAO", "TOALHA"];
+  const isSpecialCategory = SPECIAL_ACEMAR_CATEGORIES.includes(product.category);
+  
   const category = product.category || product.group;
   const image = resolveProductImage(product);
 
@@ -54,7 +58,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
           variant="outline" 
           className={cn(
             "h-4 bg-background/80 px-1 text-[9px] backdrop-blur-sm",
-            (product.category === "AMACIANTE" || product.category === "AMOLECEDOR") && "border-success/50 text-success"
+            isSpecialCategory && "border-success/50 text-success"
           )}
         >
           {category}
@@ -92,7 +96,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
           {product.brand && <span className="font-bold text-primary">{product.brand} · </span>}
           {product.category && product.category !== product.brand && (
-            <span className={cn((product.category === "AMACIANTE" || product.category === "AMOLECEDOR") && "text-success font-semibold")}>
+            <span className={cn(isSpecialCategory && "text-success font-semibold")}>
               {product.category} ·{" "}
             </span>
           )}
