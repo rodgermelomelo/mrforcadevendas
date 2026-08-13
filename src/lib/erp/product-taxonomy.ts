@@ -127,6 +127,15 @@ export function inferProductTaxonomy(product: ProductRecord, groupLabel: string 
   const brandFromGroup = firstKnownBrand(groupLabel ?? "");
   const brand = forcedBrand ?? brandFromDescription ?? brandFromGroup ?? "OUTROS";
 
+  // Bloqueio de marcas/produtos indesejados (ex: VEÍCULOS)
+  if (brand === "VEICULOS" || brand === "VEÍCULOS") {
+    return {
+      brand: "OUTROS",
+      category: "DIVERSOS",
+      segment: "GERAL",
+    };
+  }
+
   // Inferência de segmento baseada na descrição e histórico do ERP
   let segment = "GERAL";
   const descNorm = normalizeTaxonomyText(description);
