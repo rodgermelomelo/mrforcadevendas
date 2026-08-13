@@ -323,7 +323,7 @@ function spreadCustomer(
   const seed = hashString(`${pointSeed}:${index}`);
   const angle = ((seed % 3600) / 3600) * Math.PI * 2;
   const ring = Math.sqrt((index + 1) / total);
-  const distance = Math.min(0.08, 0.015 + Math.log10(total + 1) * 0.03) * ring;
+  const distance = Math.min(0.04, 0.01 + Math.log10(total + 1) * 0.015) * ring;
 
   return {
     lat: clamp(base.lat + Math.sin(angle) * distance, BRAZIL_BOUNDS.minLat, BRAZIL_BOUNDS.maxLat),
