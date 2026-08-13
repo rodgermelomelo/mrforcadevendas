@@ -66,7 +66,13 @@ const CATEGORY_ALIASES: Record<string, string> = {
  * Mapeamento manual de categorias para marcas (Curadoria Admin).
  * Quando uma categoria deve SEMPRE pertencer a uma marca específica.
  */
+/**
+ * Mapeamento manual de categorias para marcas (Curadoria Admin).
+ * OBS: Preferir usar a tela administrativa "Regras de Hierarquia" em /admin/estoque,
+ * que salva estas regras no banco de dados para efeito imediato sem troca de código.
+ */
 const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
+  // Mantendo os padrões críticos aqui como fallback caso a tabela do banco falhe
   AMACIANTE: "ACEMAR",
   AMOLECEDOR: "ACEMAR",
   GOTA: "ACEMAR",
@@ -76,13 +82,6 @@ const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
   SOLUCAO: "ACEMAR",
   TOALHA: "ACEMAR",
   BABADO: "DAILUS",
-  BASE: "DAILUS",
-  BATOM: "DAILUS",
-  BLUSH: "DAILUS",
-  BODY: "DAILUS",
-  CANETA: "DAILUS",
-  CHOCO: "DAILUS",
-  CONTORNO: "DAILUS",
 };
 
 function normalizeTaxonomyText(value: string) {

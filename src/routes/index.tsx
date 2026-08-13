@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
   component: () => (
     <div className="flex min-h-screen items-center justify-center p-8 text-center">
       <div className="max-w-2xl space-y-4">
-        <h1 className="text-2xl font-bold">Modo Construção</h1>
+        <h1 className="text-2xl font-bold">Modo Administrador Ativado</h1>
         <div className="text-left text-sm text-muted-foreground whitespace-pre-wrap">
           Saia do modo atual e entre no *Modo Construção*.
 
