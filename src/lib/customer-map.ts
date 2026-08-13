@@ -223,18 +223,41 @@ function getBaseCoordinate(
   const known = CITY_COORDS[cityKey];
   if (known) return { coordinate: known, known: true };
 
-  const state = STATE_COORDS[normalizeLocationText(uf)] ?? { lat: -14.24, lng: -51.93 };
+  const normalizedUf = normalizeLocationText(uf);
+  const state = STATE_COORDS[normalizedUf] ?? { lat: -14.24, lng: -51.93 };
   const seed = hashString(cityKey);
-  const angle = ((seed % 3600) / 3600) * Math.PI * 2;
-  const distance = 0.45 + ((seed >>> 8) % 1000) / 1000;
   
-  // Ajuste do spread para manter os pontos dentro do território brasileiro (especialmente SP)
-  const stateSpread = normalizeLocationText(uf) === "SP" ? 1.5 : 2.5;
+  // Detecção de litoral para estados específicos
+  // SP, RJ, ES, BA, SE, AL, PE, PB, RN, CE, PI, MA, PA, AP, SC, PR, RS
+  const COASTAL_UFS = ["SP", "RJ", "ES", "BA", "SE", "AL", "PE", "PB", "RN", "CE", "SC", "PR", "RS"];
+  const isCoastal = COASTAL_UFS.includes(normalizedUf);
+
+  let angle = ((seed % 3600) / 3600) * Math.PI * 2;
+  
+  // Se for litorâneo, puxamos o spread majoritariamente para o interior (Oeste)
+  // No Brasil, o oceano está a Leste (0 rad ou 2PI rad)
+  // Interior é para o Oeste (PI rad ou ~3.14)
+  if (isCoastal) {
+    // Restringe o ângulo para ficar entre 90° e 270° (Interior)
+    // Usamos um bias: se o ângulo cair no mar (Leste), jogamos para o interior oposto
+    const eastBias = Math.cos(angle);
+    if (eastBias > 0) {
+      angle += Math.PI; // Inverte para o Oeste
+    }
+  }
+
+  const distance = 0.35 + ((seed >>> 8) % 1000) / 1000;
+  
+  // Spread reduzido para estados menores ou litorâneos
+  let stateSpread = 2.0;
+  if (normalizedUf === "SP" || normalizedUf === "RJ" || normalizedUf === "ES" || normalizedUf === "SE") {
+    stateSpread = 1.0;
+  }
 
   return {
     coordinate: {
       lat: clamp(
-        state.lat + Math.sin(angle) * distance * stateSpread * 0.55,
+        state.lat + Math.sin(angle) * distance * stateSpread * 0.45,
         BRAZIL_BOUNDS.minLat,
         BRAZIL_BOUNDS.maxLat,
       ),
