@@ -84,7 +84,7 @@ function Catalogo() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([brand, items]) => ({
         brand,
-        items: items.sort((a, b) => a.name.localeCompare(b.name)),
+        items: items ? items.sort((a, b) => a.name.localeCompare(b.name)) : [],
       }));
   }, [filters.filtered]);
 
