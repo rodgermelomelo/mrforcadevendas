@@ -203,7 +203,6 @@ const CITY_COORDS: Record<string, Coordinate> = {
   "PARANAGUA/PR": { lat: -25.52, lng: -48.51 },
   "COLOMBO/PR": { lat: -25.29, lng: -49.22 },
   "SAO JOSE DOS PINHAIS/PR": { lat: -25.53, lng: -49.2 },
-  "SANTOS/SP": { lat: -23.96, lng: -46.33 },
   "BERTIOGA/SP": { lat: -23.85, lng: -46.13 },
   "SAO SEBASTIAO/SP": { lat: -23.76, lng: -45.41 },
   "ILHABELA/SP": { lat: -23.77, lng: -45.35 },
