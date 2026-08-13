@@ -10,6 +10,8 @@ import {
   X,
   Users,
   Info,
+  LayoutGrid,
+  FolderOpen,
 } from "lucide-react";
 import { maskTaxId } from "@/lib/pricing";
 import { useSales } from "@/lib/state/sales-store";
@@ -28,6 +30,13 @@ import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { CustomerDetailDialog } from "@/components/admin/customer-detail-dialog";
 import { Customer } from "@/lib/domain/types";
 import { canViewPriceTableDetails } from "@/lib/domain/roles";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/carteira")({
   head: () => ({
@@ -48,6 +57,7 @@ export const Route = createFileRoute("/_authenticated/carteira")({
 function Carteira() {
   const [term, setTerm] = useState("");
   const [sellerFilter, setSellerFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"list" | "city">("city");
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
   const { customer, customers, priceTables, sellers, itemCount, clearCustomer, role } = useSales();
   const { openCustomerPicker, startWithCustomer } = useCustomerPicker();
@@ -63,6 +73,21 @@ function Carteira() {
       ).includes(q);
     });
   }, [term, customers, sellerFilter]);
+
+  const groupedByCity = useMemo(() => {
+    const groups: Record<string, Customer[]> = {};
+    results.forEach((c) => {
+      const city = c.city || "Outras Cidades";
+      if (!groups[city]) groups[city] = [];
+      groups[city].push(c);
+    });
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([city, items]) => ({
+        city,
+        items: items.sort((a, b) => a.tradeName.localeCompare(b.tradeName)),
+      }));
+  }, [results]);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -151,11 +176,38 @@ function Carteira() {
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")}{" "}
-        clientes
-        {sellerFilter !== "all" && ` · representante ${sellerFilter}`}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {results.length.toLocaleString("pt-BR")} de {customers.length.toLocaleString("pt-BR")}{" "}
+          clientes
+          {sellerFilter !== "all" && ` · representante ${sellerFilter}`}
+        </p>
+
+        <div className="flex rounded-lg border bg-muted p-0.5">
+          <button
+            onClick={() => setViewMode("city")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all",
+              viewMode === "city"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <FolderOpen className="h-3.5 w-3.5" /> Por Cidades
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all",
+              viewMode === "list"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Todos
+          </button>
+        </div>
+      </div>
 
       {results.length === 0 ? (
         <div className="surface-card flex min-h-[40vh] flex-col items-center justify-center p-12 text-center">
@@ -177,129 +229,60 @@ function Carteira() {
             Limpar busca
           </Button>
         </div>
+      ) : viewMode === "city" ? (
+        <Accordion
+          type="multiple"
+          defaultValue={groupedByCity.length === 1 ? [groupedByCity[0]?.city ?? ""] : []}
+          className="space-y-3"
+        >
+          {groupedByCity.map(({ city, items }) => (
+            <AccordionItem key={city} value={city} className="surface-card border-none px-0">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-base font-bold text-foreground leading-tight">{city}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {items.length} {items.length === 1 ? "cliente" : "clientes"}
+                    </p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-5 pb-5">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  {items.map((c) => (
+                    <CustomerCard
+                      key={c.id}
+                      c={c}
+                      priceTables={priceTables}
+                      customer={customer}
+                      itemCount={itemCount}
+                      showPriceTableDetails={showPriceTableDetails}
+                      onStart={() => startWithCustomer(c.id)}
+                      onInfo={() => setDetailCustomer(c)}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {results.map((c) => {
-            const table = priceTables.find((t) => t.code === c.priceTableCode);
-            const selected = customer?.id === c.id;
-            const hasOtherCart = itemCount > 0 && Boolean(customer) && !selected;
-            return (
-              <article
-                key={c.id}
-                className={cn(
-                  "surface-card flex flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  selected && "border-primary/50 ring-1 ring-primary/30",
-                )}
-              >
-                <div
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 cursor-pointer"
-                  onClick={() => startWithCustomer(c.id)}
-                >
-                  <div className="min-w-0">
-                    <h2 className="truncate text-base font-semibold">{c.tradeName}</h2>
-                    <p className="truncate text-xs text-muted-foreground">{c.legalName}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                      {c.erpCode}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDetailCustomer(c);
-                      }}
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div
-                  className="mt-4 space-y-1.5 text-xs text-muted-foreground cursor-pointer"
-                  onClick={() => startWithCustomer(c.id)}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">
-                      {c.city}/{c.uf}
-                    </span>
-                  </div>
-                  <div className="truncate">CNPJ {maskTaxId(c.taxId)}</div>
-                  <div className="truncate">
-                    Rep. {c.sellerErpCode ?? "—"} · Segmento {c.segment} · Condição {c.paymentTerm}
-                  </div>
-                </div>
-
-                <div
-                  className="mt-4 flex flex-wrap gap-2 cursor-pointer"
-                  onClick={() => startWithCustomer(c.id)}
-                >
-                  {showPriceTableDetails && (
-                    <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
-                      {table ? `${table.code} · ${table.name}` : "Sem tabela"}
-                    </span>
-                  )}
-                  {table?.mappedLevel === null && (
-                    <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning">
-                      Preço pendente de configuração
-                    </span>
-                  )}
-                  {c.restricted && (
-                    <span className="flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2 py-1 text-[11px] font-medium text-destructive">
-                      <ShieldAlert className="h-3 w-3" /> Restrição
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-5 grid gap-2">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startWithCustomer(c.id);
-                    }}
-                    className="w-full rounded-xl"
-                    variant={selected ? "outline" : "default"}
-                  >
-                    {selected
-                      ? itemCount > 0
-                        ? `Continuar atendimento (${itemCount})`
-                        : "Continuar atendimento"
-                      : hasOtherCart
-                        ? "Trocar cliente"
-                        : "Atender este cliente"}
-                  </Button>
-                  {selected && itemCount > 0 && (
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="w-full rounded-xl"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Link to="/carrinho">Ver carrinho</Link>
-                    </Button>
-                  )}
-                  {!selected && hasOtherCart && (
-                    <p className="text-[11px] text-muted-foreground">
-                      O carrinho atual de {customer?.tradeName} será descartado.
-                    </p>
-                  )}
-                  {table?.mappedLevel === null && (
-                    <p className="text-[11px] text-warning">
-                      Preço pendente de configuração — o pedido ficará bloqueado.
-                    </p>
-                  )}
-                  {c.restricted && (
-                    <p className="text-[11px] text-muted-foreground">
-                      Cliente com restrição — o pedido irá para aprovação.
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+          {results.map((c) => (
+            <CustomerCard
+              key={c.id}
+              c={c}
+              priceTables={priceTables}
+              customer={customer}
+              itemCount={itemCount}
+              showPriceTableDetails={showPriceTableDetails}
+              onStart={() => startWithCustomer(c.id)}
+              onInfo={() => setDetailCustomer(c)}
+            />
+          ))}
         </div>
       )}
 
@@ -309,5 +292,142 @@ function Carteira() {
         onOpenChange={(open) => !open && setDetailCustomer(null)}
       />
     </div>
+  );
+}
+
+interface CustomerCardProps {
+  c: Customer;
+  priceTables: any[];
+  customer: Customer | null;
+  itemCount: number;
+  showPriceTableDetails: boolean;
+  onStart: () => void;
+  onInfo: () => void;
+}
+
+function CustomerCard({
+  c,
+  priceTables,
+  customer,
+  itemCount,
+  showPriceTableDetails,
+  onStart,
+  onInfo,
+}: CustomerCardProps) {
+  const table = priceTables.find((t) => t.code === c.priceTableCode);
+  const selected = customer?.id === c.id;
+  const hasOtherCart = itemCount > 0 && Boolean(customer) && !selected;
+
+  return (
+    <article
+      className={cn(
+        "surface-card flex flex-col p-5 transition-shadow hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        selected && "border-primary/50 ring-1 ring-primary/30",
+      )}
+    >
+      <div
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 cursor-pointer"
+        onClick={onStart}
+      >
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold">{c.tradeName}</h2>
+          <p className="truncate text-xs text-muted-foreground">{c.legalName}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+            {c.erpCode}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onInfo();
+            }}
+          >
+            <Info className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div
+        className="mt-4 space-y-1.5 text-xs text-muted-foreground cursor-pointer"
+        onClick={onStart}
+      >
+        <div className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">
+            {c.city}/{c.uf}
+          </span>
+        </div>
+        <div className="truncate">CNPJ {maskTaxId(c.taxId)}</div>
+        <div className="truncate">
+          Rep. {c.sellerErpCode ?? "—"} · Segmento {c.segment} · Condição {c.paymentTerm}
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2 cursor-pointer" onClick={onStart}>
+        {showPriceTableDetails && (
+          <span className="rounded-lg border border-border px-2 py-1 text-[11px] font-medium">
+            {table ? `${table.code} · ${table.name}` : "Sem tabela"}
+          </span>
+        )}
+        {table?.mappedLevel === null && (
+          <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning">
+            Preço pendente de configuração
+          </span>
+        )}
+        {c.restricted && (
+          <span className="flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2 py-1 text-[11px] font-medium text-destructive">
+            <ShieldAlert className="h-3 w-3" /> Restrição
+          </span>
+        )}
+      </div>
+
+      <div className="mt-5 grid gap-2">
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onStart();
+          }}
+          className="w-full rounded-xl"
+          variant={selected ? "outline" : "default"}
+        >
+          {selected
+            ? itemCount > 0
+              ? `Continuar atendimento (${itemCount})`
+              : "Continuar atendimento"
+            : hasOtherCart
+              ? "Trocar cliente"
+              : "Atender este cliente"}
+        </Button>
+        {selected && itemCount > 0 && (
+          <Button
+            asChild
+            variant="ghost"
+            className="w-full rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Link to="/carrinho">Ver carrinho</Link>
+          </Button>
+        )}
+        {!selected && hasOtherCart && (
+          <p className="text-[11px] text-muted-foreground">
+            O carrinho atual de {customer?.tradeName} será descartado.
+          </p>
+        )}
+        {table?.mappedLevel === null && (
+          <p className="text-[11px] text-warning">
+            Preço pendente de configuração — o pedido ficará bloqueado.
+          </p>
+        )}
+        {c.restricted && (
+          <p className="text-[11px] text-muted-foreground">
+            Cliente com restrição — o pedido irá para aprovação.
+          </p>
+        )}
+      </div>
+    </article>
   );
 }
