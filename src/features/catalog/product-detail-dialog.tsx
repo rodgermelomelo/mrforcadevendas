@@ -151,7 +151,7 @@ export function ProductDetailDialog({ product, open, onOpenChange }: ProductDeta
                   const raw = `${product.category ?? ""} ${product.brand ?? ""}`.toUpperCase();
                   const TAGGED = [
                     "AMACIANTE", "AMOLECEDOR", "GOTA", "MANTEIGA", "OLEO", "SECANTE", "SOLUCAO", "TOALHA",
-                    "SOBRANCELHA", "SKINCARE", "SKIN",
+                    "SOBRANCELHA", "SKINCARE", "SKIN", "EFEITO",
                   ];
                   const match = TAGGED.find((t) => raw.includes(t));
                   return match ? (
