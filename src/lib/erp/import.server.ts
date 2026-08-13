@@ -367,6 +367,27 @@ async function upsertProductsPreservingCatalog(sb: AdminClient, rows: Record<str
   return upsertAll(sb, "products", protectedRows, "erp_code");
 }
 
+/**
+ * Clientes: quando o arquivo do ERP não traz limite de crédito (null), mantém o
+ * valor já cadastrado (que pode ter sido ajustado manualmente por um admin).
+ * Nunca zera um limite existente por ausência de dado no arquivo.
+ */
+async function upsertCustomersPreservingCredit(
+  sb: AdminClient,
+  rows: Record<string, unknown>[],
+): Promise<number> {
+  const existingRows = await fetchAllRows(sb, "customers", "erp_code, credit_limit");
+  const existingByCode = new Map(
+    existingRows.map((row: any) => [String(row.erp_code), Number(row.credit_limit ?? 0)]),
+  );
+  const merged = rows.map((row) => {
+    const incoming = row["credit_limit"];
+    if (incoming !== null && incoming !== undefined && Number(incoming) > 0) return row;
+    return { ...row, credit_limit: existingByCode.get(String(row["erp_code"])) ?? 0 };
+  });
+  return upsertAll(sb, "customers", merged, "erp_code");
+}
+
 /** Publica todas as entidades (ordem de dependência). */
 export async function publishEntities(sb: AdminClient, e: ImportEntities): Promise<Record<string, number>> {
   const done: Record<string, number> = {};
