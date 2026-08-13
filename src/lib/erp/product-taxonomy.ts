@@ -52,6 +52,10 @@ const CATEGORY_ALIASES: Record<string, string> = {
   TOALHA: "TOALHA",
   LAPISEIRA: "LAPISEIRA",
   BABADO: "BABADO",
+  GOTA: "GOTA",
+  SECANTE: "SECANTE",
+  SOLUCAO: "SOLUÇÃO",
+  SOLUÇÃO: "SOLUÇÃO",
 };
 
 /**
@@ -61,6 +65,12 @@ const CATEGORY_ALIASES: Record<string, string> = {
 const CATEGORY_TO_BRAND_OVERRIDE: Record<string, string> = {
   AMACIANTE: "ACEMAR",
   AMOLECEDOR: "ACEMAR",
+  GOTA: "ACEMAR",
+  MANTEIGA: "ACEMAR",
+  OLEO: "ACEMAR",
+  SECANTE: "ACEMAR",
+  SOLUCAO: "ACEMAR",
+  TOALHA: "ACEMAR",
   BABADO: "DAILUS",
 };
 
