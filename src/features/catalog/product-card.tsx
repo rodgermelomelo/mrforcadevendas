@@ -28,8 +28,9 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
   const maxQty = product.stock > 0 ? Math.floor(product.stock) : 1;
   const clampQty = (value: number) => Math.min(maxQty, Math.max(1, value));
 
-  // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço.
-  const blocked = hasCustomer && (outOfStock || !price.ok);
+  // Sem cliente: navegável (sem preço/adicionar). Com cliente: bloqueia sem estoque/preço/restrição.
+  const isRestricted = hasCustomer && useSales.getState().customer?.restricted;
+  const blocked = hasCustomer && (outOfStock || !price.ok || isRestricted);
   const dimmed = hasCustomer ? blocked : outOfStock;
   const category = product.category || product.group;
   const image = resolveProductImage(product);
