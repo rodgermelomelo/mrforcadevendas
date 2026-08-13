@@ -230,6 +230,46 @@ function Catalogo() {
             Limpar todos os filtros
           </Button>
         </div>
+      ) : viewMode === "brand" ? (
+        <Accordion type="multiple" defaultValue={activeAccordionValues} className="space-y-3">
+          {groupedByBrand.map(({ brand, items }) => (
+            <AccordionItem key={brand} value={brand} className="surface-card border-none px-0">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Tag className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-base font-bold text-foreground leading-tight">{brand}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {items.length} {items.length === 1 ? "produto" : "produtos"}
+                    </p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-5 pb-5">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {items.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      hasCustomer={Boolean(customer)}
+                      onAdd={(qty) => {
+                        const result = addItem(p.id, qty);
+                        if (!result.ok) {
+                          toast.error(result.message);
+                          return;
+                        }
+                        toast.success(`${qty} un. de ${p.name} no carrinho`);
+                      }}
+                      onOpenDetail={() => setSelectedProduct(p)}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       ) : (
         <>
           <VirtualizedProductGrid
