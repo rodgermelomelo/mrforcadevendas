@@ -34,7 +34,7 @@ Siga obrigatoriamente estas regras:
 
 Prioridade: *interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.*
 
-PERFEITO, AGORA QUERO QUE VOCÊ COLOQUE TAG NOS PRODUTOS BABADO, E ADCIONE ESSES PRODUTOS DENTRO DA DAILUS, ASSIM COMO, BASE, BATOM, BLUSH, BODY, CANETA, CHOCO, CONTORNO...
+Implementar uma tela de administração para eu vincular categorias e tags às marcas e ajustar o agrupamento do catálogo sem depender de edição no código.
         </div>
       </div>
     </div>
