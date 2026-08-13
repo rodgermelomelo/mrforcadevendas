@@ -34,7 +34,7 @@ function ProductCardComponent({ product, hasCustomer, onAdd, onOpenDetail }: Pro
   const dimmed = hasCustomer ? blocked : outOfStock;
   
   const SPECIAL_ACEMAR_CATEGORIES = ["AMACIANTE", "AMOLECEDOR", "GOTA", "MANTEIGA", "OLEO", "SECANTE", "SOLUCAO", "TOALHA"];
-  const isSpecialCategory = SPECIAL_ACEMAR_CATEGORIES.includes(product.category);
+  const isSpecialCategory = product.category ? SPECIAL_ACEMAR_CATEGORIES.includes(product.category) : false;
   
   const category = product.category || product.group;
   const image = resolveProductImage(product);
