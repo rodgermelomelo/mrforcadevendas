@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/accordion";
 import { ProductCard } from "@/features/catalog/product-card";
 import { useBrandHierarchy, type BrandGroup } from "@/features/catalog/use-brand-hierarchy";
+import { prefetchBrandFolder, prefetchBrandFolders } from "@/features/catalog/prefetch-brand-folder";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
