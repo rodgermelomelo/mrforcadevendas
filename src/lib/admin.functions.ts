@@ -6,19 +6,13 @@ import {
   publishErpFile,
   getIsAdmin,
   getAdminStats,
-} from "./admin-data.functions"; // Many were likely meant to be unified here
+} from "./admin-data.functions";
 import {
-  analyzeErpFile as analyzeErp,
-  publishErpFile as publishErp,
   sha256Hex,
   parseUpload,
-  buildEntities,
 } from "./erp/import.server";
 
-// Re-exporting for backward compatibility if needed, 
-// but let's check what's actually in admin.functions.ts first.
-// Wait, I already viewed admin.functions.ts and it has analyzeErpFile, publishErpFile, getIsAdmin, getAdminStats.
-// I need to add getErpBaseRecords to it.
+export { analyzeErpFile, publishErpFile, getIsAdmin, getAdminStats };
 
 export const getErpBaseRecords = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
