@@ -245,10 +245,20 @@ function Catalogo() {
           </Button>
         </div>
       ) : viewMode === "brand" ? (
-        <Accordion type="multiple" defaultValue={activeAccordionValues} className="space-y-3">
+        <Accordion
+          type="multiple"
+          defaultValue={activeAccordionValues}
+          onValueChange={(values) => prefetchBrandFolders(groupedByBrand, values)}
+          className="space-y-3"
+        >
           {groupedByBrand.map(({ brand, items }) => (
             <AccordionItem key={brand} value={brand} className="surface-card border-none px-0">
-              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+              <AccordionTrigger
+                className="px-5 py-4 hover:no-underline"
+                onMouseEnter={() => prefetchBrandFolder(groupedByBrand, brand)}
+                onFocus={() => prefetchBrandFolder(groupedByBrand, brand)}
+                onTouchStart={() => prefetchBrandFolder(groupedByBrand, brand)}
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <Tag className="h-5 w-5" />
