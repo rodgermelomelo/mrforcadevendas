@@ -16,8 +16,8 @@ import { Input } from "@/components/ui/input";
 import {
   listTaxonomyOverrides,
   deleteTaxonomyOverride,
-
 } from "@/lib/admin-data.functions";
+import { clearBrandHierarchyCache } from "@/features/catalog/use-brand-hierarchy";
 import { AddOverrideDialog } from "./add-override-dialog";
 import {
   AlertDialog,
