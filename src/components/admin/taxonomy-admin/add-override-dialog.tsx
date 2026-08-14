@@ -32,6 +32,7 @@ export function AddOverrideDialog({
     mutationFn: () => update({ data: { categoryName, targetBrandName } }),
     onSuccess: () => {
       toast.success("Regra de taxonomia criada.");
+      clearBrandHierarchyCache();
       queryClient.invalidateQueries({ queryKey: ["admin", "taxonomy-overrides"] });
       queryClient.invalidateQueries({ queryKey: ["workspace"] });
       setCategoryName("");

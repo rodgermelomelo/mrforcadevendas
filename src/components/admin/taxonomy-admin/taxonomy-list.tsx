@@ -47,6 +47,7 @@ export function TaxonomyList() {
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
       toast.success("Regra removida.");
+      clearBrandHierarchyCache();
       queryClient.invalidateQueries({ queryKey: ["admin", "taxonomy-overrides"] });
       queryClient.invalidateQueries({ queryKey: ["workspace"] });
     },
