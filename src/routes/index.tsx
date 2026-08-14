@@ -34,7 +34,7 @@ Siga obrigatoriamente estas regras:
 
 Prioridade: *interpretar corretamente a intenção antes de agir, execute integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.*
 
-ta demorando para carregar as pastas do catálogo, corrija por favor`}
+em bases recebidas do ERP quero que abra modal nelas para eu poder conferir, até editar caso necessário`}
         </div>
       </div>
     </div>

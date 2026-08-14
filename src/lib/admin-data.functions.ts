@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sha256Hex, parseUpload } from "./erp/import.server";
+
 
 const PAGE_SIZE = 1000;
 
@@ -1780,3 +1783,74 @@ export const deleteTaxonomyOverride = createServerFn({ method: "POST" })
     await audit(context, "brand_taxonomy_overrides", data.id, "delete", {});
     return { ok: true };
   });
+
+/* ============================ IMPORTAÇÃO ERP ============================== */
+
+export const analyzeErpFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ content: z.string() }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { bytes, result } = parseUpload(data.content);
+    const hash = await sha256Hex(bytes);
+    
+    const { data: run } = await context.supabase
+      .from("erp_import_runs")
+      .select("id")
+      .eq("file_hash", hash)
+      .eq("status", "published")
+      .limit(1)
+      .maybeSingle();
+
+    const { buildEntities, summarize } = await import("./erp/import.server");
+    const entities = buildEntities(result.records);
+    
+    // Omitimos catalogImpact para velocidade na análise inicial se necessário, 
+    // mas o analyzeErpFile original geralmente inclui.
+    return summarize(result, entities, hash, !!run);
+  });
+
+export const publishErpFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ content: z.string() }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { bytes, result } = parseUpload(data.content);
+    const hash = await sha256Hex(bytes);
+    
+    const { buildEntities, publishEntities } = await import("./erp/import.server");
+    const entities = buildEntities(result.records);
+    
+    const counts = await publishEntities(context.supabase, entities);
+    
+    await audit(context, "erp_import", "manual", "publish", { hash });
+    return { counts };
+  });
+
+export const getIsAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "administrador",
+    });
+    return !!data;
+  });
+
+export const getAdminStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const [orders, customers, products] = await Promise.all([
+      context.supabase.from("orders").select("id", { count: "exact", head: true }),
+      context.supabase.from("customers").select("id", { count: "exact", head: true }),
+      context.supabase.from("products").select("id", { count: "exact", head: true }),
+    ]);
+    return {
+      orders: orders.count ?? 0,
+      customers: customers.count ?? 0,
+      products: products.count ?? 0,
+    };
+  });
+
+
