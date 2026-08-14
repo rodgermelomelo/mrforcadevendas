@@ -100,12 +100,13 @@ function DashboardPage() {
             </Link>
           </div>
           {recentOrders.length === 0 ? (
-            <EmptyState
-              className="mt-4"
-              icon={ClipboardList}
-              title="Nenhum pedido ainda"
-              description="Comece um atendimento pelo catálogo para gerar seu primeiro pedido."
-            />
+            <div className="mt-4">
+              <EmptyState
+                icon={<ClipboardList className="h-6 w-6" />}
+                title="Nenhum pedido ainda"
+                description="Comece um atendimento pelo catálogo para gerar seu primeiro pedido."
+              />
+            </div>
           ) : (
             <ul className="mt-4 divide-y divide-border">
               {recentOrders.map((order) => (
