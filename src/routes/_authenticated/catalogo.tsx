@@ -88,6 +88,14 @@ function Catalogo() {
     return groupedByBrand.length === 1 ? [groupedByBrand[0]?.brand ?? ""] : [];
   }, [filters.term, groupedByBrand]);
 
+  // Aquece as pastas já abertas (busca ou marca única) e a primeira da lista.
+  useEffect(() => {
+    if (viewMode !== "brand" || groupedByBrand.length === 0) return;
+    const targets = activeAccordionValues.filter(Boolean);
+    prefetchBrandFolders(groupedByBrand, targets.length ? targets : [groupedByBrand[0]!.brand]);
+  }, [viewMode, groupedByBrand, activeAccordionValues]);
+
+
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 sm:space-y-6">
       <PageHeader
