@@ -2,152 +2,50 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  analyzeCatalogImpact,
+  analyzeErpFile,
+  publishErpFile,
+  getIsAdmin,
+  getAdminStats,
+} from "./admin-data.functions"; // Many were likely meant to be unified here
+import {
+  analyzeErpFile as analyzeErp,
+  publishErpFile as publishErp,
+  sha256Hex,
   parseUpload,
   buildEntities,
-  summarize,
-  publishEntities,
-  importCustomerSegments,
-  saveSegmentAudit,
-  sha256Hex,
 } from "./erp/import.server";
 
-/**
- * Funções de servidor para gerenciar as Tabelas de Preço, Representantes,
- * Clientes, Produtos, Usuários, Cadastros e Regras Comerciais.
- */
+// Re-exporting for backward compatibility if needed, 
+// but let's check what's actually in admin.functions.ts first.
+// Wait, I already viewed admin.functions.ts and it has analyzeErpFile, publishErpFile, getIsAdmin, getAdminStats.
+// I need to add getErpBaseRecords to it.
 
-// Helper para garantir papel de admin
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "administrador",
-  });
-  if (data !== true) throw new Error("Acesso restrito a administradores.");
-}
-
-export const getIsAdmin = createServerFn({ method: "GET" })
+export const getErpBaseRecords = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", {
+  .inputValidator(z.object({ 
+    content: z.string(),
+    type: z.enum(["vendedores", "clientes", "produtos", "precos", "estoque", "grupos", "segmentos", "formas_pagamento", "tabelas_preco"]) 
+  }))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "administrador",
     });
-    return data === true;
-  });
+    if (isAdmin !== true) throw new Error("Acesso restrito.");
 
-export const getAdminStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context);
-    const { supabase } = context;
+    const { result } = parseUpload(data.content);
+    const { records } = result;
 
-    const [customers, products, orders, sellers] = await Promise.all([
-      supabase.from("customers").select("id", { count: "exact", head: true }),
-      supabase.from("products").select("id", { count: "exact", head: true }),
-      supabase.from("orders").select("id", { count: "exact", head: true }),
-      supabase.from("erp_sellers").select("id", { count: "exact", head: true }),
-    ]);
-
-    return {
-      customers: customers.count ?? 0,
-      products: products.count ?? 0,
-      orders: orders.count ?? 0,
-      sellers: sellers.count ?? 0,
-    };
-  });
-
-export const analyzeErpFile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ content: z.string() }))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const { bytes, result } = parseUpload(data.content);
-    const entities = buildEntities(result.records);
-    const hash = await sha256Hex(bytes);
-
-    const { data: existing } = await context.supabase
-      .from("erp_import_runs")
-      .select("id")
-      .eq("file_hash", hash)
-      .eq("status", "published")
-      .maybeSingle();
-
-    const catalogImpact = await analyzeCatalogImpact(context.supabase, entities);
-
-    return summarize(result, entities, hash, !!existing, catalogImpact);
-  });
-
-export const publishErpFile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ content: z.string() }))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const { supabase, userId } = context;
-
-    const { bytes, result } = parseUpload(data.content);
-    const entities = buildEntities(result.records);
-    const hash = await sha256Hex(bytes);
-
-    // Registra o início
-    const { data: run, error: runError } = await supabase
-      .from("erp_import_runs")
-      .insert({
-        created_by: userId,
-        file_hash: hash,
-        file_version: result.report.layoutVersion,
-        parser_version: result.report.parserVersion,
-        status: "processing",
-        totals: {},
-      })
-      .select("id")
-      .single();
-
-    if (runError) throw new Error(runError.message);
-
-    try {
-      const catalogImpact = await analyzeCatalogImpact(supabase, entities);
-      const counts = await publishEntities(supabase, entities);
-
-      // Segmentos dos clientes + trilha de auditoria (nunca derruba a publicação).
-      let segments: {
-        detection: { offset: number | null; confidence: number; matched: number; scanned: number };
-        totals: Record<string, number>;
-      } | null = null;
-      try {
-        const outcome = await importCustomerSegments(supabase, result.records);
-        await saveSegmentAudit(supabase, run.id, outcome.entries);
-        segments = { detection: outcome.detection, totals: outcome.totals };
-      } catch (segError: any) {
-        await supabase.from("erp_import_errors").insert({
-          run_id: run.id,
-          record_type: "segmentos",
-          message: `importacao_de_segmentos: ${String(segError?.message ?? "erro desconhecido").slice(0, 300)}`,
-        });
-      }
-
-      await supabase
-        .from("erp_import_runs")
-        .update({
-          status: "published",
-          finished_at: new Date().toISOString(),
-          totals: JSON.parse(JSON.stringify({ counts, catalogImpact, segments })),
-        })
-        .eq("id", run.id);
-
-      return { publishedAt: new Date().toISOString(), counts, catalogImpact, segments };
-
-    } catch (e: any) {
-      await supabase
-        .from("erp_import_runs")
-        .update({ status: "error" })
-        .eq("id", run.id);
-      
-      await supabase.from("erp_import_errors").insert({
-        run_id: run.id,
-        message: e.message,
-      });
-
-      throw e;
+    switch (data.type) {
+      case "vendedores": return records.sellers;
+      case "clientes": return records.customers;
+      case "produtos": return records.products;
+      case "precos": return records.prices;
+      case "estoque": return records.inventory;
+      case "grupos": return records.productGroups;
+      case "segmentos": return records.segments;
+      case "formas_pagamento": return records.billingMethods;
+      case "tabelas_preco": return records.priceTables;
+      default: return [];
     }
   });

@@ -2,10 +2,29 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Upload, FileCheck2, AlertTriangle, ShieldAlert, Loader2, CheckCircle2 } from "lucide-react";
+import { Upload, FileCheck2, AlertTriangle, ShieldAlert, Loader2, CheckCircle2, Search, Table, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { analyzeErpFile, publishErpFile, getIsAdmin } from "@/lib/admin.functions";
+import { analyzeErpFile, publishErpFile, getIsAdmin, getErpBaseRecords } from "@/lib/admin.functions";
 import { formatDateTimeBR } from "@/lib/pricing";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table as UITable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/importacoes")({
@@ -211,9 +230,16 @@ function ImportacoesPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               {summary.typeCounts.map((t: any) => (
-                <span key={t.type} className="rounded-full border border-border bg-background/60 px-3 py-1 text-xs">
-                  {t.type} · {t.label}: <strong>{nf(t.count)}</strong>
-                </span>
+                <div key={t.type} className="flex items-center gap-1">
+                  <span className="rounded-full border border-border bg-background/60 px-3 py-1 text-xs">
+                    {t.type} · {t.label}: <strong>{nf(t.count)}</strong>
+                  </span>
+                  <BaseRecordsDialog 
+                    type={t.type} 
+                    label={t.label} 
+                    content={content || ""} 
+                  />
+                </div>
               ))}
             </div>
           </div>
