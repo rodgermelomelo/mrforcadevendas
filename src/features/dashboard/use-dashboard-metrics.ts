@@ -24,7 +24,7 @@ export function useDashboardMetrics() {
     };
 
     const attention = customers.filter(
-      (c) => c.restricted || c.openBalance / c.creditLimit > 0.8,
+      (c) => c.restricted || (c.creditLimit > 0 && c.openBalance / c.creditLimit > 0.8),
     );
 
     const recentCustomers = customers

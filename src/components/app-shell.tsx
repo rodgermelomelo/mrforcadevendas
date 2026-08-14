@@ -49,7 +49,7 @@ import {
 
 
 const nav = [
-  { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
+  { to: "/dashboard", label: "Painel", icon: LayoutDashboard, exact: false },
   { to: "/carteira", label: "Carteira", icon: Users, exact: false },
   
   { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
@@ -349,7 +349,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
 }
 
 const primaryTabs = [
-  { to: "/", label: "Início", icon: LayoutDashboard, exact: true },
+  { to: "/dashboard", label: "Painel", icon: LayoutDashboard, exact: false },
   { to: "/carteira", label: "Carteira", icon: Users, exact: false },
   { to: "/catalogo", label: "Catálogo", icon: PackageSearch, exact: false },
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
