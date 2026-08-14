@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
       <div className="max-w-2xl space-y-4">
         <h1 className="text-2xl font-bold">Modo Administrador Ativado</h1>
         <div className="text-left text-sm text-muted-foreground whitespace-pre-wrap">
-          Saia do modo atual e entre no *Modo Construção*.
+          {`Saia do modo atual e entre no *Modo Construção*.
 
 Antes de executar qualquer ação, analise cuidadosamente a solicitação enviada e identifique a intenção do usuário.
 
@@ -32,9 +32,9 @@ Siga obrigatoriamente estas regras:
 
 6. Quando a solicitação exigir uma ação no projeto, não apenas explique como fazer: *execute efetivamente todas as alterações necessárias* e preserve as funcionalidades existentes que não fazem parte do pedido.
 
-Prioridade: *interpretar corretamente a intenção antes de agir, executar integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.*
+Prioridade: *interpretar corretamente a intenção antes de agir, execute integralmente quando houver pedido de alteração e não modificar o projeto quando houver apenas uma pergunta.*
 
-Implementar uma tela de administração para eu vincular categorias e tags às marcas e ajustar o agrupamento do catálogo sem depender de edição no código.
+ta demorando para carregar as pastas do catálogo, corrija por favor`}
         </div>
       </div>
     </div>
