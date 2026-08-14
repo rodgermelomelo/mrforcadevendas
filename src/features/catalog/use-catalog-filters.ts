@@ -181,7 +181,23 @@ export function useCatalogFilters({
     onlyInStock ||
     term !== "";
 
+  /** Assinatura estável do resultado filtrado — usada para cachear a hierarquia. */
+  const cacheKey = useMemo(
+    () =>
+      [
+        term.trim().toLowerCase(),
+        sortBy,
+        [...selectedBrands].sort().join(","),
+        [...selectedGroups].sort().join(","),
+        onlyLaunch ? "1" : "0",
+        onlyInStock ? "1" : "0",
+        table?.code ?? "-",
+      ].join("|"),
+    [term, sortBy, selectedBrands, selectedGroups, onlyLaunch, onlyInStock, table],
+  );
+
   return {
+    cacheKey,
     // estado
     term,
     setTerm,

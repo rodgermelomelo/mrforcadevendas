@@ -32,6 +32,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ProductCard } from "@/features/catalog/product-card";
+import { useBrandHierarchy, type BrandGroup } from "@/features/catalog/use-brand-hierarchy";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
