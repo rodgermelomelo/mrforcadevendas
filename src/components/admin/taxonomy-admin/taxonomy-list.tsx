@@ -17,6 +17,7 @@ import {
   listTaxonomyOverrides,
   deleteTaxonomyOverride,
 } from "@/lib/admin-data.functions";
+import { clearBrandHierarchyCache } from "@/features/catalog/use-brand-hierarchy";
 import { AddOverrideDialog } from "./add-override-dialog";
 import {
   AlertDialog,
@@ -47,6 +48,7 @@ export function TaxonomyList() {
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
       toast.success("Regra removida.");
+      clearBrandHierarchyCache();
       queryClient.invalidateQueries({ queryKey: ["admin", "taxonomy-overrides"] });
       queryClient.invalidateQueries({ queryKey: ["workspace"] });
     },
