@@ -121,7 +121,7 @@ function ImportacoesPage() {
   const publishMutation = useMutation({
     mutationFn: async (text: string) => publish({ data: { content: text } }),
     onSuccess: async (res) => {
-      setPublishedAt(res.publishedAt);
+      setPublishedAt(new Date().toISOString());
       await queryClient.invalidateQueries();
       toast.success("Publicação concluída — dados do ERP atualizados.");
     },
