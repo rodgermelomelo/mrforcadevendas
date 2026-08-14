@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sha256Hex, parseUpload } from "./erp/import.server";
+
 
 const PAGE_SIZE = 1000;
 
@@ -1780,3 +1783,72 @@ export const deleteTaxonomyOverride = createServerFn({ method: "POST" })
     await audit(context, "brand_taxonomy_overrides", data.id, "delete", {});
     return { ok: true };
   });
+
+/* ============================ IMPORTAÇÃO ERP ============================== */
+
+export const analyzeErpFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ content: z.string() }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const hash = sha256Hex(data.content);
+    const { summary } = parseUpload(data.content);
+    
+    const { data: run } = await context.supabase
+      .from("erp_import_runs")
+      .select("id")
+      .eq("file_hash", hash)
+      .eq("status", "published")
+      .limit(1)
+      .maybeSingle();
+
+    return { 
+      ...summary, 
+      fileHash: hash, 
+      alreadyPublished: !!run 
+    };
+  });
+
+export const publishErpFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ content: z.string() }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { result } = parseUpload(data.content);
+    
+    // Na prática, aqui chamamos a lógica de gravação massiva no banco.
+    // Como é uma operação pesada, geralmente delegamos a um utilitário server-only.
+    const { publishErpData } = await import("./erp/import.server");
+    const publishResult = await publishErpData(context.supabase, result);
+    
+    await audit(context, "erp_import", "manual", "publish", { hash: result.hash });
+    return publishResult;
+  });
+
+export const getIsAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "administrador",
+    });
+    return !!data;
+  });
+
+export const getAdminStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    // Agregação de estatísticas para o dashboard administrativo
+    const [orders, customers, products] = await Promise.all([
+      context.supabase.from("orders").select("id", { count: "exact", head: true }),
+      context.supabase.from("customers").select("id", { count: "exact", head: true }),
+      context.supabase.from("products").select("id", { count: "exact", head: true }),
+    ]);
+    return {
+      orders: orders.count ?? 0,
+      customers: customers.count ?? 0,
+      products: products.count ?? 0,
+    };
+  });
+

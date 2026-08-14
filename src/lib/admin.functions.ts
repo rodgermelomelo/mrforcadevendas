@@ -1,19 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  analyzeErpFile as analyzeErpData,
-  publishErpFile as publishErpData,
+import { parseUpload } from "./erp/import.server";
+import { 
+  analyzeErpFile as analyzeData,
+  publishErpFile as publishData,
   getIsAdmin as getIsAdminData,
-  getAdminStats as getAdminStatsData,
+  getAdminStats as getAdminStatsData
 } from "./admin-data.functions";
-import {
-  sha256Hex,
-  parseUpload,
-} from "./erp/import.server";
 
-export const analyzeErpFile = analyzeErpData;
-export const publishErpFile = publishErpData;
+// Re-export constants/functions from admin-data if they are used by components
+// Note: In TanStack Start, we should prefer importing from the final location.
+// But to maintain the current import structure in routes, we re-export them here.
+export const analyzeErpFile = analyzeData;
+export const publishErpFile = publishData;
 export const getIsAdmin = getIsAdminData;
 export const getAdminStats = getAdminStatsData;
 
