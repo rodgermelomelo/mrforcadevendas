@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateTaxonomyOverride } from "@/lib/admin-data.functions";
+import { clearBrandHierarchyCache } from "@/features/catalog/use-brand-hierarchy";
 
 export function AddOverrideDialog({
   open,
