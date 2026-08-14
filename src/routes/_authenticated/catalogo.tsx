@@ -74,32 +74,10 @@ function Catalogo() {
   const tableBlocked = Boolean(customer) && (!table || table.mappedLevel === null);
   const catalogLoading = loading && products.length === 0;
 
-  const groupedByBrand = useMemo(() => {
-    const groups: Record<string, Product[]> = {};
-    const brandOverrides = new Map(taxonomyOverrides.map((o) => [o.categoryName.toUpperCase(), o.targetBrandName]));
+  // Hierarquia (marca > produtos) memoizada em cache: a troca lista <-> pastas
+  // e o retorno à rota reaproveitam o agrupamento já calculado.
+  const groupedByBrand = useBrandHierarchy(filters.filtered, taxonomyOverrides, filters.cacheKey ?? "");
 
-    filters.filtered.forEach((p) => {
-      let brand = p.brand || "Sem Marca";
-      const productCategory = (p.category || "").toUpperCase();
-      const brandUpper = brand.toUpperCase();
-
-      if (brandOverrides.has(productCategory)) {
-        brand = brandOverrides.get(productCategory)!;
-      } else if (brandOverrides.has(brandUpper)) {
-        brand = brandOverrides.get(brandUpper)!;
-      }
-
-      if (!groups[brand]) groups[brand] = [];
-      groups[brand]!.push(p);
-    });
-
-    return Object.entries(groups)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([brand, items]) => ({
-        brand,
-        items: items.sort((a, b) => a.name.localeCompare(b.name)),
-      }));
-  }, [filters.filtered, taxonomyOverrides]);
 
   const activeAccordionValues = useMemo(() => {
     if (filters.term) {
