@@ -2,17 +2,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  analyzeErpFile,
-  publishErpFile,
-  getIsAdmin,
-  getAdminStats,
+  analyzeErpFile as analyzeErpData,
+  publishErpFile as publishErpData,
+  getIsAdmin as getIsAdminData,
+  getAdminStats as getAdminStatsData,
 } from "./admin-data.functions";
 import {
   sha256Hex,
   parseUpload,
 } from "./erp/import.server";
 
-export { analyzeErpFile, publishErpFile, getIsAdmin, getAdminStats };
+export const analyzeErpFile = analyzeErpData;
+export const publishErpFile = publishErpData;
+export const getIsAdmin = getIsAdminData;
+export const getAdminStats = getAdminStatsData;
 
 export const getErpBaseRecords = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
