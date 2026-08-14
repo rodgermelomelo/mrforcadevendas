@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   Search,
   Plus,
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/accordion";
 import { ProductCard } from "@/features/catalog/product-card";
 import { useBrandHierarchy, type BrandGroup } from "@/features/catalog/use-brand-hierarchy";
+import { prefetchBrandFolder, prefetchBrandFolders } from "@/features/catalog/prefetch-brand-folder";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
@@ -86,6 +87,14 @@ function Catalogo() {
     }
     return groupedByBrand.length === 1 ? [groupedByBrand[0]?.brand ?? ""] : [];
   }, [filters.term, groupedByBrand]);
+
+  // Aquece as pastas já abertas (busca ou marca única) e a primeira da lista.
+  useEffect(() => {
+    if (viewMode !== "brand" || groupedByBrand.length === 0) return;
+    const targets = activeAccordionValues.filter(Boolean);
+    prefetchBrandFolders(groupedByBrand, targets.length ? targets : [groupedByBrand[0]!.brand]);
+  }, [viewMode, groupedByBrand, activeAccordionValues]);
+
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 sm:space-y-6">
@@ -245,10 +254,20 @@ function Catalogo() {
           </Button>
         </div>
       ) : viewMode === "brand" ? (
-        <Accordion type="multiple" defaultValue={activeAccordionValues} className="space-y-3">
+        <Accordion
+          type="multiple"
+          defaultValue={activeAccordionValues}
+          onValueChange={(values) => prefetchBrandFolders(groupedByBrand, values)}
+          className="space-y-3"
+        >
           {groupedByBrand.map(({ brand, items }) => (
             <AccordionItem key={brand} value={brand} className="surface-card border-none px-0">
-              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+              <AccordionTrigger
+                className="px-5 py-4 hover:no-underline"
+                onMouseEnter={() => prefetchBrandFolder(groupedByBrand, brand)}
+                onFocus={() => prefetchBrandFolder(groupedByBrand, brand)}
+                onTouchStart={() => prefetchBrandFolder(groupedByBrand, brand)}
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <Tag className="h-5 w-5" />
