@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo, useState, useTransition } from "react";
 import {
   Search,
   Plus,
@@ -59,6 +60,13 @@ function Catalogo() {
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "brand">("brand");
+  const [isPending, startTransition] = useTransition();
+
+  const handleViewModeChange = (mode: "list" | "brand") => {
+    startTransition(() => {
+      setViewMode(mode);
+    });
+  };
 
   const filters = useCatalogFilters({ products, brandMetadata, table });
 
@@ -68,35 +76,29 @@ function Catalogo() {
 
   const groupedByBrand = useMemo(() => {
     const groups: Record<string, Product[]> = {};
-    filters.filtered.forEach((p) => {
-      // Mapeamento dinâmico de hierarquia vindo do banco de dados
-      const brandOverrides = new Map(taxonomyOverrides.map(o => [o.categoryName, o.targetBrandName]));
+    const brandOverrides = new Map(taxonomyOverrides.map((o) => [o.categoryName.toUpperCase(), o.targetBrandName]));
 
+    filters.filtered.forEach((p) => {
       let brand = p.brand || "Sem Marca";
       const productCategory = (p.category || "").toUpperCase();
       const brandUpper = brand.toUpperCase();
 
-      // Prioridade 1: Categoria do produto tem um override direto
       if (brandOverrides.has(productCategory)) {
         brand = brandOverrides.get(productCategory)!;
-      } 
-      // Prioridade 2: A própria "marca" vinda do ERP é na verdade uma categoria mapeada
-      else if (brandOverrides.has(brandUpper)) {
+      } else if (brandOverrides.has(brandUpper)) {
         brand = brandOverrides.get(brandUpper)!;
       }
-      
+
       if (!groups[brand]) groups[brand] = [];
       groups[brand]!.push(p);
     });
 
-    const result = Object.entries(groups)
+    return Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([brand, items]) => ({
         brand,
-        items: (items || []).sort((a, b) => a.name.localeCompare(b.name)),
+        items: items.sort((a, b) => a.name.localeCompare(b.name)),
       }));
-
-    return result;
   }, [filters.filtered, taxonomyOverrides]);
 
   const activeAccordionValues = useMemo(() => {
@@ -196,23 +198,27 @@ function Catalogo() {
 
         <div className="flex w-full shrink-0 rounded-lg border bg-muted p-0.5 sm:w-auto">
           <button
-            onClick={() => setViewMode("brand")}
+            onClick={() => handleViewModeChange("brand")}
+            disabled={isPending}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all sm:flex-initial",
               viewMode === "brand"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
+              isPending && "opacity-50 cursor-not-allowed"
             )}
           >
             <FolderOpen className="h-3.5 w-3.5" /> Por Marcas
           </button>
           <button
-            onClick={() => setViewMode("list")}
+            onClick={() => handleViewModeChange("list")}
+            disabled={isPending}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--radius)-4px)] px-3 py-1.5 text-xs font-medium transition-all sm:flex-initial",
               viewMode === "list"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
+              isPending && "opacity-50 cursor-not-allowed"
             )}
           >
             <LayoutGrid className="h-3.5 w-3.5" /> Todos
@@ -221,9 +227,22 @@ function Catalogo() {
       </div>
 
       {catalogLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <ProductCardSkeleton key={`catalog-loading-${index}`} />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={`skeleton-group-${i}`} className="surface-card p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {Array.from({ length: 5 }).map((_, j) => (
+                  <ProductCardSkeleton key={`skeleton-prod-${i}-${j}`} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       ) : filters.filtered.length === 0 ? (
