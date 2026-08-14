@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   Search,
   Plus,
