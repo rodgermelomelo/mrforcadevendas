@@ -1791,8 +1791,8 @@ export const analyzeErpFile = createServerFn({ method: "POST" })
   .inputValidator(z.object({ content: z.string() }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const hash = sha256Hex(data.content);
-    const { summary } = parseUpload(data.content);
+    const { bytes, result } = parseUpload(data.content);
+    const hash = await sha256Hex(bytes);
     
     const { data: run } = await context.supabase
       .from("erp_import_runs")
@@ -1802,11 +1802,12 @@ export const analyzeErpFile = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
 
-    return { 
-      ...summary, 
-      fileHash: hash, 
-      alreadyPublished: !!run 
-    };
+    const { buildEntities, summarize } = await import("./erp/import.server");
+    const entities = buildEntities(result.records);
+    
+    // Omitimos catalogImpact para velocidade na análise inicial se necessário, 
+    // mas o analyzeErpFile original geralmente inclui.
+    return summarize(result, entities, hash, !!run);
   });
 
 export const publishErpFile = createServerFn({ method: "POST" })
@@ -1814,15 +1815,16 @@ export const publishErpFile = createServerFn({ method: "POST" })
   .inputValidator(z.object({ content: z.string() }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { result } = parseUpload(data.content);
+    const { bytes, result } = parseUpload(data.content);
+    const hash = await sha256Hex(bytes);
     
-    // Na prática, aqui chamamos a lógica de gravação massiva no banco.
-    // Como é uma operação pesada, geralmente delegamos a um utilitário server-only.
-    const { publishErpData } = await import("./erp/import.server");
-    const publishResult = await publishErpData(context.supabase, result);
+    const { buildEntities, publishEntities } = await import("./erp/import.server");
+    const entities = buildEntities(result.records);
     
-    await audit(context, "erp_import", "manual", "publish", { hash: result.hash });
-    return publishResult;
+    const counts = await publishEntities(context.supabase, entities);
+    
+    await audit(context, "erp_import", "manual", "publish", { hash });
+    return { counts };
   });
 
 export const getIsAdmin = createServerFn({ method: "GET" })
@@ -1839,7 +1841,6 @@ export const getAdminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    // Agregação de estatísticas para o dashboard administrativo
     const [orders, customers, products] = await Promise.all([
       context.supabase.from("orders").select("id", { count: "exact", head: true }),
       context.supabase.from("customers").select("id", { count: "exact", head: true }),
@@ -1851,4 +1852,5 @@ export const getAdminStats = createServerFn({ method: "GET" })
       products: products.count ?? 0,
     };
   });
+
 
