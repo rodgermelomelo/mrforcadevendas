@@ -73,6 +73,7 @@ interface SalesContextValue extends DraftState {
   total: number;
   itemCount: number;
   sellerName: string;
+  sellerCodes: string[];
   sellers: {
     code: string;
     name: string;
@@ -262,6 +263,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     total,
     itemCount,
     sellerName: coreQuery.data?.sellerName ?? "Vendedor",
+    sellerCodes: coreQuery.data?.sellerCodes ?? [],
     sellers: coreQuery.data?.sellers ?? [],
     role: coreQuery.data?.role ?? null,
     brandMetadata: coreQuery.data?.brandMetadata ?? {},
