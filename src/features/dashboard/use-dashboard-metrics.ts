@@ -6,11 +6,16 @@ import { useSales } from "@/lib/state/sales-store";
  * (meta, total vendido, contagem de status e clientes em atenção).
  */
 export function useDashboardMetrics() {
-  const { orders, customers, sellerName, sellers } = useSales();
+  const { orders, customers, sellerName, sellerCodes, sellers } = useSales();
 
   return useMemo(() => {
-    const seller = sellers.find((s) => s.name === sellerName);
-    const goal = seller?.monthlyGoal ?? 0;
+    // A meta é vinculada ao(s) código(s) de representante do usuário logado.
+    // O nome do perfil só é usado como último recurso.
+    const linked = sellerCodes.length
+      ? sellers.filter((s) => sellerCodes.includes(s.code))
+      : sellers.filter((s) => s.name === sellerName);
+
+    const goal = linked.reduce((acc, s) => acc + (s.monthlyGoal ?? 0), 0);
 
     const totalSold = orders
       .filter((o) => o.status === "confirmed" || o.status === "auto_approved")
