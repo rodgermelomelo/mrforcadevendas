@@ -39,5 +39,5 @@ export function useDashboardMetrics() {
     const goalProgress = goal > 0 ? (totalSold / goal) * 100 : 0;
 
     return { goal, goalProgress, totalSold, counts, attention, recentCustomers };
-  }, [orders, customers, sellerName, sellers]);
+  }, [orders, customers, sellerName, sellerCodes, sellers]);
 }
