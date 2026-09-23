@@ -70,6 +70,7 @@ const adminNav = [
   { to: "/admin/cadastros", label: "Cadastros gerais" },
   { to: "/admin/transportadoras", label: "Transportadoras" },
   { to: "/admin/regras", label: "Regras comerciais" },
+  { to: "/admin/descontos", label: "Descontos & Acordos" },
   { to: "/admin/comissoes", label: "Comissões" },
   { to: "/admin/diagnostico", label: "Diagnóstico do catálogo" },
   { to: "/admin/importacoes", label: "Importações" },
