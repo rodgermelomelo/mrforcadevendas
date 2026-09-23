@@ -101,13 +101,13 @@ export function limpaObs(o: unknown): string {
 /** Primeiro valor monetário "R$ 1.234,56" ou "12,34" -> número. */
 function valRs(txt: string): number | null {
   const m = txt.match(/R?\$?\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})/);
-  return m ? parseFloat(m[1].replace(/\./g, "").replace(",", ".")) : null;
+  return m ? parseFloat(m[1]!.replace(/\./g, "").replace(",", ".")) : null;
 }
 
 /** Primeiro "NN%" -> inteiro. */
 function pctTxt(txt: string): number | null {
   const m = txt.match(/(\d{1,2})\s*%/);
-  return m ? parseInt(m[1], 10) : null;
+  return m ? parseInt(m[1]!, 10) : null;
 }
 
 /** % mais próximo de uma palavra-chave (ex.: "5% MAKE + 3% ACETONA"). */
@@ -115,7 +115,7 @@ function pctNear(o: string, kws: string[]): number | null {
   const pcts: Array<[number, number]> = [];
   const re = /(\d{1,2})\s*%/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(o))) pcts.push([m.index, parseInt(m[1], 10)]);
+  while ((m = re.exec(o))) pcts.push([m.index, parseInt(m[1]!, 10)]);
   if (!pcts.length) return null;
   const kpos: number[] = [];
   for (const k of kws) {
@@ -125,8 +125,8 @@ function pctNear(o: string, kws: string[]): number | null {
       i = o.indexOf(k, i + 1);
     }
   }
-  if (!kpos.length) return pcts[0][1];
-  let best = pcts[0];
+  if (!kpos.length) return pcts[0]![1];
+  let best: [number, number] = pcts[0]!;
   let bestD = Infinity;
   for (const pp of pcts) {
     const d = Math.min(...kpos.map((kp) => Math.abs(pp[0] - kp)));
@@ -140,8 +140,8 @@ function pctNear(o: string, kws: string[]): number | null {
 
 /** % do acordo: só quando há EXATAMENTE um percentual no texto do cadastro. */
 function pctAcordo(forma: string | undefined): number | null {
-  const a = [...String(forma ?? "").matchAll(/(\d+)\s*%/g)].map((x) => x[1]);
-  return a.length === 1 ? parseInt(a[0], 10) : null;
+  const a = [...String(forma ?? "").matchAll(/(\d+)\s*%/g)].map((x) => x[1]!);
+  return a.length === 1 ? parseInt(a[0]!, 10) : null;
 }
 
 /** Formata como o Python ":,.2f" (milhar com vírgula, decimal com ponto). */
@@ -212,7 +212,7 @@ export function classificarPedido(
       } else if (pc) {
         r["ACORDO"] = { status: "OK", texto: `${pc}%`, valorDesconto: round2((total * pc) / 100) };
       } else {
-        r["ACORDO"] = { status: "VERIFICAR", texto: dados.acordo[cod].slice(0, 18), valorDesconto: null };
+        r["ACORDO"] = { status: "VERIFICAR", texto: dados.acordo[cod]!.slice(0, 18), valorDesconto: null };
       }
     }
   }
@@ -230,7 +230,7 @@ export function classificarPedido(
     if (!cand.length) {
       r["CAMPANHA"] = { status: "VERIFICAR", texto: "campanha nao cadastrada", valorDesconto: null };
     } else {
-      const nome0 = cand[0].nome.split(" - ")[0];
+      const nome0 = cand[0]!.nome.split(" - ")[0];
       if (po !== null && po !== undefined) {
         const bate = cand.filter((c) => typeof c.valor === "number" && Math.trunc(c.valor) === po);
         if (bate.length) {
@@ -261,17 +261,17 @@ export function classificarPedido(
         const same = recs.filter((x) => x.num === numObs);
         const glob = dados.nfdPorNum[numObs] || [];
         if (same.length) {
-          const x = same[0];
+          const x = same[0]!;
           if (x.status.startsWith("PEND"))
             r["NFD"] = { status: "OK", texto: `R$ ${fmt(Number(x.valor || 0))}`, valorDesconto: Number(x.valor || 0) };
           else r["NFD"] = { status: "VERIFICAR", texto: `NFD ${numObs} já descontada`, valorDesconto: null };
         } else if (glob.length) {
-          r["NFD"] = { status: "VERIFICAR", texto: `NFD ${numObs} é de outro cliente (${glob[0].cod})`, valorDesconto: null };
+          r["NFD"] = { status: "VERIFICAR", texto: `NFD ${numObs} é de outro cliente (${glob[0]!.cod})`, valorDesconto: null };
         } else {
           r["NFD"] = { status: "VERIFICAR", texto: `NFD ${numObs} não encontrada`, valorDesconto: null };
         }
       } else if (pend.length === 1) {
-        const x = pend[0];
+        const x = pend[0]!;
         r["NFD"] = { status: "VERIFICAR", texto: `NFD ${x.num} pendente R$ ${fmt(Number(x.valor || 0))}? confirmar`, valorDesconto: null };
       } else if (pend.length) {
         r["NFD"] = { status: "VERIFICAR", texto: `${pend.length} NFDs pendentes — qual?`, valorDesconto: null };
@@ -288,7 +288,7 @@ export function classificarPedido(
       const recs = (mod === "SELL OUT" ? dados.sellOutPorCod : dados.selosPorCod)[cod] || [];
       const pend = recs.filter((x) => x.status.startsWith("PEND"));
       if (pend.length) {
-        const vb = Number(pend[0].valor || 0);
+        const vb = Number(pend[0]!.valor || 0);
         r[mod] = { status: "OK", texto: `R$ ${fmt(vb)}`, valorDesconto: vb };
       } else if (recs.length) {
         r[mod] = { status: "VERIFICAR", texto: "ja descontado", valorDesconto: null };
