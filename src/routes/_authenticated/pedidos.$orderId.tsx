@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PainelAutorizacao } from "@/components/orders/painel-autorizacao";
 import type { ReactNode } from "react";
 import {
   CalendarClock,
@@ -104,6 +105,8 @@ function DetalhePedido() {
           </span>
         </div>
       </header>
+
+      <PainelAutorizacao orderId={orderId} />
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
         <div className="surface-card p-5">
